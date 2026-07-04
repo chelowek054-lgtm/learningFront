@@ -5,8 +5,6 @@ src/constants/
 src/hooks/
 src/global.css
 src/app/explore.tsx
-src/app/index.tsx
-src/app/_layout.tsx
 
 # Сборки/зависимости
 node_modules/
