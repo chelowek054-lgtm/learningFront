@@ -118,7 +118,12 @@ export interface MasteryMap {
 }
 
 /** Зонд либо признак, что граница исчерпана. */
-export type ProbeResult = (Probe & { done?: false }) | { done: true; reason: string; map: MasteryMap };
+/** Почему зондирование не началось — каждая причина требует своего действия. */
+export type StopCode = 'empty' | 'no_theory' | 'settled';
+
+export type ProbeResult =
+  | (Probe & { done?: false })
+  | { done: true; reason: string; code: StopCode; map: MasteryMap };
 
 export interface AnswerResult {
   score: number;
@@ -126,6 +131,7 @@ export interface AnswerResult {
   mastery: MasteryNode | Record<string, unknown>;
   next: Probe | null;
   done?: boolean;
+  code?: StopCode;
 }
 
 export const nextProbe = (domain: string, target: string) =>

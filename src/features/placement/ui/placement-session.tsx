@@ -9,7 +9,24 @@ import {
   type MasteryMap,
   type Probe,
   type ProbeResult,
+  type StopCode,
 } from '@/shared/api';
+
+/** Останов — не ошибка, но и не всегда успех: пользователю нужен следующий шаг. */
+const STOP: Record<StopCode, { title: string; hint: string }> = {
+  empty: {
+    title: 'Граф этой области ещё не построен',
+    hint: 'Определять уровень пока не по чему. Граф готовит администратор.',
+  },
+  no_theory: {
+    title: 'В узлах графа пока нет теории',
+    hint: 'Вопросы строятся из содержания узлов, а его ещё не наполнили. Попросите администратора достроить граф — после этого проверка уровня заработает.',
+  },
+  settled: {
+    title: 'Уровень определён',
+    hint: 'Уточнять больше нечего — карта ниже отражает текущую картину.',
+  },
+};
 
 /** Целевая ступень — первый шаг: она задаёт потолок для всех зондов. */
 const TARGETS = [
@@ -31,6 +48,7 @@ export function PlacementSession({ domain }: { domain: string }) {
   const [probe, setProbe] = useState<Probe | null>(null);
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [stop, setStop] = useState<StopCode | null>(null);
   const [map, setMap] = useState<MasteryMap | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +71,7 @@ export function PlacementSession({ domain }: { domain: string }) {
         setPhase('probing');
       } else {
         setMap(result.map);
-        setFeedback(result.reason);
+        setStop(result.code);
         setPhase('done');
       }
     } catch (e) {
@@ -73,7 +91,10 @@ export function PlacementSession({ domain }: { domain: string }) {
       setAsked((n) => n + 1);
       setAnswer('');
       if (result.next) setProbe(result.next);
-      else await finish();
+      else {
+        setStop(result.code ?? 'settled');
+        await finish();
+      }
     } catch (e) {
       setError(String(e));
     } finally {
@@ -152,8 +173,9 @@ export function PlacementSession({ domain }: { domain: string }) {
 
   return (
     <ScrollView contentContainerStyle={styles.pad}>
-      <Text style={styles.h1}>Карта знаний</Text>
-      {feedback && <Text style={styles.dim}>{feedback}</Text>}
+      <Text style={styles.h1}>{stop ? STOP[stop].title : 'Карта знаний'}</Text>
+      {stop && <Text style={styles.dim}>{STOP[stop].hint}</Text>}
+      {!stop && feedback && <Text style={styles.dim}>{feedback}</Text>}
       {!map ? (
         <ActivityIndicator />
       ) : (

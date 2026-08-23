@@ -15,6 +15,7 @@ export {
   type Probe,
   type ProbeItem,
   type ProbeResult,
+  type StopCode,
   type AnswerResult,
   type MasteryMap,
   type MasteryNode,
