@@ -74,3 +74,67 @@ export const expandNode = (conceptId: string, direction: string) =>
     method: 'POST',
     body: JSON.stringify({ concept_id: conceptId, direction }),
   });
+
+// ---- адаптивный плейсмент (KG4) ----
+
+export interface ProbeOption {
+  text: string;
+  correct: boolean;
+  why: string;
+}
+
+export interface ProbeItem {
+  prompt: string;
+  expected: string;
+  options: ProbeOption[];
+  criteria: string[];
+  grounded_in: string;
+}
+
+export interface Probe {
+  conceptId: string;
+  conceptTitle: string;
+  bloom: string;
+  uncertainty: number;
+  item: ProbeItem;
+}
+
+export interface MasteryNode {
+  conceptId: string;
+  title: string;
+  tier: NodeTier;
+  status: 'locked' | 'frontier' | 'learning' | 'known';
+  estimate: number;
+  confidence: number;
+  observations: number;
+  bloom_reached: string | null;
+}
+
+export interface MasteryMap {
+  domain: string;
+  nodes: MasteryNode[];
+  summary: Record<string, number>;
+  coreCovered: boolean;
+}
+
+/** Зонд либо признак, что граница исчерпана. */
+export type ProbeResult = (Probe & { done?: false }) | { done: true; reason: string; map: MasteryMap };
+
+export interface AnswerResult {
+  score: number;
+  explanation: string;
+  mastery: MasteryNode | Record<string, unknown>;
+  next: Probe | null;
+  done?: boolean;
+}
+
+export const nextProbe = (domain: string, target: string) =>
+  api<ProbeResult>(`/graph/placement/${domain}/probe?target=${encodeURIComponent(target)}`);
+
+export const answerProbe = (domain: string, conceptId: string, bloom: string, answer: unknown) =>
+  api<AnswerResult>('/graph/placement/answer', {
+    method: 'POST',
+    body: JSON.stringify({ domain, concept_id: conceptId, bloom, answer }),
+  });
+
+export const masteryMap = (domain: string) => api<MasteryMap>(`/graph/placement/${domain}/map`);

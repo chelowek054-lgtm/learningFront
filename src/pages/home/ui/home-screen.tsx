@@ -10,10 +10,12 @@ import { useIsOnline } from '@/shared/lib';
 export function HomeScreen({
   onOpenReview,
   onOpenGraph,
+  onOpenPlacement,
   onOpenActivity,
 }: {
   onOpenReview: () => void;
   onOpenGraph: () => void;
+  onOpenPlacement: () => void;
   onOpenActivity: (a: Activity) => void;
 }) {
   const { user, logout } = useSession();
@@ -85,6 +87,10 @@ export function HomeScreen({
 
         <Pressable style={styles.graphCard} onPress={onOpenGraph}>
           <Text style={styles.graphText}>🕸️ Граф знаний · ML</Text>
+        </Pressable>
+
+        <Pressable style={styles.graphCard} onPress={onOpenPlacement}>
+          <Text style={styles.graphText}>🎯 Определить уровень</Text>
         </Pressable>
 
         <Text style={styles.section}>Задания</Text>

@@ -9,6 +9,15 @@ export { getLocalStore } from './local-store';
 export { syncNow } from './sync-service';
 export { submitForGrading, type SubmitParams } from './grading';
 export {
+  nextProbe,
+  answerProbe,
+  masteryMap,
+  type Probe,
+  type ProbeItem,
+  type ProbeResult,
+  type AnswerResult,
+  type MasteryMap,
+  type MasteryNode,
   getGraph,
   buildCanon,
   recomputeCentrality,
