@@ -16,6 +16,7 @@ interface TokenResponse {
 export async function register(email: string, password: string): Promise<void> {
   const r = await api<TokenResponse>('/auth/register', {
     method: 'POST',
+    auth: false,
     body: JSON.stringify({ email, password }),
   });
   await setToken(r.access_token);
@@ -24,6 +25,7 @@ export async function register(email: string, password: string): Promise<void> {
 export async function login(email: string, password: string): Promise<void> {
   const r = await api<TokenResponse>('/auth/login', {
     method: 'POST',
+    auth: false,
     body: JSON.stringify({ email, password }),
   });
   await setToken(r.access_token);

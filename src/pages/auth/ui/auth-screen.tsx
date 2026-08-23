@@ -3,6 +3,19 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSession } from '@/entities/session';
+import { ApiError, NetworkError } from '@/shared/api';
+
+/** Показать настоящую причину: сетевой сбой ≠ неверный пароль (иначе диагноз невозможен). */
+function describe(e: unknown, mode: 'login' | 'register'): string {
+  if (e instanceof NetworkError) return `${e.message}. Проверьте, что backend запущен и адрес верный.`;
+  if (e instanceof ApiError) {
+    if (e.status === 401) return 'Неверный email или пароль';
+    if (e.status === 409) return 'Этот email уже зарегистрирован';
+    if (e.status === 422) return 'Проверьте формат email и длину пароля (мин. 6)';
+    return `Ошибка сервера ${e.status}: ${e.message.slice(0, 200)}`;
+  }
+  return `Не удалось ${mode === 'login' ? 'войти' : 'зарегистрироваться'}: ${String(e)}`;
+}
 
 export function AuthScreen() {
   const { login, register } = useSession();
@@ -19,7 +32,7 @@ export function AuthScreen() {
       if (mode === 'login') await login(email.trim(), password);
       else await register(email.trim(), password);
     } catch (e) {
-      setError(mode === 'login' ? 'Неверный email или пароль' : `Не удалось: ${String(e)}`);
+      setError(describe(e, mode));
     } finally {
       setBusy(false);
     }
