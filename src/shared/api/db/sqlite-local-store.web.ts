@@ -38,6 +38,14 @@ export class SqliteLocalStore implements LocalStore {
     this.responses.set(r.id, r);
   }
 
+  async getResponse(id: string): Promise<Response | null> {
+    return this.responses.get(id) ?? null;
+  }
+
+  async listResponses(): Promise<Response[]> {
+    return [...this.responses.values()];
+  }
+
   async listUnsyncedResponses(): Promise<Response[]> {
     return [...this.responses.values()].filter((r) => !r.synced);
   }
@@ -50,6 +58,14 @@ export class SqliteLocalStore implements LocalStore {
   // --- srs ---
   async upsertSrsCard(c: SrsCardRecord): Promise<void> {
     this.srsCards.set(c.id, c);
+  }
+
+  async getSrsCard(id: string): Promise<SrsCardRecord | null> {
+    return this.srsCards.get(id) ?? null;
+  }
+
+  async listSrsCards(): Promise<SrsCardRecord[]> {
+    return [...this.srsCards.values()];
   }
 
   async listDueSrsCards(nowIso: string): Promise<SrsCardRecord[]> {

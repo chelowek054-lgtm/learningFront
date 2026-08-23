@@ -1,87 +1,102 @@
-// Стартовый экран Ф0: подтверждает связку ядро + модули + SQLite.
-// Показывает зарегистрированные модули/типы Activity, статус локальной БД
-// и демо-диспетчеризацию рендерера через реестр.
-import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+// Home-дашборд (WS8): «на сегодня» — повторения, активности, адаптивный сигнал.
+import { useCallback, useEffect, useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSession } from '@/entities/session';
 import type { Activity } from '@/shared/engine';
-import { useModuleRegistry } from '@/shared/lib';
-import { createSqliteLocalStore } from '@/shared/api';
-import { ActivityDispatcher } from '@/widgets/activity-dispatcher';
+import { getLocalStore, syncNow } from '@/shared/api';
+import { useIsOnline } from '@/shared/lib';
 
-export function HomeScreen() {
-  const registry = useModuleRegistry();
-  const modules = useMemo(() => registry.getModules(), [registry]);
-  const [dbStatus, setDbStatus] = useState('проверка…');
+export function HomeScreen({
+  onOpenReview,
+  onOpenGraph,
+  onOpenActivity,
+}: {
+  onOpenReview: () => void;
+  onOpenGraph: () => void;
+  onOpenActivity: (a: Activity) => void;
+}) {
+  const { user, logout } = useSession();
+  const online = useIsOnline();
+  const [dueCount, setDueCount] = useState(0);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [weakest, setWeakest] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = useCallback(async () => {
+    const store = getLocalStore();
+    if (online) {
+      try {
+        await syncNow(store);
+      } catch {
+        /* офлайн — работаем с локальными данными */
+      }
+    }
+    setDueCount((await store.listDueSrsCards(new Date().toISOString())).length);
+    setActivities(await store.listActivities());
+
+    // Адаптивный сигнал: слабейший критерий по всем оценённым ответам.
+    const sums: Record<string, { s: number; n: number }> = {};
+    for (const r of await store.listResponses()) {
+      for (const c of r.grade?.criteria ?? []) {
+        const cur = (sums[c.name] ??= { s: 0, n: 0 });
+        cur.s += c.max ? c.score / c.max : 0;
+        cur.n += 1;
+      }
+    }
+    const ranked = Object.entries(sums)
+      .map(([k, v]) => [k, v.s / v.n] as const)
+      .sort((a, b) => a[1] - b[1]);
+    setWeakest(ranked[0]?.[0] ?? null);
+  }, [online]);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const store = createSqliteLocalStore();
-        const activities = await store.listActivities();
-        if (!cancelled) setDbStatus(`OK · activities: ${activities.length}`);
-      } catch (e) {
-        if (!cancelled) setDbStatus(`недоступно (${String(e)})`);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    void load();
+  }, [load]);
 
-  // Демо: диспетчеризация рендерера для первого зарегистрированного типа.
-  const firstType = registry.getActivityTypes()[0]?.type;
-  const demoActivity: Activity | undefined = firstType
-    ? {
-        id: 'demo',
-        userId: 'demo',
-        module: registry.getModuleIdForType(firstType) ?? '',
-        type: firstType,
-        connectivity: 'offline',
-        payload: {},
-        createdAt: '1970-01-01T00:00:00.000Z',
-      }
-    : undefined;
+  async function onRefresh() {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.h1}>Praxis</Text>
-        <Text style={styles.sub}>Фаза 0 — каркас: ядро · модули · SQLite</Text>
-
-        <View style={styles.card}>
-          <Text style={styles.label}>Локальная БД (SQLite)</Text>
-          <Text style={styles.value}>{dbStatus}</Text>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        <View style={styles.header}>
+          <Text style={styles.h1}>Praxis</Text>
+          <Pressable onPress={logout}>
+            <Text style={styles.logout}>выйти</Text>
+          </Pressable>
         </View>
+        <Text style={styles.sub}>
+          {user?.email} {online ? '· онлайн' : '· офлайн'}
+        </Text>
 
-        {modules.map((m) => (
-          <View key={m.id} style={styles.card}>
-            <Text style={styles.moduleTitle}>
-              {m.title} <Text style={styles.moduleId}>({m.id})</Text>
-            </Text>
-            {m.activityTypes.map((t) => (
-              <View key={t.type} style={styles.row}>
-                <Text style={styles.type}>{t.type}</Text>
-                <Text
-                  style={[
-                    styles.badge,
-                    t.connectivity === 'online' ? styles.online : styles.offline,
-                  ]}
-                >
-                  {t.connectivity}
-                </Text>
-              </View>
-            ))}
-          </View>
-        ))}
+        {weakest && <Text style={styles.hint}>💡 Стоит подтянуть: {weakest}</Text>}
 
-        {demoActivity && (
-          <View style={styles.card}>
-            <Text style={styles.label}>Демо-диспетчеризация</Text>
-            <ActivityDispatcher activity={demoActivity} />
-          </View>
+        <Pressable style={styles.reviewCard} onPress={onOpenReview}>
+          <Text style={styles.reviewCount}>{dueCount}</Text>
+          <Text style={styles.reviewLabel}>карточек к повторению</Text>
+        </Pressable>
+
+        <Pressable style={styles.graphCard} onPress={onOpenGraph}>
+          <Text style={styles.graphText}>🕸️ Граф знаний · ML</Text>
+        </Pressable>
+
+        <Text style={styles.section}>Задания</Text>
+        {activities.length === 0 && (
+          <Text style={styles.empty}>Пусто. Потяните вниз для синхронизации.</Text>
         )}
+        {activities.map((a) => (
+          <Pressable key={a.id} style={styles.row} onPress={() => onOpenActivity(a)}>
+            <Text style={styles.rowType}>{a.type}</Text>
+            <Text style={styles.rowModule}>{a.module}</Text>
+          </Pressable>
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
@@ -90,28 +105,37 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   content: { padding: 16, gap: 12 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   h1: { fontSize: 28, fontWeight: '700' },
-  sub: { fontSize: 14, opacity: 0.6, marginBottom: 4 },
-  card: {
-    borderRadius: 12,
+  logout: { color: '#2563eb' },
+  sub: { fontSize: 13, opacity: 0.6 },
+  hint: { fontSize: 14, backgroundColor: '#fde68a55', padding: 10, borderRadius: 8 },
+  reviewCard: {
+    backgroundColor: '#2563eb',
+    borderRadius: 14,
+    padding: 20,
+    alignItems: 'center',
+  },
+  reviewCount: { color: '#fff', fontSize: 40, fontWeight: '800' },
+  reviewLabel: { color: '#fff', fontSize: 14, opacity: 0.9 },
+  graphCard: {
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#8888',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  graphText: { fontSize: 15, fontWeight: '600' },
+  section: { fontSize: 16, fontWeight: '600', marginTop: 8 },
+  empty: { fontSize: 13, opacity: 0.5 },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#8888',
+    borderRadius: 10,
     padding: 14,
-    gap: 8,
   },
-  label: { fontSize: 13, opacity: 0.6 },
-  value: { fontSize: 15, fontWeight: '500' },
-  moduleTitle: { fontSize: 17, fontWeight: '600' },
-  moduleId: { fontSize: 13, opacity: 0.5, fontWeight: '400' },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  type: { fontSize: 14, fontFamily: 'monospace' },
-  badge: {
-    fontSize: 11,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  online: { backgroundColor: '#2563eb22', color: '#2563eb' },
-  offline: { backgroundColor: '#6b728022', color: '#6b7280' },
+  rowType: { fontSize: 15, fontWeight: '500', fontFamily: 'monospace' },
+  rowModule: { fontSize: 12, opacity: 0.5 },
 });

@@ -5,3 +5,20 @@ export { getToken, setToken, clearToken } from './token';
 export { register, login, logout, fetchMe, updateProfile, type AuthUser } from './auth-api';
 export { createSyncClient } from './sync-client';
 export { createJobQueue } from './job-queue';
+export { getLocalStore } from './local-store';
+export { syncNow } from './sync-service';
+export { submitForGrading, type SubmitParams } from './grading';
+export {
+  getGraph,
+  buildCanon,
+  recomputeCentrality,
+  approveNode,
+  overrideNode,
+  patchUserNode,
+  expandNode,
+  type Graph,
+  type GraphNode,
+  type GraphEdge,
+  type CentralityRow,
+  type NodeTier,
+} from './graph-api';

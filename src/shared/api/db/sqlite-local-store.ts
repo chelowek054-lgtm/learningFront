@@ -224,6 +224,15 @@ export class SqliteLocalStore implements LocalStore {
     );
   }
 
+  async getResponse(id: string): Promise<Response | null> {
+    const row = this.db.getFirstSync<ResponseRow>('SELECT * FROM response WHERE id = ?', id);
+    return row ? toResponse(row) : null;
+  }
+
+  async listResponses(): Promise<Response[]> {
+    return this.db.getAllSync<ResponseRow>('SELECT * FROM response').map(toResponse);
+  }
+
   async listUnsyncedResponses(): Promise<Response[]> {
     const rows = this.db.getAllSync<ResponseRow>('SELECT * FROM response WHERE synced = 0');
     return rows.map(toResponse);
@@ -249,6 +258,15 @@ export class SqliteLocalStore implements LocalStore {
       c.dueAt,
       c.createdAt,
     );
+  }
+
+  async getSrsCard(id: string): Promise<SrsCardRecord | null> {
+    const row = this.db.getFirstSync<SrsRow>('SELECT * FROM srs_card WHERE id = ?', id);
+    return row ? toSrsCard(row) : null;
+  }
+
+  async listSrsCards(): Promise<SrsCardRecord[]> {
+    return this.db.getAllSync<SrsRow>('SELECT * FROM srs_card').map(toSrsCard);
   }
 
   async listDueSrsCards(nowIso: string): Promise<SrsCardRecord[]> {

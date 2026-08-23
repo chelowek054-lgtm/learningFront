@@ -17,6 +17,7 @@ interface SessionValue {
   login(email: string, password: string): Promise<void>;
   register(email: string, password: string): Promise<void>;
   logout(): Promise<void>;
+  refresh(): Promise<void>;
 }
 
 const SessionContext = createContext<SessionValue | null>(null);
@@ -62,6 +63,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setStatus('anonymous');
         setUser(null);
       },
+      refresh,
     }),
     [status, user],
   );

@@ -41,11 +41,15 @@ export interface LocalStore {
 
   // response — event log
   appendResponse(response: Response): Promise<void>;
+  getResponse(id: string): Promise<Response | null>;
+  listResponses(): Promise<Response[]>;
   listUnsyncedResponses(): Promise<Response[]>;
   markResponseSynced(id: string): Promise<void>;
 
   // srs
   upsertSrsCard(card: SrsCardRecord): Promise<void>;
+  getSrsCard(id: string): Promise<SrsCardRecord | null>;
+  listSrsCards(): Promise<SrsCardRecord[]>;
   listDueSrsCards(nowIso: string): Promise<SrsCardRecord[]>;
 
   // jobs

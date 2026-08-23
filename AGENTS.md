@@ -1,3 +1,5 @@
-# Expo HAS CHANGED
+# Expo SDK 54
 
-Read the exact versioned docs at https://docs.expo.dev/versions/v57.0.0/ before writing any code.
+Проект на **Expo SDK 54** (понижен ради совместимости с публичным Expo Go, который на
+целевом устройстве поддерживает SDK 54).
+Перед написанием кода под Expo сверяйся с версионными доками: https://docs.expo.dev/versions/v54.0.0/
