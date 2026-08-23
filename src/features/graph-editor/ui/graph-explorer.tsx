@@ -20,8 +20,12 @@ import {
   type Graph,
   type GraphNode,
 } from '@/shared/api';
+import { useSession } from '@/entities/session';
 
 export function GraphExplorer({ domain }: { domain: string }) {
+  // Канон общий для всех, поэтому строит и курирует его только админ (backend вернёт 403).
+  // Свой слой (COW) — правка, рост ветки — доступен любому пользователю.
+  const { isAdmin } = useSession();
   const [graph, setGraph] = useState<Graph | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -91,17 +95,24 @@ export function GraphExplorer({ domain }: { domain: string }) {
     return (
       <View style={styles.pad}>
         <Text style={styles.empty}>Граф «{domain}» пуст.</Text>
-        <Pressable
-          style={styles.btn}
-          onPress={() => run(() => buildCanon(domain, 'Трансформеры'))}
-          disabled={busy}
-        >
-          {busy ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.btnText}>Построить граф (LLM)</Text>
-          )}
-        </Pressable>
+        {isAdmin ? (
+          <Pressable
+            style={styles.btn}
+            onPress={() => run(() => buildCanon(domain, 'Трансформеры'))}
+            disabled={busy}
+          >
+            {busy ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.btnText}>Построить граф (LLM)</Text>
+            )}
+          </Pressable>
+        ) : (
+          <Text style={styles.dim}>
+            Канон этой области ещё не построен. Его готовит администратор — как только граф
+            появится, он станет доступен здесь автоматически.
+          </Text>
+        )}
       </View>
     );
   }
@@ -162,7 +173,7 @@ export function GraphExplorer({ domain }: { domain: string }) {
                 <Text style={styles.actText}>Сохранить</Text>
               </Pressable>
             )}
-            {selected.kind === 'canonical' && selected.tier !== 'core' && (
+            {isAdmin && selected.kind === 'canonical' && selected.tier !== 'core' && (
               <Pressable
                 style={styles.act}
                 onPress={() => run(() => approveNode(selected.id, 'core'))}

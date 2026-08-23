@@ -14,6 +14,8 @@ type Status = 'loading' | 'authenticated' | 'anonymous';
 interface SessionValue {
   status: Status;
   user: AuthUser | null;
+  /** Права администратора: канон графа правит только он (backend вернёт 403). */
+  isAdmin: boolean;
   login(email: string, password: string): Promise<void>;
   register(email: string, password: string): Promise<void>;
   logout(): Promise<void>;
@@ -50,6 +52,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     () => ({
       status,
       user,
+      isAdmin: user?.is_superuser === true,
       async login(email, password) {
         await apiLogin(email, password);
         await refresh();

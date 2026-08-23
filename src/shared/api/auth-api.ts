@@ -5,6 +5,8 @@ import { setToken, clearToken } from './token';
 export interface AuthUser {
   id: string;
   email: string | null;
+  /** Админ: курирование канона графа + доступ в /admin. Поле приходит snake_case. */
+  is_superuser: boolean;
   profile: Record<string, unknown>;
 }
 
