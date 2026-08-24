@@ -189,3 +189,39 @@ export const completeStep = (domain: string, conceptId: string) =>
     method: 'POST',
     body: JSON.stringify({ concept_id: conceptId }),
   });
+
+// ---- прохождение шага курса (KG5-05) ----
+
+export interface StepActivity {
+  id: string;
+  type: string;
+  connectivity: 'offline' | 'online';
+  payload: Record<string, unknown>;
+}
+
+export interface StepResult {
+  score: number;
+  explanation: string;
+  mastery: { estimate: number; confidence: number; observations: number };
+  stepCompleted: boolean;
+}
+
+export const startStep = (domain: string, conceptId: string) =>
+  api<{ conceptId: string; activities: StepActivity[] }>(
+    `/graph/course/${domain}/step/${conceptId}/start`,
+    { method: 'POST', body: JSON.stringify({}) },
+  );
+
+export const answerStep = (
+  domain: string,
+  conceptId: string,
+  activityId: string,
+  answer: unknown,
+) =>
+  api<StepResult>(`/graph/course/${domain}/step/${conceptId}/answer`, {
+    method: 'POST',
+    body: JSON.stringify({ activity_id: activityId, answer }),
+  });
+
+export const weakNodes = (domain: string) =>
+  api<{ conceptId: string; title: string; estimate: number }[]>(`/graph/course/${domain}/weak`);

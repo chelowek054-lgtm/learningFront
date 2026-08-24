@@ -9,6 +9,9 @@ import {
   type ModuleRegistry,
 } from '@/shared/engine';
 import {
+  KNOWLEDGE_MODULE_ID,
+  KNOWLEDGE_MODULE_TITLE,
+  knowledgeActivityTypes,
   LANGUAGES_MODULE_ID,
   LANGUAGES_MODULE_TITLE,
   languagesActivityTypes,
@@ -17,6 +20,7 @@ import {
   mlActivityTypes,
 } from '@/entities/module';
 import { ConceptRecallActivity } from '@/features/concept-recall';
+import { ConceptQuestionActivity, ConceptStudyActivity } from '@/features/concept-study';
 import { IeltsWritingActivity, ieltsWritingLocalGrader } from '@/features/ielts-writing';
 import { MaterialReadActivity } from '@/features/material-read';
 import { NotImplementedActivity } from '@/shared/ui';
@@ -26,6 +30,9 @@ const RENDERERS: Record<string, ActivityRenderer> = {
   ielts_writing_task2: IeltsWritingActivity,
   concept_recall: ConceptRecallActivity,
   material_read: MaterialReadActivity,
+  concept_study: ConceptStudyActivity,
+  concept_contrast: ConceptQuestionActivity,
+  concept_apply: ConceptQuestionActivity,
 };
 
 const LOCAL_GRADERS: Record<string, LocalGrader> = {
@@ -46,6 +53,7 @@ function buildManifest(id: string, title: string, types: ActivityTypeDef[]): Mod
 export const moduleManifests: ModuleManifest[] = [
   buildManifest(LANGUAGES_MODULE_ID, LANGUAGES_MODULE_TITLE, languagesActivityTypes),
   buildManifest(ML_MODULE_ID, ML_MODULE_TITLE, mlActivityTypes),
+  buildManifest(KNOWLEDGE_MODULE_ID, KNOWLEDGE_MODULE_TITLE, knowledgeActivityTypes),
 ];
 
 export function initModuleRegistry(): ModuleRegistry {

@@ -34,7 +34,14 @@ const TARGETS = [
   { key: 'create', label: 'Создать' },
 ] as const;
 
-export function CoursePath({ domain }: { domain: string }) {
+export function CoursePath({
+  domain,
+  onStartStep,
+}: {
+  domain: string;
+  /** Прохождение шага оркеструет страница: диспетчер живёт в widgets, фича его не видит. */
+  onStartStep: (conceptId: string) => void;
+}) {
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -116,14 +123,16 @@ export function CoursePath({ domain }: { domain: string }) {
           </Text>
           <Pressable
             style={styles.btn}
+            onPress={() => onStartStep(course.current!.conceptId)}
+            disabled={busy}
+          >
+            <Text style={styles.btnText}>Начать</Text>
+          </Pressable>
+          <Pressable
             onPress={() => run(() => completeStep(domain, course.current!.conceptId))}
             disabled={busy}
           >
-            {busy ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.btnText}>Пройдено</Text>
-            )}
+            <Text style={styles.link}>Уже знаю, пропустить</Text>
           </Pressable>
         </View>
       )}
