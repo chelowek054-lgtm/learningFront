@@ -36,10 +36,14 @@
     "vitest": "^2.1.8"
   },
   "scripts": {
+    "prestart": "node ./scripts/sync-env.js",
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
+    "preandroid": "node ./scripts/sync-env.js",
     "android": "expo start --android",
+    "preios": "node ./scripts/sync-env.js",
     "ios": "expo start --ios",
+    "preweb": "node ./scripts/sync-env.js",
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",

@@ -31,7 +31,7 @@ yarn-error.*
 *.pem
 
 # local env files
-.env*.local
+.env*
 
 # typescript
 *.tsbuildinfo
@@ -42,5 +42,5 @@ example
 /ios
 /android
 
-# Локальный .env: машинно-зависимый (адрес backend). В репозитории — только .env.example.
-.env
+# Локальный .env ГЕНЕРИРУЕТСЯ из ../.env скриптом scripts/sync-env.js
+# (см. хуки prestart/preweb в package.json). В репозитории его быть не должно.
