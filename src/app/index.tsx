@@ -8,11 +8,12 @@ import { AuthScreen } from '@/pages/auth';
 import { GraphScreen } from '@/pages/graph';
 import { HomeScreen } from '@/pages/home';
 import { OnboardingScreen } from '@/pages/onboarding';
+import { CourseScreen } from '@/pages/course';
 import { PlacementScreen } from '@/pages/placement';
 import { ReviewScreen } from '@/pages/review';
 import { ActivityDispatcher } from '@/widgets/activity-dispatcher';
 
-type View = 'home' | 'review' | 'graph' | 'placement' | { activity: Activity };
+type View = 'home' | 'review' | 'graph' | 'placement' | 'course' | { activity: Activity };
 
 function ActivityRunner({ activity, onBack }: { activity: Activity; onBack: () => void }) {
   return (
@@ -38,6 +39,7 @@ export default function Index() {
   if (view === 'review') return <ReviewScreen onDone={() => setView('home')} />;
   if (view === 'graph') return <GraphScreen onBack={() => setView('home')} />;
   if (view === 'placement') return <PlacementScreen />;
+  if (view === 'course') return <CourseScreen />;
   if (typeof view === 'object') {
     return <ActivityRunner activity={view.activity} onBack={() => setView('home')} />;
   }
@@ -46,6 +48,7 @@ export default function Index() {
       onOpenReview={() => setView('review')}
       onOpenGraph={() => setView('graph')}
       onOpenPlacement={() => setView('placement')}
+      onOpenCourse={() => setView('course')}
       onOpenActivity={(a) => setView({ activity: a })}
     />
   );

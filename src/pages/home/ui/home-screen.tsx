@@ -11,11 +11,13 @@ export function HomeScreen({
   onOpenReview,
   onOpenGraph,
   onOpenPlacement,
+  onOpenCourse,
   onOpenActivity,
 }: {
   onOpenReview: () => void;
   onOpenGraph: () => void;
   onOpenPlacement: () => void;
+  onOpenCourse: () => void;
   onOpenActivity: (a: Activity) => void;
 }) {
   const { user, logout } = useSession();
@@ -91,6 +93,10 @@ export function HomeScreen({
 
         <Pressable style={styles.graphCard} onPress={onOpenPlacement}>
           <Text style={styles.graphText}>🎯 Определить уровень</Text>
+        </Pressable>
+
+        <Pressable style={styles.graphCard} onPress={onOpenCourse}>
+          <Text style={styles.graphText}>🧭 Мой курс</Text>
         </Pressable>
 
         <Text style={styles.section}>Задания</Text>

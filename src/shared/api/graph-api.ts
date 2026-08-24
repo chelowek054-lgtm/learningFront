@@ -144,3 +144,48 @@ export const answerProbe = (domain: string, conceptId: string, bloom: string, an
   });
 
 export const masteryMap = (domain: string) => api<MasteryMap>(`/graph/placement/${domain}/map`);
+
+// ---- курс (KG5) ----
+
+export interface CourseActivity {
+  type: string;
+  bloom: string;
+  conceptId?: string;
+  note?: string;
+}
+
+/** Почему узел попал в путь — это объяснение курса, а не отладочная метка. */
+export type StepReason = 'rooting' | 'differentiation' | 'branch' | 'spiral';
+
+export interface CourseStep {
+  conceptId: string;
+  title: string;
+  tier: NodeTier;
+  bloom: string;
+  reason: StepReason;
+  activities: CourseActivity[];
+  done: boolean;
+}
+
+export interface Course {
+  domain: string;
+  target: { bloom: string; concepts: string[] };
+  steps: CourseStep[];
+  completed: number;
+  total: number;
+  current: CourseStep | null;
+}
+
+export const buildCourse = (domain: string, targetBloom: string) =>
+  api<Course>(`/graph/course/${domain}`, {
+    method: 'POST',
+    body: JSON.stringify({ target_bloom: targetBloom }),
+  });
+
+export const getCourse = (domain: string) => api<Course>(`/graph/course/${domain}`);
+
+export const completeStep = (domain: string, conceptId: string) =>
+  api<Course>(`/graph/course/${domain}/complete`, {
+    method: 'POST',
+    body: JSON.stringify({ concept_id: conceptId }),
+  });
