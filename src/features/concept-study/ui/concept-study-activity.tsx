@@ -1,7 +1,8 @@
 // Рендерер `concept_study` (KG5-05): теория узла графа.
 // Работает офлайн — весь текст лежит в payload, сети не требуется.
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { View } from 'react-native';
 import type { ActivityRendererProps } from '@/shared/engine';
+import { Body, Button, Lead, Muted, Note, space, Title } from '@/shared/ui';
 
 interface Section {
   heading: string;
@@ -21,50 +22,36 @@ export function ConceptStudyActivity({ activity, onComplete }: ActivityRendererP
   const content = payload.content;
 
   return (
-    <View style={styles.wrap}>
-      <Text style={styles.title}>{payload.title ?? 'Концепция'}</Text>
-      {content?.summary ? <Text style={styles.summary}>{content.summary}</Text> : null}
+    <View style={{ gap: space.md }}>
+      <Title>{payload.title ?? 'Концепция'}</Title>
+      {content?.summary ? <Lead>{content.summary}</Lead> : null}
 
       {(content?.sections ?? []).map((s) => (
-        <View key={s.heading} style={styles.section}>
-          <Text style={styles.heading}>{s.heading}</Text>
-          <Text style={styles.body}>{s.body}</Text>
+        <View key={s.heading} style={{ gap: space.sm }}>
+          <Body>{s.heading}</Body>
+          <Body>{s.body}</Body>
           {s.examples.map((e) => (
-            <Text key={e} style={styles.example}>
-              — {e}
-            </Text>
+            <View key={e} style={{ paddingLeft: space.md }}>
+              <Muted>— {e}</Muted>
+            </View>
           ))}
+          {/* Заблуждения выделены смыслом, а не украшением: их надо заметить. */}
           {s.counter_examples.map((e) => (
-            <Text key={e} style={styles.counter}>
-              ✗ {e}
-            </Text>
+            <View key={e} style={{ paddingLeft: space.md }}>
+              <Note tone="warn">✗ {e}</Note>
+            </View>
           ))}
         </View>
       ))}
 
       {(content?.references ?? []).length > 0 && (
-        <Text style={styles.dim}>
-          Источники: {(content?.references ?? []).map((r) => r.title).join(', ')}
-        </Text>
+        <Muted>Источники: {(content?.references ?? []).map((r) => r.title).join(', ')}</Muted>
       )}
 
-      <Pressable style={styles.btn} onPress={() => onComplete({ activityId: activity.id, userAnswer: { read: true } })}>
-        <Text style={styles.btnText}>Разобрался</Text>
-      </Pressable>
+      <Button
+        label="Разобрался"
+        onPress={() => onComplete({ activityId: activity.id, userAnswer: { read: true } })}
+      />
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: { gap: 12 },
-  title: { fontSize: 22, fontWeight: '700' },
-  summary: { fontSize: 16, lineHeight: 23 },
-  section: { gap: 5, marginTop: 4 },
-  heading: { fontSize: 15, fontWeight: '700' },
-  body: { fontSize: 15, lineHeight: 22 },
-  example: { fontSize: 14, opacity: 0.75, paddingLeft: 8 },
-  counter: { fontSize: 14, color: '#b45309', paddingLeft: 8 },
-  dim: { fontSize: 13, opacity: 0.6 },
-  btn: { backgroundColor: '#2563eb', borderRadius: 10, padding: 14, alignItems: 'center' },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});

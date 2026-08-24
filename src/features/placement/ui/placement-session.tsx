@@ -2,6 +2,7 @@
 // затем идут зонды на границе знаний, в конце — карта освоенности.
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useTheme, type Palette } from '@/shared/ui';
 import {
   answerProbe,
   masteryMap,
@@ -43,6 +44,8 @@ function isProbe(r: ProbeResult): r is Probe {
 }
 
 export function PlacementSession({ domain }: { domain: string }) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const [phase, setPhase] = useState<Phase>('target');
   const [target, setTarget] = useState<string>('understand');
   const [probe, setProbe] = useState<Probe | null>(null);
@@ -214,45 +217,45 @@ const STATUS: Record<string, string> = {
   locked: 'ждёт предпосылок',
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Palette) =>
+  StyleSheet.create({
   pad: { padding: 16, gap: 12 },
-  h1: { fontSize: 24, fontWeight: '700' },
-  eyebrow: { fontSize: 12, opacity: 0.6, textTransform: 'uppercase' },
-  question: { fontSize: 18, lineHeight: 25, fontWeight: '500' },
-  dim: { fontSize: 13, opacity: 0.6, lineHeight: 19 },
-  warn: { fontSize: 13, color: '#b45309' },
-  error: { fontSize: 13, color: '#dc2626' },
-  link: { color: '#2563eb', marginTop: 8 },
+  h1: { fontSize: 24, fontWeight: '700', color: c.ink },
+  eyebrow: { fontSize: 12, color: c.muted, textTransform: 'uppercase' },
+  question: { fontSize: 18, lineHeight: 25, fontWeight: '500', color: c.ink },
+  dim: { fontSize: 13, color: c.muted, lineHeight: 19 },
+  warn: { fontSize: 13, color: c.warn },
+  error: { fontSize: 13, color: c.danger },
+  link: { color: c.accent, marginTop: 8 },
   choice: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
+    borderColor: c.line,
     borderRadius: 10,
     padding: 14,
     gap: 2,
   },
-  choiceOn: { borderColor: '#2563eb', borderWidth: 2 },
-  choiceLabel: { fontSize: 16, fontWeight: '600' },
+  choiceOn: { borderColor: c.accent, borderWidth: 2 },
+  choiceLabel: { fontSize: 16, fontWeight: '600', color: c.ink },
   option: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
+    borderColor: c.line,
     borderRadius: 10,
     padding: 14,
   },
-  optionText: { fontSize: 15, lineHeight: 21 },
+  optionText: { fontSize: 15, lineHeight: 21, color: c.ink },
   input: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
+    borderColor: c.line,
     borderRadius: 10,
     padding: 12,
     fontSize: 15,
     minHeight: 96,
-    textAlignVertical: 'top',
-  },
-  btn: { backgroundColor: '#2563eb', borderRadius: 10, padding: 14, alignItems: 'center' },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+    textAlignVertical: 'top', color: c.ink, backgroundColor: c.surface },
+  btn: { backgroundColor: c.accent, borderRadius: 10, padding: 14, alignItems: 'center' },
+  btnText: { color: c.onAccent, fontSize: 16, fontWeight: '600' },
   row: { gap: 6, paddingVertical: 8 },
   rowMain: { gap: 2 },
-  rowTitle: { fontSize: 15, fontWeight: '500' },
-  meter: { height: 6, backgroundColor: '#8882', borderRadius: 99, overflow: 'hidden' },
-  meterFill: { height: '100%', backgroundColor: '#2563eb', borderRadius: 99 },
-});
+  rowTitle: { fontSize: 15, fontWeight: '500', color: c.ink },
+  meter: { height: 6, backgroundColor: c.surfaceAlt, borderRadius: 99, overflow: 'hidden' },
+  meterFill: { height: '100%', backgroundColor: c.accent, borderRadius: 99 },
+  });

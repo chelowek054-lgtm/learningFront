@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useTheme, type Palette } from '@/shared/ui';
 import {
   approveNode,
   buildCanon,
@@ -23,6 +24,8 @@ import {
 import { useSession } from '@/entities/session';
 
 export function GraphExplorer({ domain }: { domain: string }) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   // Канон общий для всех, поэтому строит и курирует его только админ (backend вернёт 403).
   // Свой слой (COW) — правка, рост ветки — доступен любому пользователю.
   const { isAdmin } = useSession();
@@ -211,6 +214,8 @@ function Section({
   nodes: GraphNode[];
   onPick: (id: string) => void;
 }) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
@@ -226,47 +231,47 @@ function Section({
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Palette) =>
+  StyleSheet.create({
   pad: { padding: 16, gap: 12 },
-  empty: { fontSize: 15, opacity: 0.6 },
+  empty: { fontSize: 15, color: c.muted },
   section: { gap: 6 },
-  sectionTitle: { fontSize: 13, fontWeight: '700', opacity: 0.6, marginTop: 6 },
+  sectionTitle: { fontSize: 13, fontWeight: '700', color: c.muted, marginTop: 6 },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
+    borderColor: c.line,
     borderRadius: 10,
     padding: 12,
   },
-  rowTitle: { fontSize: 15, fontWeight: '500' },
-  rowMeta: { fontSize: 11, opacity: 0.5 },
+  rowTitle: { fontSize: 15, fontWeight: '500', color: c.ink },
+  rowMeta: { fontSize: 11, color: c.muted },
   detail: { gap: 8 },
-  back: { color: '#2563eb' },
-  title: { fontSize: 22, fontWeight: '700' },
-  meta: { fontSize: 12, opacity: 0.6 },
-  summary: { fontSize: 15, lineHeight: 21 },
-  sub: { fontSize: 13, fontWeight: '600', marginTop: 8 },
-  dim: { fontSize: 13, opacity: 0.4 },
-  neighbor: { fontSize: 13, fontFamily: 'monospace' },
+  back: { color: c.accent },
+  title: { fontSize: 22, fontWeight: '700', color: c.ink },
+  meta: { fontSize: 12, color: c.muted },
+  summary: { fontSize: 15, lineHeight: 21, color: c.ink },
+  sub: { fontSize: 13, fontWeight: '600', marginTop: 8, color: c.ink },
+  dim: { fontSize: 13, color: c.muted },
+  neighbor: { fontSize: 13, fontFamily: 'monospace', color: c.ink },
   input: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
+    borderColor: c.line,
     borderRadius: 10,
     padding: 10,
-    fontSize: 14,
-  },
+    fontSize: 14, color: c.ink, backgroundColor: c.surface },
   actions: { flexDirection: 'row', gap: 8, marginTop: 8 },
-  act: { backgroundColor: '#2563eb', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14 },
-  actText: { color: '#fff', fontWeight: '600' },
+  act: { backgroundColor: c.accent, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14 },
+  actText: { color: c.onAccent, fontWeight: '600' },
   deepenRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  deepenInput: { flex: 1 },
+  deepenInput: { flex: 1, backgroundColor: c.surface },
   btn: {
-    backgroundColor: '#2563eb',
+    backgroundColor: c.accent,
     borderRadius: 10,
     padding: 14,
     alignItems: 'center',
     marginTop: 8,
   },
-  btnText: { color: '#fff', fontWeight: '600' },
-});
+  btnText: { color: c.onAccent, fontWeight: '600' },
+  });

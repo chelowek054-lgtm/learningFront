@@ -1,7 +1,7 @@
 // Экран входа/регистрации (WS1).
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StyleSheet, TextInput, View } from 'react-native';
+import { Button, Display, Muted, Note, Screen, space, useTheme } from '@/shared/ui';
 import { useSession } from '@/entities/session';
 import { ApiError, NetworkError } from '@/shared/api';
 
@@ -38,68 +38,54 @@ export function AuthScreen() {
     }
   }
 
+  const { colors } = useTheme();
+  const input = {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.line,
+    backgroundColor: colors.surface,
+    color: colors.ink,
+    borderRadius: 8,
+    padding: space.md,
+    fontSize: 16,
+  };
+
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.form}>
-        <Text style={styles.h1}>Praxis</Text>
-        <Text style={styles.sub}>{mode === 'login' ? 'Вход' : 'Регистрация'}</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="email"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="пароль (мин. 6)"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-
-        {error && <Text style={styles.error}>{error}</Text>}
-
-        <Pressable style={styles.btn} onPress={submit} disabled={busy}>
-          {busy ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.btnText}>{mode === 'login' ? 'Войти' : 'Зарегистрироваться'}</Text>
-          )}
-        </Pressable>
-
-        <Pressable onPress={() => setMode(mode === 'login' ? 'register' : 'login')}>
-          <Text style={styles.toggle}>
-            {mode === 'login' ? 'Нет аккаунта? Регистрация' : 'Уже есть аккаунт? Вход'}
-          </Text>
-        </Pressable>
+    <Screen>
+      <View style={{ gap: space.xs, marginTop: space.xxl }}>
+        <Display>Praxis</Display>
+        <Muted>{mode === 'login' ? 'Вход' : 'Регистрация'}</Muted>
       </View>
-    </SafeAreaView>
+
+      <TextInput
+        style={input}
+        placeholder="email"
+        placeholderTextColor={colors.muted}
+        autoCapitalize="none"
+        keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
+      />
+      <TextInput
+        style={input}
+        placeholder="пароль (мин. 6)"
+        placeholderTextColor={colors.muted}
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+      />
+
+      {error && <Note tone="danger">{error}</Note>}
+
+      <Button
+        label={mode === 'login' ? 'Войти' : 'Зарегистрироваться'}
+        onPress={submit}
+        busy={busy}
+      />
+      <Button
+        label={mode === 'login' ? 'Нет аккаунта? Регистрация' : 'Уже есть аккаунт? Вход'}
+        variant="quiet"
+        onPress={() => setMode(mode === 'login' ? 'register' : 'login')}
+      />
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, justifyContent: 'center' },
-  form: { padding: 24, gap: 12 },
-  h1: { fontSize: 32, fontWeight: '700', textAlign: 'center' },
-  sub: { fontSize: 15, opacity: 0.6, textAlign: 'center', marginBottom: 8 },
-  input: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
-  },
-  error: { color: '#dc2626', fontSize: 13 },
-  btn: {
-    backgroundColor: '#2563eb',
-    borderRadius: 10,
-    padding: 14,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  toggle: { color: '#2563eb', textAlign: 'center', marginTop: 8 },
-});

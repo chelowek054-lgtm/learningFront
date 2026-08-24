@@ -2,11 +2,13 @@
 // (план курса) и виджет-диспетчер (исполнение активностей); FSD запрещает
 // фиче импортировать widgets.
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, SafeAreaView, ScrollView, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSession } from '@/entities/session';
 import { CoursePath } from '@/features/course';
 import { startStep, type StepActivity } from '@/shared/api';
 import type { Activity } from '@/shared/engine';
+import { Button, Label, Note, space, TopBar, useTheme } from '@/shared/ui';
 import { ActivityDispatcher } from '@/widgets/activity-dispatcher';
 
 /** Активность движка из ответа backend: payload несёт всё, что нужно рендереру. */
@@ -22,8 +24,17 @@ function toActivity(a: StepActivity, userId: string): Activity {
   };
 }
 
+const STEP_LABEL: Record<string, string> = {
+  concept_study: 'Теория',
+  concept_recall: 'Вспомнить',
+  concept_contrast: 'Отличить от заблуждения',
+  concept_apply: 'Применить',
+  srs: 'Повторение',
+};
+
 export function CourseScreen({ domain = 'ml' }: { domain?: string }) {
   const { user } = useSession();
+  const { colors } = useTheme();
   const [running, setRunning] = useState<StepActivity[] | null>(null);
   const [index, setIndex] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -48,29 +59,23 @@ export function CourseScreen({ domain = 'ml' }: { domain?: string }) {
     setIndex(0);
   }
 
-  if (busy) return <ActivityIndicator style={styles.pad} />;
+  if (busy) return <ActivityIndicator style={{ marginTop: space.xxl }} />;
 
   if (running) {
     const activity = running[index];
     const last = index >= running.length - 1;
     return (
-      <SafeAreaView style={styles.safe}>
-        <ScrollView contentContainerStyle={styles.pad}>
-          <Pressable onPress={back}>
-            <Text style={styles.link}>← К плану курса</Text>
-          </Pressable>
-          <Text style={styles.dim}>
-            шаг · {index + 1} из {running.length} · {activity.type}
-          </Text>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+        <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md }}>
+          <TopBar title={STEP_LABEL[activity.type] ?? activity.type} onBack={back} />
+          <Label>{`шаг ${index + 1} из ${running.length}`}</Label>
           <ActivityDispatcher
             key={activity.id}
             activity={toActivity(activity, user?.id ?? '')}
             onComplete={() => (last ? back() : setIndex(index + 1))}
           />
           {!last && (
-            <Pressable onPress={() => setIndex(index + 1)}>
-              <Text style={styles.link}>Дальше →</Text>
-            </Pressable>
+            <Button label="Дальше" variant="quiet" onPress={() => setIndex(index + 1)} />
           )}
         </ScrollView>
       </SafeAreaView>
@@ -78,17 +83,13 @@ export function CourseScreen({ domain = 'ml' }: { domain?: string }) {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      {error && <Text style={styles.error}>{error}</Text>}
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+      {error && (
+        <View style={{ padding: space.lg }}>
+          <Note tone="danger">{error}</Note>
+        </View>
+      )}
       <CoursePath domain={domain} onStartStep={begin} />
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1 },
-  pad: { padding: 16, gap: 12 },
-  dim: { fontSize: 12, opacity: 0.6, textTransform: 'uppercase' },
-  link: { color: '#2563eb', fontSize: 15 },
-  error: { color: '#dc2626', padding: 16 },
-});

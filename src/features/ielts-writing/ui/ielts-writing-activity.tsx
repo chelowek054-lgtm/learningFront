@@ -5,12 +5,14 @@ import { useSession } from '@/entities/session';
 import type { ActivityRendererProps, Grade } from '@/shared/engine';
 import { getLocalStore, submitForGrading, syncNow } from '@/shared/api';
 import { useIsOnline } from '@/shared/lib';
-import { GradeView } from '@/shared/ui';
+import { GradeView , useTheme, type Palette } from '@/shared/ui';
 import { ieltsWritingLocalGrader } from '../lib/local-grader';
 
 type Phase = 'edit' | 'submitting' | 'graded' | 'queued';
 
 export function IeltsWritingActivity({ activity }: ActivityRendererProps) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const { user } = useSession();
   const online = useIsOnline();
   const [essay, setEssay] = useState('');
@@ -97,20 +99,20 @@ export function IeltsWritingActivity({ activity }: ActivityRendererProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Palette) =>
+  StyleSheet.create({
   box: { gap: 10 },
-  prompt: { fontSize: 15, fontWeight: '500' },
+  prompt: { fontSize: 15, fontWeight: '500', color: c.ink },
   input: {
     minHeight: 140,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
+    borderColor: c.line,
     borderRadius: 10,
     padding: 12,
     fontSize: 15,
-    textAlignVertical: 'top',
-  },
-  btn: { backgroundColor: '#2563eb', borderRadius: 10, padding: 14, alignItems: 'center' },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  queued: { fontSize: 13, color: '#b45309' },
-  done: { fontSize: 14, fontWeight: '600', marginBottom: 4 },
-});
+    textAlignVertical: 'top', color: c.ink, backgroundColor: c.surface },
+  btn: { backgroundColor: c.accent, borderRadius: 10, padding: 14, alignItems: 'center' },
+  btnText: { color: c.onAccent, fontSize: 16, fontWeight: '600' },
+  queued: { fontSize: 13, color: c.warn },
+  done: { fontSize: 14, fontWeight: '600', marginBottom: 4, color: c.ink },
+  });

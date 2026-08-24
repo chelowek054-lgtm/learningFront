@@ -1,29 +1,42 @@
-// Home-дашборд (WS8): «на сегодня» — повторения, активности, адаптивный сигнал.
+// «Сегодня» — что делать прямо сейчас: повторения, текущий шаг курса, задания.
+// Навигацию по разделам забрали вкладки, поэтому здесь только работа, а не меню.
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { RefreshControl, View } from 'react-native';
 import { useSession } from '@/entities/session';
 import type { Activity } from '@/shared/engine';
-import { getLocalStore, syncNow } from '@/shared/api';
+import { ApiError, getCourse, getLocalStore, syncNow, type Course } from '@/shared/api';
 import { useIsOnline } from '@/shared/lib';
+import {
+  Body,
+  Button,
+  Card,
+  Display,
+  Empty,
+  Label,
+  Muted,
+  Note,
+  Pill,
+  Progress,
+  Screen,
+  space,
+} from '@/shared/ui';
 
 export function HomeScreen({
   onOpenReview,
-  onOpenGraph,
   onOpenPlacement,
   onOpenCourse,
   onOpenActivity,
 }: {
   onOpenReview: () => void;
-  onOpenGraph: () => void;
   onOpenPlacement: () => void;
   onOpenCourse: () => void;
   onOpenActivity: (a: Activity) => void;
 }) {
-  const { user, logout } = useSession();
+  const { user } = useSession();
   const online = useIsOnline();
   const [dueCount, setDueCount] = useState(0);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [course, setCourse] = useState<Course | null>(null);
   const [weakest, setWeakest] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -34,6 +47,13 @@ export function HomeScreen({
         await syncNow(store);
       } catch {
         /* офлайн — работаем с локальными данными */
+      }
+      try {
+        setCourse(await getCourse('ml'));
+      } catch (e) {
+        // 404 — курса просто нет, это не ошибка.
+        if (!(e instanceof ApiError && e.status === 404)) setCourse(null);
+        else setCourse(null);
       }
     }
     setDueCount((await store.listDueSrsCards(new Date().toISOString())).length);
@@ -64,90 +84,64 @@ export function HomeScreen({
     setRefreshing(false);
   }
 
+  const step = course?.current ?? null;
+
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      >
-        <View style={styles.header}>
-          <Text style={styles.h1}>Praxis</Text>
-          <Pressable onPress={logout}>
-            <Text style={styles.logout}>выйти</Text>
-          </Pressable>
-        </View>
-        <Text style={styles.sub}>
-          {user?.email} {online ? '· онлайн' : '· офлайн'}
-        </Text>
+    <Screen refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+      <View style={{ gap: space.xs }}>
+        <Display>Сегодня</Display>
+        <Muted>
+          {user?.email ?? ''} {online ? '· онлайн' : '· офлайн'}
+        </Muted>
+      </View>
 
-        {weakest && <Text style={styles.hint}>💡 Стоит подтянуть: {weakest}</Text>}
+      {/* Повторение — ежедневная привычка, поэтому первым и с числом. */}
+      <Card tone={dueCount > 0 ? 'accent' : 'plain'} onPress={dueCount > 0 ? onOpenReview : undefined}>
+        <Label>Повторение</Label>
+        <Display>{dueCount}</Display>
+        <Muted>
+          {dueCount > 0 ? 'карточек ждут — интервалы уже подошли' : 'на сегодня всё повторено'}
+        </Muted>
+      </Card>
 
-        <Pressable style={styles.reviewCard} onPress={onOpenReview}>
-          <Text style={styles.reviewCount}>{dueCount}</Text>
-          <Text style={styles.reviewLabel}>карточек к повторению</Text>
-        </Pressable>
+      {step ? (
+        <Card tone="accent" onPress={onOpenCourse}>
+          <Label>Текущий шаг курса</Label>
+          <Body>{step.title}</Body>
+          <View style={{ flexDirection: 'row', gap: space.sm }}>
+            <Pill text={step.tier === 'core' ? 'ядро' : 'ветвь'} tone={step.tier === 'core' ? 'core' : 'muted'} />
+            <Pill text={step.bloom} />
+          </View>
+          <Progress value={course ? course.completed / Math.max(1, course.total) : 0} />
+          <Muted>
+            Пройдено {course?.completed} из {course?.total}
+          </Muted>
+        </Card>
+      ) : (
+        <Card>
+          <Label>Курс</Label>
+          <Muted>
+            Курса пока нет. Он строится от вашей границы знаний — начните с проверки уровня.
+          </Muted>
+          <Button label="Определить уровень" variant="quiet" onPress={onOpenPlacement} />
+        </Card>
+      )}
 
-        <Pressable style={styles.graphCard} onPress={onOpenGraph}>
-          <Text style={styles.graphText}>🕸️ Граф знаний · ML</Text>
-        </Pressable>
+      <Label>Задания</Label>
+      {activities.length === 0 ? (
+        <Empty text="Пусто. Потяните вниз, чтобы синхронизировать." />
+      ) : (
+        activities.map((a) => (
+          <Card key={a.id} onPress={() => onOpenActivity(a)}>
+            <Body>{a.type}</Body>
+            <Muted>
+              {a.module} · {a.connectivity === 'offline' ? 'работает без сети' : 'нужна сеть'}
+            </Muted>
+          </Card>
+        ))
+      )}
 
-        <Pressable style={styles.graphCard} onPress={onOpenPlacement}>
-          <Text style={styles.graphText}>🎯 Определить уровень</Text>
-        </Pressable>
-
-        <Pressable style={styles.graphCard} onPress={onOpenCourse}>
-          <Text style={styles.graphText}>🧭 Мой курс</Text>
-        </Pressable>
-
-        <Text style={styles.section}>Задания</Text>
-        {activities.length === 0 && (
-          <Text style={styles.empty}>Пусто. Потяните вниз для синхронизации.</Text>
-        )}
-        {activities.map((a) => (
-          <Pressable key={a.id} style={styles.row} onPress={() => onOpenActivity(a)}>
-            <Text style={styles.rowType}>{a.type}</Text>
-            <Text style={styles.rowModule}>{a.module}</Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-    </SafeAreaView>
+      {weakest && <Note tone="warn">Слабее всего даётся: {weakest}. Стоит сфокусироваться.</Note>}
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1 },
-  content: { padding: 16, gap: 12 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  h1: { fontSize: 28, fontWeight: '700' },
-  logout: { color: '#2563eb' },
-  sub: { fontSize: 13, opacity: 0.6 },
-  hint: { fontSize: 14, backgroundColor: '#fde68a55', padding: 10, borderRadius: 8 },
-  reviewCard: {
-    backgroundColor: '#2563eb',
-    borderRadius: 14,
-    padding: 20,
-    alignItems: 'center',
-  },
-  reviewCount: { color: '#fff', fontSize: 40, fontWeight: '800' },
-  reviewLabel: { color: '#fff', fontSize: 14, opacity: 0.9 },
-  graphCard: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-  graphText: { fontSize: 15, fontWeight: '600' },
-  section: { fontSize: 16, fontWeight: '600', marginTop: 8 },
-  empty: { fontSize: 13, opacity: 0.5 },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
-    borderRadius: 10,
-    padding: 14,
-  },
-  rowType: { fontSize: 15, fontWeight: '500', fontFamily: 'monospace' },
-  rowModule: { fontSize: 12, opacity: 0.5 },
-});

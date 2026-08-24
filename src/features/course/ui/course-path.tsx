@@ -1,7 +1,7 @@
 // Курс (KG5-04): путь по графу от границы знаний до цели.
 // Порядок шагов задаёт backend — экран показывает его и объясняет, почему так.
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 import {
   ApiError,
   buildCourse,
@@ -11,6 +11,22 @@ import {
   type CourseStep,
   type StepReason,
 } from '@/shared/api';
+import {
+  Body,
+  Button,
+  Card,
+  Label,
+  Lead,
+  Muted,
+  Note,
+  Pill,
+  Progress,
+  radius,
+  Screen,
+  space,
+  Title,
+  useTheme,
+} from '@/shared/ui';
 
 /** Каждая стадия развития объясняется пользователю, а не остаётся кодом. */
 const REASON: Record<StepReason, string> = {
@@ -77,73 +93,65 @@ export function CoursePath({
     }
   }
 
-  if (loading) return <ActivityIndicator style={styles.pad} />;
-
-  if (!course) {
+  if (loading) {
     return (
-      <ScrollView contentContainerStyle={styles.pad}>
-        <Text style={styles.h1}>Курс ещё не построен</Text>
-        <Text style={styles.dim}>
-          Путь собирается от вашей текущей границы знаний: сначала непройденный фундамент, затем
-          вглубь к цели. Выберите, до какого уровня хотите дойти.
-        </Text>
-        {TARGETS.map((t) => (
-          <Pressable
-            key={t.key}
-            style={styles.btn}
-            onPress={() => run(() => buildCourse(domain, t.key))}
-            disabled={busy}
-          >
-            <Text style={styles.btnText}>{t.label}</Text>
-          </Pressable>
-        ))}
-        {error && <Text style={styles.error}>{error}</Text>}
-      </ScrollView>
+      <Screen scroll={false}>
+        <ActivityIndicator />
+      </Screen>
     );
   }
 
-  const percent = course.total ? Math.round((course.completed / course.total) * 100) : 0;
+  if (!course) {
+    return (
+      <Screen>
+        <Title>Курс ещё не построен</Title>
+        <Muted>
+          Путь собирается от вашей текущей границы знаний: сначала непройденный фундамент, затем
+          вглубь к цели. Выберите, до какого уровня хотите дойти.
+        </Muted>
+        {TARGETS.map((t) => (
+          <Button
+            key={t.key}
+            label={t.label}
+            onPress={() => run(() => buildCourse(domain, t.key))}
+            busy={busy}
+          />
+        ))}
+        {error && <Note tone="danger">{error}</Note>}
+      </Screen>
+    );
+  }
 
   return (
-    <ScrollView contentContainerStyle={styles.pad}>
-      <Text style={styles.h1}>Курс · до уровня «{course.target.bloom}»</Text>
-      <Text style={styles.dim}>
+    <Screen>
+      <Title>Курс · до уровня «{course.target.bloom}»</Title>
+      <Muted>
         Пройдено {course.completed} из {course.total}
-      </Text>
-      <View style={styles.bar}>
-        <View style={[styles.barFill, { width: `${percent}%` }]} />
-      </View>
+      </Muted>
+      <Progress value={course.completed / Math.max(1, course.total)} />
 
       {course.current && (
-        <View style={styles.now}>
-          <Text style={styles.nowLabel}>Сейчас</Text>
-          <Text style={styles.nowTitle}>{course.current.title}</Text>
-          <Text style={styles.dim}>
+        <Card tone="accent">
+          <Label>Сейчас</Label>
+          <Lead>{course.current.title}</Lead>
+          <Muted>
             {course.current.activities.map((a) => ACTIVITY[a.type] ?? a.type).join(' → ')}
-          </Text>
-          <Pressable
-            style={styles.btn}
-            onPress={() => onStartStep(course.current!.conceptId)}
-            disabled={busy}
-          >
-            <Text style={styles.btnText}>Начать</Text>
-          </Pressable>
-          <Pressable
+          </Muted>
+          <Button label="Начать" onPress={() => onStartStep(course.current!.conceptId)} />
+          <Button
+            label="Уже знаю, пропустить"
+            variant="quiet"
             onPress={() => run(() => completeStep(domain, course.current!.conceptId))}
-            disabled={busy}
-          >
-            <Text style={styles.link}>Уже знаю, пропустить</Text>
-          </Pressable>
-        </View>
+            busy={busy}
+          />
+        </Card>
       )}
 
       {course.total === 0 && (
-        <Text style={styles.dim}>
-          Идти некуда: всё, что есть в графе, уже освоено до выбранного уровня.
-        </Text>
+        <Muted>Идти некуда: всё, что есть в графе, уже освоено до выбранного уровня.</Muted>
       )}
 
-      <Text style={styles.section}>Весь путь</Text>
+      <Label>Весь путь</Label>
       {course.steps.map((step, i) => (
         <StepRow
           key={step.conceptId}
@@ -154,11 +162,14 @@ export function CoursePath({
         />
       ))}
 
-      {error && <Text style={styles.error}>{error}</Text>}
-      <Pressable onPress={() => run(() => buildCourse(domain, course.target.bloom))} disabled={busy}>
-        <Text style={styles.link}>Пересобрать путь по текущим знаниям</Text>
-      </Pressable>
-    </ScrollView>
+      {error && <Note tone="danger">{error}</Note>}
+      <Button
+        label="Пересобрать путь по текущим знаниям"
+        variant="quiet"
+        onPress={() => run(() => buildCourse(domain, course.target.bloom))}
+        busy={busy}
+      />
+    </Screen>
   );
 }
 
@@ -173,65 +184,55 @@ function StepRow({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const { colors } = useTheme();
   return (
-    <Pressable style={[styles.step, step.done && styles.stepDone]} onPress={onToggle}>
-      <View style={styles.stepHead}>
-        <Text style={styles.stepNum}>{step.done ? '✓' : index}</Text>
-        <View style={styles.stepMain}>
-          <Text style={[styles.stepTitle, step.done && styles.struck]}>{step.title}</Text>
-          <Text style={styles.dim}>
-            {REASON[step.reason]} · {step.tier === 'core' ? 'ядро' : 'ветвь'} · {step.bloom}
-          </Text>
+    <Pressable
+      onPress={onToggle}
+      style={{
+        backgroundColor: colors.surface,
+        borderColor: colors.line,
+        borderWidth: 1,
+        borderRadius: radius.md,
+        padding: space.md,
+        gap: space.sm,
+        opacity: step.done ? 0.6 : 1,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+        <View
+          style={{
+            width: 26,
+            height: 26,
+            borderRadius: radius.pill,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: step.done ? colors.accent : colors.surfaceAlt,
+          }}
+        >
+          <Body>{step.done ? '✓' : String(index)}</Body>
+        </View>
+        <View style={{ flex: 1, gap: space.xs }}>
+          <Body>{step.title}</Body>
+          <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
+            <Pill text={REASON[step.reason]} />
+            <Pill
+              text={step.tier === 'core' ? 'ядро' : 'ветвь'}
+              tone={step.tier === 'core' ? 'core' : 'muted'}
+            />
+            <Pill text={step.bloom} />
+          </View>
         </View>
       </View>
       {expanded && (
-        <View style={styles.acts}>
+        <View style={{ paddingLeft: space.xxl + space.sm, gap: space.xs }}>
           {step.activities.map((a, i) => (
-            <Text key={`${a.type}-${i}`} style={styles.act}>
+            <Muted key={`${a.type}-${i}`}>
               • {ACTIVITY[a.type] ?? a.type}
               {a.note ? ` (${a.note})` : ''}
-            </Text>
+            </Muted>
           ))}
         </View>
       )}
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  pad: { padding: 16, gap: 12 },
-  h1: { fontSize: 24, fontWeight: '700' },
-  dim: { fontSize: 13, opacity: 0.6, lineHeight: 19 },
-  error: { fontSize: 13, color: '#dc2626' },
-  link: { color: '#2563eb', marginTop: 12 },
-  section: { fontSize: 13, fontWeight: '700', opacity: 0.6, marginTop: 12 },
-  bar: { height: 8, backgroundColor: '#8882', borderRadius: 99, overflow: 'hidden' },
-  barFill: { height: '100%', backgroundColor: '#2563eb', borderRadius: 99 },
-  now: {
-    borderWidth: 2,
-    borderColor: '#2563eb',
-    borderRadius: 12,
-    padding: 14,
-    gap: 6,
-    marginTop: 4,
-  },
-  nowLabel: { fontSize: 11, letterSpacing: 1, opacity: 0.6, textTransform: 'uppercase' },
-  nowTitle: { fontSize: 19, fontWeight: '700' },
-  step: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
-    borderRadius: 10,
-    padding: 12,
-    gap: 8,
-  },
-  stepDone: { opacity: 0.55 },
-  stepHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  stepNum: { fontSize: 15, fontWeight: '700', width: 22, textAlign: 'center', opacity: 0.6 },
-  stepMain: { flex: 1, gap: 2 },
-  stepTitle: { fontSize: 15, fontWeight: '500' },
-  struck: { textDecorationLine: 'line-through' },
-  acts: { paddingLeft: 34, gap: 3 },
-  act: { fontSize: 13, opacity: 0.7 },
-  btn: { backgroundColor: '#2563eb', borderRadius: 10, padding: 14, alignItems: 'center' },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});

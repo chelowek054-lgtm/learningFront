@@ -1,13 +1,18 @@
 // Экран плейсмента — тонкая обёртка над фичей (FSD: страница не держит логику).
-import { SafeAreaView, StyleSheet } from 'react-native';
 import { PlacementSession } from '@/features/placement';
+import { Screen, TopBar } from '@/shared/ui';
 
-export function PlacementScreen({ domain = 'ml' }: { domain?: string }) {
+export function PlacementScreen({
+  domain = 'ml',
+  onBack,
+}: {
+  domain?: string;
+  onBack?: () => void;
+}) {
   return (
-    <SafeAreaView style={styles.safe}>
+    <Screen scroll={false}>
+      <TopBar title="Определить уровень" onBack={onBack} />
       <PlacementSession domain={domain} />
-    </SafeAreaView>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({ safe: { flex: 1 } });

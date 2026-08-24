@@ -1,6 +1,7 @@
 // Экран интервального повторения (WS6): очередь due-карточек + FSRS.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTheme, type Palette } from '@/shared/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   createScheduler,
@@ -49,6 +50,8 @@ function backText(c: SrsCardRecord): string {
 }
 
 export function ReviewScreen({ onDone }: { onDone?: () => void }) {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const scheduler = useMemo(() => createScheduler(), []);
   const [queue, setQueue] = useState<SrsCardRecord[]>([]);
   const [revealed, setRevealed] = useState(false);
@@ -121,33 +124,34 @@ export function ReviewScreen({ onDone }: { onDone?: () => void }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Palette) =>
+  StyleSheet.create({
   safe: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   content: { flex: 1, padding: 16, gap: 16 },
-  counter: { fontSize: 13, opacity: 0.6 },
+  counter: { fontSize: 13, color: c.muted },
   card: {
     minHeight: 180,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
+    borderColor: c.line,
     borderRadius: 14,
     padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
   },
-  front: { fontSize: 24, fontWeight: '700', textAlign: 'center' },
-  back: { fontSize: 17, textAlign: 'center', opacity: 0.85 },
-  hint: { fontSize: 12, opacity: 0.4 },
+  front: { fontSize: 24, fontWeight: '700', textAlign: 'center', color: c.ink },
+  back: { fontSize: 17, textAlign: 'center', color: c.muted },
+  hint: { fontSize: 12, color: c.muted },
   ratings: { flexDirection: 'row', gap: 8 },
   rateBtn: {
     flex: 1,
-    backgroundColor: '#2563eb',
+    backgroundColor: c.accent,
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',
   },
-  rateText: { color: '#fff', fontWeight: '600' },
-  done: { fontSize: 18, fontWeight: '600' },
-  link: { color: '#2563eb', fontSize: 15 },
-});
+  rateText: { color: c.onAccent, fontWeight: '600' },
+  done: { fontSize: 18, fontWeight: '600', color: c.ink },
+  link: { color: c.accent, fontSize: 15 },
+  });

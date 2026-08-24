@@ -1,11 +1,14 @@
 // Онбординг (WS8): цели пользователя → profile.
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useTheme, type Palette } from '@/shared/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSession } from '@/entities/session';
 import { updateProfile } from '@/shared/api';
 
 export function OnboardingScreen() {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
   const { refresh } = useSession();
   const [band, setBand] = useState('7.0');
   const [topics, setTopics] = useState('transformers, attention');
@@ -53,25 +56,25 @@ export function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Palette) =>
+  StyleSheet.create({
   safe: { flex: 1, justifyContent: 'center' },
   form: { padding: 24, gap: 10 },
-  h1: { fontSize: 26, fontWeight: '700' },
-  sub: { fontSize: 14, opacity: 0.6, marginBottom: 8 },
-  label: { fontSize: 13, opacity: 0.7, marginTop: 6 },
+  h1: { fontSize: 26, fontWeight: '700', color: c.ink },
+  sub: { fontSize: 14, color: c.muted, marginBottom: 8 },
+  label: { fontSize: 13, color: c.muted, marginTop: 6 },
   input: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
+    borderColor: c.line,
     borderRadius: 10,
     padding: 12,
-    fontSize: 16,
-  },
+    fontSize: 16, color: c.ink, backgroundColor: c.surface },
   btn: {
-    backgroundColor: '#2563eb',
+    backgroundColor: c.accent,
     borderRadius: 10,
     padding: 14,
     alignItems: 'center',
     marginTop: 12,
   },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-});
+  btnText: { color: c.onAccent, fontSize: 16, fontWeight: '600' },
+  });
