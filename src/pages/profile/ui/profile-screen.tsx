@@ -1,8 +1,8 @@
 // Профиль: кто вошёл, цели из онбординга, состояние синхронизации, выход.
 // Раньше выход прятался в углу главной — теперь у него есть своё место.
 import { useEffect, useState } from 'react';
-import { useSession } from '@/entities/session';
-import { getLocalStore, syncNow } from '@/shared/api';
+import { targetLabel, useSession } from '@/entities/session';
+import { getLocalStore, syncNow, updateProfile } from '@/shared/api';
 import { useIsOnline } from '@/shared/lib';
 import { Pressable, Text, View } from 'react-native';
 import {
@@ -63,13 +63,8 @@ function ThemePicker() {
   );
 }
 
-interface Goals {
-  targetBand?: number;
-  mlTopics?: string[];
-}
-
-export function ProfileScreen() {
-  const { user, logout } = useSession();
+export function ProfileScreen({ onOpenActivities }: { onOpenActivities?: () => void }) {
+  const { user, logout, refresh, subject } = useSession();
   const online = useIsOnline();
   const [due, setDue] = useState<number | null>(null);
   const [syncing, setSyncing] = useState(false);
@@ -85,8 +80,6 @@ export function ProfileScreen() {
       }
     })();
   }, []);
-
-  const goals = (user?.profile ?? {}) as Goals;
 
   async function sync() {
     setSyncing(true);
@@ -109,17 +102,29 @@ export function ProfileScreen() {
       </Card>
 
       <Card>
-        <Label>Цели</Label>
-        {goals.targetBand ? (
-          <Muted>Целевой балл: {goals.targetBand}</Muted>
+        <Label>Предмет</Label>
+        {subject ? (
+          <>
+            <Muted>{subject.title}</Muted>
+            <Muted>Цель: {targetLabel(subject.target)}</Muted>
+          </>
         ) : (
-          <Muted>Целевой балл не задан</Muted>
+          <Muted>Предмет не выбран</Muted>
         )}
-        {goals.mlTopics?.length ? (
-          <Muted>Темы: {goals.mlTopics.join(', ')}</Muted>
-        ) : (
-          <Muted>Темы не выбраны</Muted>
-        )}
+        {/* Сброс возвращает в онбординг: гейт в app/_layout показывает его,
+            пока profile.onboarded не выставлен. Отдельного экрана не нужно. */}
+        <Button
+          label="Сменить предмет"
+          variant="quiet"
+          onPress={() =>
+            void (async () => {
+              // Профиль заменяется целиком, поэтому переносим остальное:
+              // иначе смена предмета стирала бы всё, что в нём накопилось.
+              await updateProfile({ ...(user?.profile ?? {}), onboarded: false });
+              await refresh();
+            })()
+          }
+        />
       </Card>
 
       <Card>
@@ -140,6 +145,15 @@ export function ProfileScreen() {
           busy={syncing}
         />
       </Card>
+
+      {/* Сырой список заданий — отладочный вид. На «Сегодня» он мешал:
+          человек видел слуги типов вместо одного понятного шага. */}
+      {onOpenActivities && (
+        <Card onPress={onOpenActivities}>
+          <Label>Разработчику</Label>
+          <Muted>Все задания списком — служебный экран</Muted>
+        </Card>
+      )}
 
       {!user && <Empty text="Нет данных пользователя" />}
 

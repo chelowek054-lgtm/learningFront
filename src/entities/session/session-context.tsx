@@ -1,5 +1,6 @@
 // Сессия пользователя (WS1): состояние аутентификации + действия.
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { readSubject, type Subject } from './subject';
 import {
   fetchMe,
   getToken,
@@ -16,6 +17,8 @@ interface SessionValue {
   user: AuthUser | null;
   /** Права администратора: канон графа правит только он (backend вернёт 403). */
   isAdmin: boolean;
+  /** Предмет изучения из профиля. null — онбординг ещё не пройден. */
+  subject: Subject | null;
   login(email: string, password: string): Promise<void>;
   register(email: string, password: string): Promise<void>;
   logout(): Promise<void>;
@@ -53,6 +56,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       status,
       user,
       isAdmin: user?.is_superuser === true,
+      subject: readSubject(user?.profile),
       async login(email, password) {
         await apiLogin(email, password);
         await refresh();

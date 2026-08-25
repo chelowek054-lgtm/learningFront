@@ -1,5 +1,9 @@
-// Редактор графа знаний (KG2-03..05): список узлов по тирам + фокус-узел с соседями
-// и действиями (углубиться / подтвердить в ядро / править). UX под телефон — без canvas.
+// Курирование графа знаний (KG2-03..05): построение канона, правка узла,
+// подтверждение в ядро, дорост ветки. UX под телефон — без canvas.
+//
+// Экран целиком административный: учащемуся показывается GraphMap (только
+// чтение). Раньше это был один компонент на двоих, и правка узла с доростом
+// ветки были открыты каждому, хотя канон общий для всех.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -21,18 +25,15 @@ import {
   type Graph,
   type GraphNode,
 } from '@/shared/api';
-import { useSession } from '@/entities/session';
 
-export function GraphExplorer({ domain }: { domain: string }) {
+export function GraphCuration({ domain }: { domain: string }) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
-  // Канон общий для всех, поэтому строит и курирует его только админ (backend вернёт 403).
-  // Свой слой (COW) — правка, рост ветки — доступен любому пользователю.
-  const { isAdmin } = useSession();
   const [graph, setGraph] = useState<Graph | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [direction, setDirection] = useState('');
+  const [topic, setTopic] = useState('');
   const [editSummary, setEditSummary] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -98,24 +99,26 @@ export function GraphExplorer({ domain }: { domain: string }) {
     return (
       <View style={styles.pad}>
         <Text style={styles.empty}>Граф «{domain}» пуст.</Text>
-        {isAdmin ? (
-          <Pressable
-            style={styles.btn}
-            onPress={() => run(() => buildCanon(domain, 'Трансформеры'))}
-            disabled={busy}
-          >
-            {busy ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.btnText}>Построить граф (LLM)</Text>
-            )}
-          </Pressable>
-        ) : (
-          <Text style={styles.dim}>
-            Канон этой области ещё не построен. Его готовит администратор — как только граф
-            появится, он станет доступен здесь автоматически.
-          </Text>
-        )}
+        {/* Тема раньше была константой «Трансформеры»: кнопка всегда строила
+            один и тот же граф, чем бы область ни называлась. */}
+        <TextInput
+          style={styles.input}
+          placeholder="тема для построения"
+          placeholderTextColor={colors.muted}
+          value={topic}
+          onChangeText={setTopic}
+        />
+        <Pressable
+          style={styles.btn}
+          onPress={() => run(() => buildCanon(domain, topic.trim()))}
+          disabled={busy || !topic.trim()}
+        >
+          {busy ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.btnText}>Построить граф</Text>
+          )}
+        </Pressable>
       </View>
     );
   }
@@ -176,7 +179,7 @@ export function GraphExplorer({ domain }: { domain: string }) {
                 <Text style={styles.actText}>Сохранить</Text>
               </Pressable>
             )}
-            {isAdmin && selected.kind === 'canonical' && selected.tier !== 'core' && (
+            {selected.kind === 'canonical' && selected.tier !== 'core' && (
               <Pressable
                 style={styles.act}
                 onPress={() => run(() => approveNode(selected.id, 'core'))}
@@ -187,7 +190,7 @@ export function GraphExplorer({ domain }: { domain: string }) {
             )}
           </View>
 
-          <Text style={styles.sub}>Углубиться (LLM дорастит ветку)</Text>
+          <Text style={styles.sub}>Дорастить ветку</Text>
           <View style={styles.deepenRow}>
             <TextInput
               style={[styles.input, styles.deepenInput]}

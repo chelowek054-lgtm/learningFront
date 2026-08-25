@@ -39,6 +39,19 @@ export class ModuleRegistry {
     return this.typeIndex.get(type)?.moduleId;
   }
 
+  getActivityType(type: string): ActivityTypeDef | undefined {
+    return this.typeIndex.get(type)?.def;
+  }
+
+  /**
+   * Название типа для человека. Единственный источник: экраны спрашивают
+   * здесь, а не держат свои карты — иначе словарь разъезжается по слоям.
+   * Незнакомый тип отдаёт сам слуг: это заметно на экране и лучше пустоты.
+   */
+  getActivityTitle(type: string): string {
+    return this.typeIndex.get(type)?.def.title ?? type;
+  }
+
   getRenderer(type: string): ActivityRenderer | undefined {
     const entry = this.typeIndex.get(type);
     if (!entry) return undefined;

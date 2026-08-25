@@ -8,6 +8,7 @@ function fakeModule(id: string, types: string[]): ModuleManifest {
     title: `Fake ${id}`,
     activityTypes: types.map((type) => ({
       type,
+      title: `Название ${type}`,
       connectivity: 'offline',
       payloadSchema: {},
     })),
@@ -40,6 +41,19 @@ describe('ModuleRegistry', () => {
 
     const renderer = reg.getRenderer('essay');
     expect(renderer?.({ activity: {} as never, onComplete: () => {} })).toBe('render:essay');
+  });
+
+  it('отдаёт название типа для человека, а незнакомый — слугом', () => {
+    // Экраны берут название отсюда: пока его не было, «Сегодня» печатал
+    // `concept_recall`. Незнакомый тип возвращает сам слуг — это видно
+    // на экране и лучше пустой строки.
+    const reg = createModuleRegistry();
+    reg.registerModule(fakeModule('alpha', ['card_flip']));
+
+    expect(reg.getActivityTitle('card_flip')).toBe('Название card_flip');
+    expect(reg.getActivityType('card_flip')?.connectivity).toBe('offline');
+    expect(reg.getActivityTitle('unknown')).toBe('unknown');
+    expect(reg.getActivityType('unknown')).toBeUndefined();
   });
 
   it('запрещает повторную регистрацию модуля', () => {

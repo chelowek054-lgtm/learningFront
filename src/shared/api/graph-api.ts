@@ -43,7 +43,14 @@ export interface CentralityRow {
   suggestedCore: boolean;
 }
 
-export const getGraph = (domain: string) => api<Graph>(`/graph/${domain}`);
+/**
+ * Сегмент пути. Домен приходит из названия предмета, которое ввёл человек:
+ * без кодирования кириллица и пробелы ломали запрос. Раньше encodeURIComponent
+ * стоял только на `target` в nextProbe — остальные интерполяции были без него.
+ */
+const seg = (v: string) => encodeURIComponent(v);
+
+export const getGraph = (domain: string) => api<Graph>(`/graph/${seg(domain)}`);
 
 export const buildCanon = (domain: string, topic: string) =>
   api<Graph>('/graph/canon/build', { method: 'POST', body: JSON.stringify({ domain, topic }) });
@@ -55,19 +62,19 @@ export const recomputeCentrality = (domain: string) =>
   });
 
 export const approveNode = (conceptId: string, tier?: NodeTier) =>
-  api(`/graph/canon/nodes/${conceptId}/approve`, {
+  api(`/graph/canon/nodes/${seg(conceptId)}/approve`, {
     method: 'POST',
     body: JSON.stringify({ tier }),
   });
 
 export const overrideNode = (baseConceptId: string, content: Record<string, unknown>) =>
-  api(`/graph/nodes/${baseConceptId}/override`, {
+  api(`/graph/nodes/${seg(baseConceptId)}/override`, {
     method: 'POST',
     body: JSON.stringify({ content }),
   });
 
 export const patchUserNode = (userConceptId: string, patch: Record<string, unknown>) =>
-  api(`/graph/user-nodes/${userConceptId}`, { method: 'PUT', body: JSON.stringify(patch) });
+  api(`/graph/user-nodes/${seg(userConceptId)}`, { method: 'PUT', body: JSON.stringify(patch) });
 
 export const expandNode = (conceptId: string, direction: string) =>
   api<Graph>('/graph/expand', {
@@ -134,7 +141,7 @@ export interface AnswerResult {
 }
 
 export const nextProbe = (domain: string, target: string) =>
-  api<ProbeResult>(`/graph/placement/${domain}/probe?target=${encodeURIComponent(target)}`);
+  api<ProbeResult>(`/graph/placement/${seg(domain)}/probe?target=${seg(target)}`);
 
 export const answerProbe = (domain: string, conceptId: string, bloom: string, answer: unknown) =>
   api<AnswerResult>('/graph/placement/answer', {
@@ -142,7 +149,8 @@ export const answerProbe = (domain: string, conceptId: string, bloom: string, an
     body: JSON.stringify({ domain, concept_id: conceptId, bloom, answer }),
   });
 
-export const masteryMap = (domain: string) => api<MasteryMap>(`/graph/placement/${domain}/map`);
+export const masteryMap = (domain: string) =>
+  api<MasteryMap>(`/graph/placement/${seg(domain)}/map`);
 
 // ---- курс (KG5) ----
 
@@ -176,15 +184,15 @@ export interface Course {
 }
 
 export const buildCourse = (domain: string, targetBloom: string) =>
-  api<Course>(`/graph/course/${domain}`, {
+  api<Course>(`/graph/course/${seg(domain)}`, {
     method: 'POST',
     body: JSON.stringify({ target_bloom: targetBloom }),
   });
 
-export const getCourse = (domain: string) => api<Course>(`/graph/course/${domain}`);
+export const getCourse = (domain: string) => api<Course>(`/graph/course/${seg(domain)}`);
 
 export const completeStep = (domain: string, conceptId: string) =>
-  api<Course>(`/graph/course/${domain}/complete`, {
+  api<Course>(`/graph/course/${seg(domain)}/complete`, {
     method: 'POST',
     body: JSON.stringify({ concept_id: conceptId }),
   });
@@ -207,7 +215,7 @@ export interface StepResult {
 
 export const startStep = (domain: string, conceptId: string) =>
   api<{ conceptId: string; activities: StepActivity[] }>(
-    `/graph/course/${domain}/step/${conceptId}/start`,
+    `/graph/course/${seg(domain)}/step/${seg(conceptId)}/start`,
     { method: 'POST', body: JSON.stringify({}) },
   );
 
@@ -217,10 +225,12 @@ export const answerStep = (
   activityId: string,
   answer: unknown,
 ) =>
-  api<StepResult>(`/graph/course/${domain}/step/${conceptId}/answer`, {
+  api<StepResult>(`/graph/course/${seg(domain)}/step/${seg(conceptId)}/answer`, {
     method: 'POST',
     body: JSON.stringify({ activity_id: activityId, answer }),
   });
 
 export const weakNodes = (domain: string) =>
-  api<{ conceptId: string; title: string; estimate: number }[]>(`/graph/course/${domain}/weak`);
+  api<{ conceptId: string; title: string; estimate: number }[]>(
+    `/graph/course/${seg(domain)}/weak`,
+  );

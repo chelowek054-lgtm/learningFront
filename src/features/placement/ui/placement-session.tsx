@@ -1,6 +1,7 @@
 // Адаптивный плейсмент (KG4-04): сначала пользователь задаёт целевую ступень,
 // затем идут зонды на границе знаний, в конце — карта освоенности.
 import { useCallback, useEffect, useState } from 'react';
+import { MASTERY_TARGETS } from '@/entities/session';
 import {
   ActivityIndicator,
   Pressable,
@@ -37,13 +38,9 @@ const STOP: Record<StopCode, { title: string; hint: string }> = {
   },
 };
 
-/** Целевая ступень — первый шаг: она задаёт потолок для всех зондов. */
-const TARGETS = [
-  { key: 'remember', label: 'Вспомнить', hint: 'узнаю термины' },
-  { key: 'understand', label: 'Понять', hint: 'объясню своими словами' },
-  { key: 'apply', label: 'Применить', hint: 'решу задачу' },
-  { key: 'create', label: 'Создать', hint: 'построю своё' },
-] as const;
+/** Целевая ступень — первый шаг: она задаёт потолок для всех зондов.
+ *  Список общий с онбордингом и курсом (entities/session). */
+const TARGETS = MASTERY_TARGETS;
 
 type Phase = 'target' | 'probing' | 'done';
 
@@ -130,12 +127,12 @@ export function PlacementSession({ domain }: { domain: string }) {
         </Text>
         {TARGETS.map((t) => (
           <Pressable
-            key={t.key}
-            style={[styles.choice, target === t.key && styles.choiceOn]}
-            onPress={() => setTarget(t.key)}
+            key={t.bloom}
+            style={[styles.choice, target === t.bloom && styles.choiceOn]}
+            onPress={() => setTarget(t.bloom)}
           >
-            <Text style={styles.choiceLabel}>{t.label}</Text>
-            <Text style={styles.dim}>{t.hint}</Text>
+            <Text style={styles.choiceLabel}>{t.short}</Text>
+            <Text style={styles.dim}>{t.short}</Text>
           </Pressable>
         ))}
         {error && <Text style={styles.error}>{error}</Text>}

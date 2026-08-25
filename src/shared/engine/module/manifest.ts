@@ -8,6 +8,14 @@ export type JSONSchema = Record<string, unknown>;
 
 export interface ActivityTypeDef {
   type: string;
+  /**
+   * Название для человека. Обязательное: пока его не было, экраны печатали
+   * слуг типа (`concept_recall`), и два задания разных модулей выглядели
+   * одинаково. Чинить это в шаблоне экрана нельзя — названия нет в модели.
+   */
+  title: string;
+  /** Одна строка о том, что человек здесь делает. Показывать под названием. */
+  hint?: string;
   connectivity: Connectivity;
   payloadSchema: JSONSchema;
   /** Питает ли этот тип SRS через error-log. */

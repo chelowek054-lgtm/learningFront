@@ -2,6 +2,7 @@
 // Гейт стоит здесь, а не внутри роутов: пока сессии нет, показывать нечего,
 // и незачем плодить редиректы между вкладками.
 import { Stack } from 'expo-router';
+import Head from 'expo-router/head';
 import { useMemo } from 'react';
 import { StatusBar } from 'expo-status-bar';
 
@@ -11,6 +12,19 @@ import { OnboardingScreen } from '@/pages/onboarding';
 import { ModuleRegistryProvider } from '@/shared/lib';
 import { ThemeProvider, useTheme } from '@/shared/ui';
 import { getModuleRegistry } from '@/widgets/module-registry';
+
+/**
+ * Заголовок вкладки браузера. Через options.title экранов он не проставлялся —
+ * expo-router оставлял <title> пустым, и страница выглядела безымянной. Head —
+ * поддерживаемый способ управлять головой документа; на нативе это no-op.
+ */
+function DocumentHead() {
+  return (
+    <Head>
+      <title>Praxis</title>
+    </Head>
+  );
+}
 
 function Gate() {
   const { status, user } = useSession();
@@ -33,6 +47,7 @@ function Gate() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="review" options={{ presentation: 'card' }} />
         <Stack.Screen name="placement" options={{ presentation: 'card' }} />
+        <Stack.Screen name="activities" options={{ presentation: 'card' }} />
       </Stack>
     </>
   );
@@ -44,6 +59,7 @@ export default function RootLayout() {
     <ThemeProvider>
       <SessionProvider>
         <ModuleRegistryProvider registry={registry}>
+          <DocumentHead />
           <Gate />
         </ModuleRegistryProvider>
       </SessionProvider>

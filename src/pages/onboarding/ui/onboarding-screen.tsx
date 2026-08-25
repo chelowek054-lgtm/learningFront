@@ -1,83 +1,108 @@
-// Онбординг (WS8): цели пользователя → profile.
+// Онбординг: что человек хочет изучать и до какого уровня → profile.
+//
+// Раньше здесь была анкета двух зашитых областей — целевой балл IELTS и темы
+// ML. Приложение обещает «любую базу знаний», а на первом же экране просило
+// заполнить чужие поля; пришедший за третьим предметом сразу понимал, что
+// приложение не про него.
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useTheme, type Palette } from '@/shared/ui';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSession } from '@/entities/session';
+import { Pressable, Text, View } from 'react-native';
+
+import { MASTERY_TARGETS, toSubjectId, useSession, type TargetBloom } from '@/entities/session';
 import { updateProfile } from '@/shared/api';
+import {
+  Button,
+  Display,
+  Field,
+  font,
+  Label,
+  Muted,
+  Note,
+  radius,
+  Screen,
+  space,
+  useTheme,
+} from '@/shared/ui';
 
 export function OnboardingScreen() {
   const { colors } = useTheme();
-  const styles = makeStyles(colors);
-  const { refresh } = useSession();
-  const [band, setBand] = useState('7.0');
-  const [topics, setTopics] = useState('transformers, attention');
+  const { refresh, subject, user } = useSession();
+  // При смене предмета подставляем прежние значения — не заставлять набирать заново.
+  const [title, setTitle] = useState(subject?.title ?? '');
+  const [target, setTarget] = useState<TargetBloom>(subject?.target ?? 'apply');
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const subjectTitle = title.trim();
+  const ready = subjectTitle.length > 1;
 
   async function finish() {
     setBusy(true);
+    setError(null);
     try {
       await updateProfile({
+        ...(user?.profile ?? {}),
         onboarded: true,
-        targetBand: Number.parseFloat(band) || 7,
-        mlTopics: topics
-          .split(',')
-          .map((t) => t.trim())
-          .filter(Boolean),
+        subject: { id: toSubjectId(subjectTitle), title: subjectTitle, target },
       });
       await refresh();
+    } catch (e) {
+      setError(`Не удалось сохранить: ${String(e)}`);
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.form}>
-        <Text style={styles.h1}>Цели обучения</Text>
-        <Text style={styles.sub}>Настроим план под вас.</Text>
-
-        <Text style={styles.label}>Целевой балл IELTS</Text>
-        <TextInput
-          style={styles.input}
-          keyboardType="decimal-pad"
-          value={band}
-          onChangeText={setBand}
-        />
-
-        <Text style={styles.label}>Темы ML (через запятую)</Text>
-        <TextInput style={styles.input} value={topics} onChangeText={setTopics} />
-
-        <Pressable style={styles.btn} onPress={finish} disabled={busy}>
-          {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Начать</Text>}
-        </Pressable>
+    <Screen>
+      <View style={{ gap: space.xs, marginTop: space.xxl }}>
+        <Display>С чего начнём</Display>
+        <Muted>Путь строится под предмет — назовите его своими словами.</Muted>
       </View>
-    </SafeAreaView>
+
+      <Label>Что хотите изучать</Label>
+      <Field
+        placeholder="например: машинное обучение"
+        autoFocus
+        value={title}
+        onChangeText={setTitle}
+      />
+
+      <Label>До какого уровня</Label>
+      {/* Те же формулировки, что на экране проверки уровня: человек читает их
+          как свои намерения, а не как ступени таксономии. */}
+      <View style={{ gap: space.sm }}>
+        {MASTERY_TARGETS.map((t) => {
+          const active = target === t.bloom;
+          return (
+            <Pressable
+              key={t.bloom}
+              onPress={() => setTarget(t.bloom)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: active }}
+              style={{
+                paddingVertical: space.md,
+                paddingHorizontal: space.md,
+                borderRadius: radius.sm,
+                backgroundColor: active ? colors.accent : colors.surfaceAlt,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: font.body,
+                  fontWeight: active ? '600' : '400',
+                  color: active ? colors.onAccent : colors.muted,
+                }}
+              >
+                {t.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {error && <Note tone="danger">{error}</Note>}
+
+      <Button label="Начать" onPress={finish} busy={busy} disabled={!ready} />
+    </Screen>
   );
 }
-
-const makeStyles = (c: Palette) =>
-  StyleSheet.create({
-    safe: { flex: 1, justifyContent: 'center' },
-    form: { padding: 24, gap: 10 },
-    h1: { fontSize: 26, fontWeight: '700', color: c.ink },
-    sub: { fontSize: 14, color: c.muted, marginBottom: 8 },
-    label: { fontSize: 13, color: c.muted, marginTop: 6 },
-    input: {
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: c.line,
-      borderRadius: 10,
-      padding: 12,
-      fontSize: 16,
-      color: c.ink,
-      backgroundColor: c.surface,
-    },
-    btn: {
-      backgroundColor: c.accent,
-      borderRadius: 10,
-      padding: 14,
-      alignItems: 'center',
-      marginTop: 12,
-    },
-    btnText: { color: c.onAccent, fontSize: 16, fontWeight: '600' },
-  });
