@@ -8,8 +8,9 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
+  type TextInputProps,
   View,
-  type StyleProp,
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
@@ -48,8 +49,7 @@ export function Card({
   tone?: 'plain' | 'accent' | 'core';
 }) {
   const { colors } = useTheme();
-  const border =
-    tone === 'accent' ? colors.accent : tone === 'core' ? colors.core : colors.line;
+  const border = tone === 'accent' ? colors.accent : tone === 'core' ? colors.core : colors.line;
   const style: ViewStyle = {
     backgroundColor: colors.surface,
     borderColor: border,
@@ -113,11 +113,13 @@ export function Button({
 
 // ---- типографика ----
 
-function useText(size: number, weight: TextStyle['fontWeight'], color: keyof typeof KEYS) {
+function useText(size: number, weight: TextStyle['fontWeight'], color: ToneKey) {
   const { colors } = useTheme();
   return { fontSize: size, fontWeight: weight, color: colors[color], lineHeight: size * 1.4 };
 }
-const KEYS = { ink: 0, muted: 0, accent: 0, ok: 0, warn: 0, danger: 0, core: 0 } as const;
+/** Ключи палитры, доступные тексту. Раньше это был объект-пустышка ради
+ *  `keyof typeof`; тип выражает то же самое и не создаёт значения. */
+type ToneKey = 'ink' | 'muted' | 'accent' | 'ok' | 'warn' | 'danger' | 'core';
 
 export const Display = ({ children }: { children: ReactNode }) => (
   <Text style={useText(font.display, '700', 'ink')}>{children}</Text>
@@ -167,9 +169,39 @@ export function Label({ children }: { children: ReactNode }) {
   );
 }
 
+/** Поле ввода. Экраны не объявляют рамку и цвета сами: инлайн-копии этих
+ *  стилей уже разъезжались между экранами при правке темы. */
+export function Field({ invalid, style, ...rest }: TextInputProps & { invalid?: boolean }) {
+  const { colors } = useTheme();
+  return (
+    <TextInput
+      placeholderTextColor={colors.muted}
+      style={[
+        {
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: invalid ? colors.danger : colors.line,
+          backgroundColor: colors.surface,
+          color: colors.ink,
+          borderRadius: radius.sm,
+          padding: space.md,
+          fontSize: font.body,
+        },
+        style,
+      ]}
+      {...rest}
+    />
+  );
+}
+
 // ---- составные ----
 
-export function Pill({ text, tone = 'muted' }: { text: string; tone?: 'muted' | 'accent' | 'core' }) {
+export function Pill({
+  text,
+  tone = 'muted',
+}: {
+  text: string;
+  tone?: 'muted' | 'accent' | 'core';
+}) {
   const { colors } = useTheme();
   const fg = tone === 'accent' ? colors.accent : tone === 'core' ? colors.core : colors.muted;
   return (

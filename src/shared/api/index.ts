@@ -3,7 +3,16 @@ export { SqliteLocalStore, createSqliteLocalStore } from './db/sqlite-local-stor
 export { api, ApiError, NetworkError } from './http';
 export { getToken, setToken, clearToken } from './token';
 export { getThemeMode, setThemeMode, type ThemeMode } from './preferences';
-export { register, login, logout, fetchMe, updateProfile, type AuthUser } from './auth-api';
+export {
+  register,
+  login,
+  logout,
+  fetchMe,
+  updateProfile,
+  requestPasswordReset,
+  confirmPasswordReset,
+  type AuthUser,
+} from './auth-api';
 export { createSyncClient } from './sync-client';
 export { createJobQueue } from './job-queue';
 export { getLocalStore } from './local-store';
