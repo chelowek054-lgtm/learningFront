@@ -74,9 +74,7 @@ export function CourseScreen({ domain = 'ml' }: { domain?: string }) {
             activity={toActivity(activity, user?.id ?? '')}
             onComplete={() => (last ? back() : setIndex(index + 1))}
           />
-          {!last && (
-            <Button label="Дальше" variant="quiet" onPress={() => setIndex(index + 1)} />
-          )}
+          {!last && <Button label="Дальше" variant="quiet" onPress={() => setIndex(index + 1)} />}
         </ScrollView>
       </SafeAreaView>
     );

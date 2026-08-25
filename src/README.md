@@ -4,14 +4,14 @@
 
 ## Слои (импорт строго вниз)
 
-| Слой | Роль |
-|---|---|
-| `app/` | Инициализация, провайдеры, роуты expo-router, **регистрация модулей** (`app/modules/*`) |
-| `pages/` | Экраны |
-| `widgets/` | Составные блоки (`ActivityDispatcher`, `TodayQueue`) |
-| `features/` | Взаимодействия по типам Activity (`vocab-review`, `ielts-writing`, …) |
-| `entities/` | Бизнес-сущности (`activity`, `srs-card`, `response`, `module`) |
-| `shared/` | Переиспользуемое: **`engine/`** (доменно-независимое ядро), `ui`, `api`, `config`, `lib` |
+| Слой        | Роль                                                                                     |
+| ----------- | ---------------------------------------------------------------------------------------- |
+| `app/`      | Инициализация, провайдеры, роуты expo-router, **регистрация модулей** (`app/modules/*`)  |
+| `pages/`    | Экраны                                                                                   |
+| `widgets/`  | Составные блоки (`ActivityDispatcher`, `TodayQueue`)                                     |
+| `features/` | Взаимодействия по типам Activity (`vocab-review`, `ielts-writing`, …)                    |
+| `entities/` | Бизнес-сущности (`activity`, `srs-card`, `response`, `module`)                           |
+| `shared/`   | Переиспользуемое: **`engine/`** (доменно-независимое ядро), `ui`, `api`, `config`, `lib` |
 
 ## Ядро (`shared/engine`)
 

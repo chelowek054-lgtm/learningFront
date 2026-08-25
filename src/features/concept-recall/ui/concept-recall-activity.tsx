@@ -5,7 +5,7 @@ import { useSession } from '@/entities/session';
 import type { ActivityRendererProps, Grade } from '@/shared/engine';
 import { getLocalStore, submitForGrading, syncNow } from '@/shared/api';
 import { useIsOnline } from '@/shared/lib';
-import { GradeView , useTheme, type Palette } from '@/shared/ui';
+import { GradeView, useTheme, type Palette } from '@/shared/ui';
 
 type Phase = 'edit' | 'submitting' | 'graded' | 'queued';
 
@@ -79,17 +79,20 @@ export function ConceptRecallActivity({ activity }: ActivityRendererProps) {
 
 const makeStyles = (c: Palette) =>
   StyleSheet.create({
-  box: { gap: 10 },
-  prompt: { fontSize: 15, fontWeight: '500', color: c.ink },
-  input: {
-    minHeight: 100,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.line,
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 15,
-    textAlignVertical: 'top', color: c.ink, backgroundColor: c.surface },
-  btn: { backgroundColor: c.accent, borderRadius: 10, padding: 14, alignItems: 'center' },
-  btnText: { color: c.onAccent, fontSize: 16, fontWeight: '600' },
-  queued: { fontSize: 13, color: c.warn },
+    box: { gap: 10 },
+    prompt: { fontSize: 15, fontWeight: '500', color: c.ink },
+    input: {
+      minHeight: 100,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.line,
+      borderRadius: 10,
+      padding: 12,
+      fontSize: 15,
+      textAlignVertical: 'top',
+      color: c.ink,
+      backgroundColor: c.surface,
+    },
+    btn: { backgroundColor: c.accent, borderRadius: 10, padding: 14, alignItems: 'center' },
+    btnText: { color: c.onAccent, fontSize: 16, fontWeight: '600' },
+    queued: { fontSize: 13, color: c.warn },
   });

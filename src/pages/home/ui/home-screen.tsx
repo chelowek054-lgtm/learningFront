@@ -96,7 +96,10 @@ export function HomeScreen({
       </View>
 
       {/* Повторение — ежедневная привычка, поэтому первым и с числом. */}
-      <Card tone={dueCount > 0 ? 'accent' : 'plain'} onPress={dueCount > 0 ? onOpenReview : undefined}>
+      <Card
+        tone={dueCount > 0 ? 'accent' : 'plain'}
+        onPress={dueCount > 0 ? onOpenReview : undefined}
+      >
         <Label>Повторение</Label>
         <Display>{dueCount}</Display>
         <Muted>
@@ -109,7 +112,10 @@ export function HomeScreen({
           <Label>Текущий шаг курса</Label>
           <Body>{step.title}</Body>
           <View style={{ flexDirection: 'row', gap: space.sm }}>
-            <Pill text={step.tier === 'core' ? 'ядро' : 'ветвь'} tone={step.tier === 'core' ? 'core' : 'muted'} />
+            <Pill
+              text={step.tier === 'core' ? 'ядро' : 'ветвь'}
+              tone={step.tier === 'core' ? 'core' : 'muted'}
+            />
             <Pill text={step.bloom} />
           </View>
           <Progress value={course ? course.completed / Math.max(1, course.total) : 0} />

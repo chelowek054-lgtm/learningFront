@@ -58,23 +58,26 @@ export function OnboardingScreen() {
 
 const makeStyles = (c: Palette) =>
   StyleSheet.create({
-  safe: { flex: 1, justifyContent: 'center' },
-  form: { padding: 24, gap: 10 },
-  h1: { fontSize: 26, fontWeight: '700', color: c.ink },
-  sub: { fontSize: 14, color: c.muted, marginBottom: 8 },
-  label: { fontSize: 13, color: c.muted, marginTop: 6 },
-  input: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.line,
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16, color: c.ink, backgroundColor: c.surface },
-  btn: {
-    backgroundColor: c.accent,
-    borderRadius: 10,
-    padding: 14,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  btnText: { color: c.onAccent, fontSize: 16, fontWeight: '600' },
+    safe: { flex: 1, justifyContent: 'center' },
+    form: { padding: 24, gap: 10 },
+    h1: { fontSize: 26, fontWeight: '700', color: c.ink },
+    sub: { fontSize: 14, color: c.muted, marginBottom: 8 },
+    label: { fontSize: 13, color: c.muted, marginTop: 6 },
+    input: {
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.line,
+      borderRadius: 10,
+      padding: 12,
+      fontSize: 16,
+      color: c.ink,
+      backgroundColor: c.surface,
+    },
+    btn: {
+      backgroundColor: c.accent,
+      borderRadius: 10,
+      padding: 14,
+      alignItems: 'center',
+      marginTop: 12,
+    },
+    btnText: { color: c.onAccent, fontSize: 16, fontWeight: '600' },
   });

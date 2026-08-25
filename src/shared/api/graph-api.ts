@@ -122,8 +122,7 @@ export interface MasteryMap {
 export type StopCode = 'empty' | 'no_theory' | 'settled';
 
 export type ProbeResult =
-  | (Probe & { done?: false })
-  | { done: true; reason: string; code: StopCode; map: MasteryMap };
+  (Probe & { done?: false }) | { done: true; reason: string; code: StopCode; map: MasteryMap };
 
 export interface AnswerResult {
   score: number;

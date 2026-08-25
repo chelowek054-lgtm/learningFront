@@ -10,8 +10,12 @@ export class SqliteLocalStore implements LocalStore {
   private readonly srsCards = new Map<string, SrsCardRecord>();
   private readonly jobs = new Map<string, JobRecord>();
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  constructor(_dbName = 'praxis.db') {}
+  // Имя базы в вебе не нужно — данные в памяти. Аргумент принимается ради
+  // совпадения сигнатуры с нативной реализацией: createSqliteLocalStore
+  // общий, и вызов new SqliteLocalStore(dbName) должен типизироваться.
+  constructor(dbName = 'praxis.db') {
+    void dbName;
+  }
 
   /** No-op: схема в памяти не нужна. */
   migrate(): void {}

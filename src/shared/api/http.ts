@@ -15,7 +15,10 @@ export class ApiError extends Error {
 
 /** Сеть недоступна: до backend не дошли (нет связи, неверный BASE_URL, CORS). */
 export class NetworkError extends Error {
-  constructor(public url: string, cause: unknown) {
+  constructor(
+    public url: string,
+    cause: unknown,
+  ) {
     super(`Нет связи с сервером (${url})`);
     this.name = 'NetworkError';
     this.cause = cause;

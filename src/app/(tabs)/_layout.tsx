@@ -41,10 +41,7 @@ function TabBar() {
             onPress={() => router.navigate(tab.path)}
           >
             <View
-              style={[
-                styles.mark,
-                { backgroundColor: active ? colors.accent : 'transparent' },
-              ]}
+              style={[styles.mark, { backgroundColor: active ? colors.accent : 'transparent' }]}
             />
             <Text
               style={{

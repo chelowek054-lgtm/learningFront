@@ -17,7 +17,7 @@ export function MaterialReadActivity({ activity }: ActivityRendererProps) {
 
 const makeStyles = (c: Palette) =>
   StyleSheet.create({
-  box: { gap: 8 },
-  title: { fontSize: 17, fontWeight: '700', color: c.ink },
-  text: { fontSize: 15, lineHeight: 22, color: c.ink },
+    box: { gap: 8 },
+    title: { fontSize: 17, fontWeight: '700', color: c.ink },
+    text: { fontSize: 15, lineHeight: 22, color: c.ink },
   });

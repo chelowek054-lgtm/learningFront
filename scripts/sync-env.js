@@ -39,7 +39,9 @@ const picked = fs
   .map((m) => `${m[1]}=${m[2].trim()}`);
 
 if (picked.length === 0) {
-  console.warn(`[sync-env] в ../.env нет ни одной переменной ${PREFIX}* — клиент возьмёт значения по умолчанию.`);
+  console.warn(
+    `[sync-env] в ../.env нет ни одной переменной ${PREFIX}* — клиент возьмёт значения по умолчанию.`,
+  );
 }
 
 const next = `${HEADER}${picked.join('\n')}\n`;

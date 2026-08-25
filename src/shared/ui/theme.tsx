@@ -3,7 +3,15 @@
 //
 // Три режима, а не два: `system` следует за устройством, `light`/`dark` — явный
 // выбор пользователя, который переживает перезапуск.
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { useColorScheme } from 'react-native';
 import { getThemeMode, setThemeMode, type ThemeMode } from '@/shared/api';
 import {
