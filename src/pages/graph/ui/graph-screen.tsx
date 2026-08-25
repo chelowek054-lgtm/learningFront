@@ -22,7 +22,7 @@ export function GraphScreen() {
       ) : isAdmin ? (
         <GraphCuration domain={subject.id} />
       ) : (
-        <GraphMap domain={subject.id} />
+        <GraphMap domain={subject.id} subjectTitle={subject.title} />
       )}
     </SafeAreaView>
   );

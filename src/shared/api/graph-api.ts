@@ -18,6 +18,11 @@ export interface GraphNode {
   mastery: Record<string, unknown>;
   status: string;
   origin: string;
+  /**
+   * Статус модерации канона: `draft` — построено LLM и куратор ещё не смотрел,
+   * `approved` — вычитано. Отдельно от `status` выше: тот про персональный слой.
+   */
+  reviewStatus?: string;
 }
 
 export interface GraphEdge {
@@ -52,6 +57,7 @@ const seg = (v: string) => encodeURIComponent(v);
 
 export const getGraph = (domain: string) => api<Graph>(`/graph/${seg(domain)}`);
 
+/** Пустую область заводит любой пользователь; достройку существующей — только админ. */
 export const buildCanon = (domain: string, topic: string) =>
   api<Graph>('/graph/canon/build', { method: 'POST', body: JSON.stringify({ domain, topic }) });
 

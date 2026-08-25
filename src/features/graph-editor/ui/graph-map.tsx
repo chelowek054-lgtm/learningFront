@@ -7,8 +7,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
-import { getGraph, type Graph, type GraphNode } from '@/shared/api';
-import { Body, Card, Empty, Label, Lead, Muted, Pill, Screen, space, TopBar } from '@/shared/ui';
+import { buildCanon, getGraph, type Graph, type GraphNode } from '@/shared/api';
+import {
+  Body,
+  Button,
+  Card,
+  Empty,
+  Field,
+  Label,
+  Lead,
+  Muted,
+  Note,
+  Pill,
+  Screen,
+  space,
+  TopBar,
+} from '@/shared/ui';
 
 const EDGE_LABEL: Record<string, string> = {
   prereq: 'нужно раньше',
@@ -16,10 +30,13 @@ const EDGE_LABEL: Record<string, string> = {
   related: 'рядом',
 };
 
-export function GraphMap({ domain }: { domain: string }) {
+export function GraphMap({ domain, subjectTitle }: { domain: string; subjectTitle: string }) {
   const [graph, setGraph] = useState<Graph | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const [topic, setTopic] = useState(subjectTitle);
+  const [building, setBuilding] = useState(false);
+  const [buildError, setBuildError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -51,9 +68,37 @@ export function GraphMap({ domain }: { domain: string }) {
   if (failed) return <Empty text="Не удалось загрузить карту. Потяните вниз позже." />;
   if (!graph) return <ActivityIndicator style={{ marginTop: space.xxl }} />;
 
+  // Пустая область — не тупик: предмет выбрал человек, ему же и заводить.
+  // Пока это было закрыто админом, «появится, как только будет готова» не
+  // сбывалось никогда — строить было некому.
   if (nodes.length === 0) {
+    async function build() {
+      setBuilding(true);
+      setBuildError(null);
+      try {
+        setGraph(await buildCanon(domain, topic.trim()));
+      } catch (e) {
+        setBuildError(`Не удалось построить карту: ${String(e).slice(0, 200)}`);
+      } finally {
+        setBuilding(false);
+      }
+    }
     return (
-      <Empty text="Карта этой области ещё не построена. Она появится здесь, как только будет готова." />
+      <Screen>
+        <Label>Карты пока нет</Label>
+        <Muted>
+          Соберём её из вашей темы: получится черновик, по которому дальше строится путь.
+        </Muted>
+        <Field placeholder="тема" value={topic} onChangeText={setTopic} />
+        {buildError && <Note tone="danger">{buildError}</Note>}
+        <Button
+          label="Построить карту"
+          onPress={() => void build()}
+          busy={building}
+          disabled={!topic.trim()}
+        />
+        {building && <Muted>Это занимает около минуты.</Muted>}
+      </Screen>
     );
   }
 
@@ -62,10 +107,13 @@ export function GraphMap({ domain }: { domain: string }) {
       <Screen>
         <TopBar title="Карта знаний" onBack={() => setSelectedId(null)} />
         <Lead>{selected.title}</Lead>
-        <Pill
-          text={selected.tier === 'core' ? 'Основа' : 'Ответвление'}
-          tone={selected.tier === 'core' ? 'core' : 'muted'}
-        />
+        <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
+          <Pill
+            text={selected.tier === 'core' ? 'Основа' : 'Ответвление'}
+            tone={selected.tier === 'core' ? 'core' : 'muted'}
+          />
+          {selected.reviewStatus === 'draft' && <Pill text="не проверено" />}
+        </View>
         <Body>{selected.content.summary ?? 'Пояснение пока не готово.'}</Body>
 
         <Label>Связи</Label>
