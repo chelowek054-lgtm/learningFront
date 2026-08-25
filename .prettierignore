@@ -1,10 +1,5 @@
-# Файлы шаблона Expo — форматируются своим стилем, мигрируют в FSD-слои постепенно.
-# По мере переноса в shared/ui, widgets и т.д. — удалять записи отсюда.
-src/components/
-src/constants/
-src/hooks/
+# Файл шаблона Expo, ещё не перенесённый в FSD-слои.
 src/global.css
-src/app/explore.tsx
 
 # Сборки/зависимости
 node_modules/
