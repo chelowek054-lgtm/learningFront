@@ -30,7 +30,7 @@ export function createSyncClient(): SyncClient {
       return {
         activities: r.activities,
         responses: r.responses,
-        doneJobs: r.jobs,
+        finishedJobs: r.jobs,
         srsCards: r.srsCards,
       };
     },

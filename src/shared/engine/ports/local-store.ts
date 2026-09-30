@@ -16,6 +16,8 @@ export interface SrsCardRecord {
   /** ISO-8601. */
   dueAt: string;
   createdAt: string;
+  /** Последнее изменение состояния (ISO-8601); по нему сервер решает LWW. */
+  updatedAt?: string;
 }
 
 export type JobStatus = 'pending' | 'running' | 'done' | 'failed';
@@ -51,6 +53,9 @@ export interface LocalStore {
   getSrsCard(id: string): Promise<SrsCardRecord | null>;
   listSrsCards(): Promise<SrsCardRecord[]>;
   listDueSrsCards(nowIso: string): Promise<SrsCardRecord[]>;
+  /** Карточки, изменённые локально и ещё не подтверждённые сервером. */
+  listUnsyncedSrsCards(): Promise<SrsCardRecord[]>;
+  markSrsCardSynced(id: string): Promise<void>;
 
   // jobs
   enqueueJob(job: JobRecord): Promise<void>;
