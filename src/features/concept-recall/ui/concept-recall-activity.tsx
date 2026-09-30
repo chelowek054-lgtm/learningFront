@@ -62,7 +62,7 @@ export function ConceptRecallActivity({ activity }: ActivityRendererProps) {
           />
           <Pressable style={styles.btn} onPress={submit} disabled={phase === 'submitting'}>
             {phase === 'submitting' ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.onAccent} />
             ) : (
               <Text style={styles.btnText}>Проверить</Text>
             )}
