@@ -77,6 +77,7 @@ export function ReviewScreen({ onDone }: { onDone?: () => void }) {
       ...card,
       fsrsState: serializeCard(next),
       dueAt: dueAt.toISOString(),
+      updatedAt: now.toISOString(),
     });
     setQueue((q) => q.slice(1));
     setRevealed(false);

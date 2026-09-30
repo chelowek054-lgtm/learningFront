@@ -114,7 +114,7 @@ export function GraphCuration({ domain }: { domain: string }) {
           disabled={busy || !topic.trim()}
         >
           {busy ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.onAccent} />
           ) : (
             <Text style={styles.btnText}>Построить граф</Text>
           )}

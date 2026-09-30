@@ -137,7 +137,11 @@ export function PlacementSession({ domain }: { domain: string }) {
         ))}
         {error && <Text style={styles.error}>{error}</Text>}
         <Pressable style={styles.btn} onPress={start} disabled={busy}>
-          {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Начать</Text>}
+          {busy ? (
+            <ActivityIndicator color={colors.onAccent} />
+          ) : (
+            <Text style={styles.btnText}>Начать</Text>
+          )}
         </Pressable>
       </ScrollView>
     );
@@ -173,7 +177,7 @@ export function PlacementSession({ domain }: { domain: string }) {
               disabled={busy || !answer.trim()}
             >
               {busy ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={colors.onAccent} />
               ) : (
                 <Text style={styles.btnText}>Ответить</Text>
               )}

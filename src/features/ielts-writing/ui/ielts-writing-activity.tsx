@@ -78,7 +78,7 @@ export function IeltsWritingActivity({ activity }: ActivityRendererProps) {
           <GradeView grade={draft} />
           <Pressable style={styles.btn} onPress={submit} disabled={phase === 'submitting'}>
             {phase === 'submitting' ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.onAccent} />
             ) : (
               <Text style={styles.btnText}>Отправить на оценку</Text>
             )}

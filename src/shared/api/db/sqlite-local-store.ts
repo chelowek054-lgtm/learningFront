@@ -38,7 +38,9 @@ CREATE TABLE IF NOT EXISTS srs_card (
   source TEXT NOT NULL,
   fsrs_state TEXT NOT NULL,
   due_at TEXT NOT NULL,
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  updated_at TEXT,
+  synced INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_srs_due ON srs_card(due_at);
 
@@ -90,6 +92,7 @@ interface SrsRow {
   fsrs_state: string;
   due_at: string;
   created_at: string;
+  updated_at: string | null;
 }
 
 interface JobRow {
@@ -140,6 +143,7 @@ function toSrsCard(r: SrsRow): SrsCardRecord {
     fsrsState: parse(r.fsrs_state),
     dueAt: r.due_at,
     createdAt: r.created_at,
+    updatedAt: r.updated_at ?? r.created_at,
   };
 }
 
@@ -168,6 +172,23 @@ export class SqliteLocalStore implements LocalStore {
   /** Применяет схему (идемпотентно). Вызывать при старте приложения. */
   migrate(): void {
     this.db.execSync(DDL);
+    this.addMissingColumns();
+  }
+
+  /**
+   * `CREATE TABLE IF NOT EXISTS` не эволюционирует существующую таблицу: у
+   * установок, созданных до `updated_at`/`synced`, колонок нет. Добавляем их;
+   * прежние карточки получают synced=0 и уйдут на сервер первым же sync.
+   */
+  private addMissingColumns(): void {
+    const cols = this.db
+      .getAllSync<{ name: string }>('PRAGMA table_info(srs_card)')
+      .map((c) => c.name);
+    if (!cols.includes('updated_at'))
+      this.db.execSync('ALTER TABLE srs_card ADD COLUMN updated_at TEXT');
+    if (!cols.includes('synced')) {
+      this.db.execSync('ALTER TABLE srs_card ADD COLUMN synced INTEGER NOT NULL DEFAULT 0');
+    }
   }
 
   // --- activity ---
@@ -246,8 +267,8 @@ export class SqliteLocalStore implements LocalStore {
   async upsertSrsCard(c: SrsCardRecord): Promise<void> {
     this.db.runSync(
       `INSERT OR REPLACE INTO srs_card
-        (id, user_id, module, front, back, source, fsrs_state, due_at, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (id, user_id, module, front, back, source, fsrs_state, due_at, created_at, updated_at, synced)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
       c.id,
       c.userId,
       c.module,
@@ -257,7 +278,16 @@ export class SqliteLocalStore implements LocalStore {
       json(c.fsrsState),
       c.dueAt,
       c.createdAt,
+      c.updatedAt ?? c.createdAt,
     );
+  }
+
+  async listUnsyncedSrsCards(): Promise<SrsCardRecord[]> {
+    return this.db.getAllSync<SrsRow>('SELECT * FROM srs_card WHERE synced = 0').map(toSrsCard);
+  }
+
+  async markSrsCardSynced(id: string): Promise<void> {
+    this.db.runSync('UPDATE srs_card SET synced = 1 WHERE id = ?', id);
   }
 
   async getSrsCard(id: string): Promise<SrsCardRecord | null> {

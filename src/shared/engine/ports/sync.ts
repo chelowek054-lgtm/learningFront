@@ -15,7 +15,7 @@ export interface SyncPullResult {
   activities: Activity[];
   responses: Response[];
   /** Завершённые на сервере jobs (результаты скоринга/генерации). */
-  doneJobs: JobRecord[];
+  finishedJobs: JobRecord[];
   /** Новые/обновлённые карточки (в т.ч. сгенерированные из error-log). */
   srsCards: SrsCardRecord[];
 }

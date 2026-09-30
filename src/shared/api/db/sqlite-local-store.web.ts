@@ -8,6 +8,7 @@ export class SqliteLocalStore implements LocalStore {
   private readonly activities = new Map<string, Activity>();
   private readonly responses = new Map<string, Response>();
   private readonly srsCards = new Map<string, SrsCardRecord>();
+  private readonly unsyncedCards = new Set<string>();
   private readonly jobs = new Map<string, JobRecord>();
 
   // Имя базы в вебе не нужно — данные в памяти. Аргумент принимается ради
@@ -61,7 +62,18 @@ export class SqliteLocalStore implements LocalStore {
 
   // --- srs ---
   async upsertSrsCard(c: SrsCardRecord): Promise<void> {
-    this.srsCards.set(c.id, c);
+    this.srsCards.set(c.id, { ...c, updatedAt: c.updatedAt ?? c.createdAt });
+    this.unsyncedCards.add(c.id);
+  }
+
+  async listUnsyncedSrsCards(): Promise<SrsCardRecord[]> {
+    return [...this.unsyncedCards]
+      .map((id) => this.srsCards.get(id))
+      .filter((c): c is SrsCardRecord => c !== undefined);
+  }
+
+  async markSrsCardSynced(id: string): Promise<void> {
+    this.unsyncedCards.delete(id);
   }
 
   async getSrsCard(id: string): Promise<SrsCardRecord | null> {
