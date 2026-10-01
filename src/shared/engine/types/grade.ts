@@ -27,4 +27,6 @@ export interface Grade {
   exemplar?: string;
   /** true = черновой локальный сигнал (офлайн-fallback), не полный скоринг. */
   gradedOfflineFallback?: boolean;
+  /** Оговорка рубрики об ограничениях оценки (напр. «код не запускался»). */
+  caveat?: string;
 }

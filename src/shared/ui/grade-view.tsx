@@ -8,6 +8,7 @@ export function GradeView({ grade }: { grade: Grade }) {
   return (
     <View style={{ gap: space.sm, marginTop: space.sm }}>
       {grade.gradedOfflineFallback && <Note tone="warn">черновая оценка (офлайн)</Note>}
+      {!!grade.caveat && <Note tone="warn">{grade.caveat}</Note>}
       {grade.overall !== undefined && <Lead>Overall: {grade.overall}</Lead>}
 
       {grade.criteria.map((c) => (
