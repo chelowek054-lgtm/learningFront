@@ -20,6 +20,7 @@ import {
   buildCanon,
   expandNode,
   getGraph,
+  getNode,
   overrideNode,
   patchUserNode,
   type Graph,
@@ -84,7 +85,10 @@ export function GraphCuration({ domain }: { domain: string }) {
 
   async function saveSummary() {
     if (!selected || editSummary === null) return;
-    const content = { ...selected.content, summary: editSummary };
+    // Список графа облегчён: целиком сохранять можно только полный узел,
+    // иначе правка summary затёрла бы разделы теории.
+    const full = selected.light ? await getNode(selected.id) : selected;
+    const content = { ...full.content, summary: editSummary };
     await run(() =>
       selected.kind === 'personal' && selected.userConceptId
         ? patchUserNode(selected.userConceptId, { content })

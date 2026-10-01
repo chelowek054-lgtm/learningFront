@@ -42,6 +42,7 @@ export {
   type MasteryMap,
   type MasteryNode,
   getGraph,
+  getNode,
   buildCanon,
   recomputeCentrality,
   approveNode,
