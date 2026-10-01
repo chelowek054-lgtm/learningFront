@@ -9,6 +9,8 @@ describe('Метаданные модулей', () => {
     const types = languagesActivityTypes.map((t) => t.type);
     expect(types).toContain('ielts_writing_task2');
     expect(types).toContain('vocab_srs');
+    expect(types).toContain('toefl_writing_independent');
+    expect(types).toContain('toefl_writing_integrated');
   });
 
   it('ml объявляет ожидаемые типы Activity', () => {
