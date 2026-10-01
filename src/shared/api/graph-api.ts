@@ -230,10 +230,15 @@ export interface StepResult {
 }
 
 export const startStep = (domain: string, conceptId: string) =>
-  api<{ conceptId: string; activities: StepActivity[] }>(
-    `/graph/course/${seg(domain)}/step/${seg(conceptId)}/start`,
-    { method: 'POST', body: JSON.stringify({}) },
-  );
+  api<{
+    conceptId: string;
+    activities: StepActivity[];
+    /** Карточки, на повторение которых ведёт шаг (A-0016): не Activity, а очередь. */
+    reviewCards: string[];
+  }>(`/graph/course/${seg(domain)}/step/${seg(conceptId)}/start`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
 
 export const answerStep = (
   domain: string,

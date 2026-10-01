@@ -1,12 +1,13 @@
 // Экран курса. Страница — единственный слой, который может свести вместе фичу
 // (план курса) и виджет-диспетчер (исполнение активностей); FSD запрещает
 // фиче импортировать widgets.
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSession } from '@/entities/session';
 import { CoursePath } from '@/features/course';
-import { startStep, type StepActivity } from '@/shared/api';
+import { getLocalStore, startStep, syncNow, type StepActivity } from '@/shared/api';
 import type { Activity } from '@/shared/engine';
 import { useModuleRegistry } from '@/shared/lib';
 import { Button, Empty, Label, Note, space, TopBar, useTheme } from '@/shared/ui';
@@ -33,7 +34,9 @@ export function CourseScreen() {
   const registry = useModuleRegistry();
   const domain = subject?.id ?? '';
   const { colors } = useTheme();
+  const router = useRouter();
   const [running, setRunning] = useState<StepActivity[] | null>(null);
+  const [reviewCards, setReviewCards] = useState<string[]>([]);
   const [index, setIndex] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +46,14 @@ export function CourseScreen() {
     setError(null);
     try {
       const started = await startStep(domain, conceptId);
+      const cards = started.reviewCards ?? [];
+      if (started.activities.length === 0) {
+        // В шаге нет активностей, только повторение — сразу к карточкам.
+        await goReview(cards);
+        return;
+      }
       setRunning(started.activities);
+      setReviewCards(cards);
       setIndex(0);
     } catch (e) {
       setError(String(e));
@@ -55,6 +65,25 @@ export function CourseScreen() {
   function back() {
     setRunning(null);
     setIndex(0);
+  }
+
+  // Конец шага ведёт на повторение его карточек (A-0016). Карточка заведена
+  // на сервере, поэтому сначала подтягиваем её в локальное хранилище; без сети
+  // повторение откроется с тем, что уже есть.
+  async function goReview(cards: string[]) {
+    if (cards.length === 0) return;
+    try {
+      await syncNow(getLocalStore());
+    } catch {
+      // офлайн: повторение пойдёт по локальным карточкам
+    }
+    router.push({ pathname: '/review', params: { cards: cards.join(',') } });
+  }
+
+  function finish() {
+    const cards = reviewCards;
+    back();
+    void goReview(cards);
   }
 
   // Без предмета строить нечего: домен пустой, и запрос ушёл бы в /graph/course/.
@@ -85,7 +114,7 @@ export function CourseScreen() {
               user?.id ?? '',
               registry.getModuleIdForType(activity.type) ?? '',
             )}
-            onComplete={() => (last ? back() : setIndex(index + 1))}
+            onComplete={() => (last ? finish() : setIndex(index + 1))}
           />
           {!last && <Button label="Дальше" variant="quiet" onPress={() => setIndex(index + 1)} />}
         </ScrollView>
