@@ -61,4 +61,8 @@ export interface LocalStore {
   enqueueJob(job: JobRecord): Promise<void>;
   listPendingJobs(): Promise<JobRecord[]>;
   updateJob(id: string, patch: Partial<JobRecord>): Promise<void>;
+
+  // состояние синхронизации (курсор pull, момент последнего push)
+  getSyncState(key: string): Promise<string | null>;
+  setSyncState(key: string, value: string): Promise<void>;
 }

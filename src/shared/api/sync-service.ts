@@ -1,14 +1,53 @@
 // Оркестрация синхронизации (WS8): push локальных изменений + pull и применение.
 // Карточки применяются insert-only, чтобы pull не затирал локальный прогресс FSRS;
 // прогресс, наоборот, уходит наверх (FR-SYNC-08): сервер решает по updatedAt (LWW).
+//
+// Инкрементальность (T-0048): между запусками хранится состояние
+// { userId, cursor, pushedAt }. Pull просит у сервера только изменения новее
+// cursor, push отправляет активности, созданные после прошлого успешного push.
+// Состояние привязано к аккаунту: локальная база при смене пользователя не
+// очищается, и чужой курсор скрыл бы от нового пользователя его историю.
 import type { LocalStore } from '@/shared/engine';
+import { getCurrentUserId } from './current-user';
 import { createSyncClient } from './sync-client';
+
+const STATE_KEY = 'sync';
+/** Запас на расхождение часов устройства и на активность, созданную во время sync. */
+const PUSH_SLACK_MS = 10_000;
+
+interface SyncState {
+  userId: string;
+  cursor?: string;
+  pushedAt?: string;
+}
+
+async function loadState(store: LocalStore, userId: string | null): Promise<SyncState | null> {
+  if (!userId) return null;
+  const raw = await store.getSyncState(STATE_KEY);
+  if (!raw) return null;
+  try {
+    const state = JSON.parse(raw) as SyncState;
+    return state.userId === userId ? state : null;
+  } catch {
+    return null;
+  }
+}
 
 export async function syncNow(store: LocalStore): Promise<void> {
   const client = createSyncClient();
+  const userId = await getCurrentUserId();
+  const previous = await loadState(store, userId);
+  const startedAt = new Date().toISOString();
 
   // 1. PUSH локальных изменений.
-  const activities = await store.listActivities();
+  // Активности меняются редко и приходят в основном с сервера, поэтому шлём
+  // только созданные после прошлого push; ответы и карточки уже фильтруются флагом synced.
+  const pushedFrom = previous?.pushedAt
+    ? new Date(Date.parse(previous.pushedAt) - PUSH_SLACK_MS).toISOString()
+    : null;
+  const activities = (await store.listActivities()).filter(
+    (a) => pushedFrom === null || a.createdAt >= pushedFrom,
+  );
   const responses = await store.listUnsyncedResponses();
   const jobs = await store.listPendingJobs();
   const srsCards = await store.listUnsyncedSrsCards();
@@ -25,7 +64,7 @@ export async function syncNow(store: LocalStore): Promise<void> {
   }
 
   // 2. PULL и применение.
-  const pull = await client.pull();
+  const pull = await client.pull(previous?.cursor);
   for (const a of pull.activities) await store.upsertActivity(a);
   for (const r of pull.responses) await store.appendResponse({ ...r, synced: true });
 
@@ -41,5 +80,12 @@ export async function syncNow(store: LocalStore): Promise<void> {
   // Завершённые на сервере jobs: done или failed (с причиной в result).
   for (const j of pull.finishedJobs) {
     await store.updateJob(j.id, { status: j.status, result: j.result ?? null });
+  }
+
+  // Состояние сохраняется последним: оборвавшийся на середине sync повторится с
+  // прежним курсором, а не потеряет изменения.
+  if (userId && pull.cursor && (!pull.userId || pull.userId === userId)) {
+    const next: SyncState = { userId, cursor: pull.cursor, pushedAt: startedAt };
+    await store.setSyncState(STATE_KEY, JSON.stringify(next));
   }
 }

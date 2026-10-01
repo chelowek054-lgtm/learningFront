@@ -18,6 +18,10 @@ export interface SyncPullResult {
   finishedJobs: JobRecord[];
   /** Новые/обновлённые карточки (в т.ч. сгенерированные из error-log). */
   srsCards: SrsCardRecord[];
+  /** Чей это ответ. Без него клиент не узнает, что локальный курсор от другого аккаунта. */
+  userId?: string;
+  /** Курсор для следующего pull (серверное время); отдаётся как `since`. */
+  cursor?: string;
 }
 
 export interface SyncClient {

@@ -10,6 +10,7 @@ export class SqliteLocalStore implements LocalStore {
   private readonly srsCards = new Map<string, SrsCardRecord>();
   private readonly unsyncedCards = new Set<string>();
   private readonly jobs = new Map<string, JobRecord>();
+  private readonly syncState = new Map<string, string>();
 
   // Имя базы в вебе не нужно — данные в памяти. Аргумент принимается ради
   // совпадения сигнатуры с нативной реализацией: createSqliteLocalStore
@@ -97,6 +98,14 @@ export class SqliteLocalStore implements LocalStore {
 
   async listPendingJobs(): Promise<JobRecord[]> {
     return [...this.jobs.values()].filter((j) => j.status === 'pending');
+  }
+
+  async getSyncState(key: string): Promise<string | null> {
+    return this.syncState.get(key) ?? null;
+  }
+
+  async setSyncState(key: string, value: string): Promise<void> {
+    this.syncState.set(key, value);
   }
 
   async updateJob(id: string, patch: Partial<JobRecord>): Promise<void> {

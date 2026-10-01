@@ -56,6 +56,11 @@ CREATE TABLE IF NOT EXISTS job (
   updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_job_status ON job(status);
+
+CREATE TABLE IF NOT EXISTS sync_state (
+  key TEXT PRIMARY KEY NOT NULL,
+  value TEXT NOT NULL
+);
 `;
 
 const json = (v: unknown): string => JSON.stringify(v);
@@ -329,6 +334,18 @@ export class SqliteLocalStore implements LocalStore {
   async listPendingJobs(): Promise<JobRecord[]> {
     const rows = this.db.getAllSync<JobRow>("SELECT * FROM job WHERE status = 'pending'");
     return rows.map(toJob);
+  }
+
+  async getSyncState(key: string): Promise<string | null> {
+    const row = this.db.getFirstSync<{ value: string }>(
+      'SELECT value FROM sync_state WHERE key = ?',
+      key,
+    );
+    return row ? row.value : null;
+  }
+
+  async setSyncState(key: string, value: string): Promise<void> {
+    this.db.runSync('INSERT OR REPLACE INTO sync_state (key, value) VALUES (?, ?)', key, value);
   }
 
   async updateJob(id: string, patch: Partial<JobRecord>): Promise<void> {
