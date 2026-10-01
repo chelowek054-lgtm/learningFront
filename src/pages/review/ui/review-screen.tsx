@@ -49,7 +49,14 @@ function backText(c: SrsCardRecord): string {
   );
 }
 
-export function ReviewScreen({ onDone }: { onDone?: () => void }) {
+export function ReviewScreen({
+  onDone,
+  cardIds,
+}: {
+  onDone?: () => void;
+  /** Повторить только эти карточки (шаг курса); без списка — вся очередь. */
+  cardIds?: string[];
+}) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const scheduler = useMemo(() => createScheduler(), []);
@@ -59,10 +66,11 @@ export function ReviewScreen({ onDone }: { onDone?: () => void }) {
 
   const load = useCallback(async () => {
     const store = getLocalStore();
-    setQueue(await store.listDueSrsCards(new Date().toISOString()));
+    const due = await store.listDueSrsCards(new Date().toISOString());
+    setQueue(cardIds ? due.filter((c) => cardIds.includes(c.id)) : due);
     setRevealed(false);
     setLoading(false);
-  }, []);
+  }, [cardIds]);
 
   useEffect(() => {
     void load();

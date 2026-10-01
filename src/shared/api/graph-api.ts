@@ -8,6 +8,8 @@ export interface GraphNode {
   id: string;
   kind: NodeKind;
   userConceptId: string | null;
+  /** Устойчивый ключ канон-узла; у личных узлов и непересобранных его нет. */
+  key?: string | null;
   title: string;
   tier: NodeTier;
   centrality: number;
@@ -23,6 +25,11 @@ export interface GraphNode {
    * `approved` — вычитано. Отдельно от `status` выше: тот про персональный слой.
    */
   reviewStatus?: string;
+  /**
+   * `true` — узел из облегчённого списка: в `content` только `summary`, полной
+   * теории нет. Такой `content` нельзя сохранять целиком — сначала `getNode`.
+   */
+  light?: boolean;
 }
 
 export interface GraphEdge {
@@ -56,6 +63,9 @@ export interface CentralityRow {
 const seg = (v: string) => encodeURIComponent(v);
 
 export const getGraph = (domain: string) => api<Graph>(`/graph/${seg(domain)}`);
+
+/** Полный узел с теорией (список графа отдаёт облегчённые). */
+export const getNode = (id: string) => api<GraphNode>(`/graph/nodes/${seg(id)}`);
 
 /** Пустую область заводит любой пользователь; достройку существующей — только админ. */
 export const buildCanon = (domain: string, topic: string) =>
@@ -220,10 +230,15 @@ export interface StepResult {
 }
 
 export const startStep = (domain: string, conceptId: string) =>
-  api<{ conceptId: string; activities: StepActivity[] }>(
-    `/graph/course/${seg(domain)}/step/${seg(conceptId)}/start`,
-    { method: 'POST', body: JSON.stringify({}) },
-  );
+  api<{
+    conceptId: string;
+    activities: StepActivity[];
+    /** Карточки, на повторение которых ведёт шаг (A-0016): не Activity, а очередь. */
+    reviewCards: string[];
+  }>(`/graph/course/${seg(domain)}/step/${seg(conceptId)}/start`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
 
 export const answerStep = (
   domain: string,
