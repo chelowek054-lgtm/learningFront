@@ -1,4 +1,4 @@
-// Рендерер Activity `ielts_writing_task2` (WS5): эссе → офлайн-сигнал → скоринг.
+// Рендерер письменных Activity — IELTS Task 2 и TOEFL (WS5, T-0018): эссе → офлайн-сигнал → скоринг.
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSession } from '@/entities/session';
@@ -7,6 +7,7 @@ import { getLocalStore, submitForGrading, syncNow } from '@/shared/api';
 import { useIsOnline } from '@/shared/lib';
 import { GradeView, useTheme, type Palette } from '@/shared/ui';
 import { ieltsWritingLocalGrader } from '../lib/local-grader';
+import { hasLocalDraftSignal, writingRubricId } from '../lib/rubric';
 
 type Phase = 'edit' | 'submitting' | 'graded' | 'queued';
 
@@ -43,7 +44,7 @@ export function IeltsWritingActivity({ activity }: ActivityRendererProps) {
       userId: user.id,
       answer: essay,
       jobType: 'grade_writing',
-      rubricId: 'ielts_writing_task2',
+      rubricId: writingRubricId(activity.type),
     });
     if (online) {
       try {
@@ -75,7 +76,7 @@ export function IeltsWritingActivity({ activity }: ActivityRendererProps) {
             onChangeText={setEssay}
             editable={phase === 'edit'}
           />
-          <GradeView grade={draft} />
+          {hasLocalDraftSignal(activity.type) && <GradeView grade={draft} />}
           <Pressable style={styles.btn} onPress={submit} disabled={phase === 'submitting'}>
             {phase === 'submitting' ? (
               <ActivityIndicator color={colors.onAccent} />
@@ -91,7 +92,7 @@ export function IeltsWritingActivity({ activity }: ActivityRendererProps) {
 
       {phase === 'graded' && grade && (
         <View>
-          <Text style={styles.done}>Оценка по рубрике IELTS:</Text>
+          <Text style={styles.done}>Оценка по рубрике:</Text>
           <GradeView grade={grade} />
         </View>
       )}

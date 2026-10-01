@@ -15,6 +15,22 @@ export const languagesActivityTypes: ActivityTypeDef[] = [
     producesErrorLog: true,
   },
   {
+    type: 'toefl_writing_independent',
+    title: 'Эссе TOEFL (Independent)',
+    hint: 'Обосновать позицию и получить оценку по шкале 0–5',
+    connectivity: 'online',
+    payloadSchema: {},
+    producesErrorLog: true,
+  },
+  {
+    type: 'toefl_writing_integrated',
+    title: 'Пересказ TOEFL (Integrated)',
+    hint: 'Связать лекцию с текстом и получить оценку по шкале 0–5',
+    connectivity: 'online',
+    payloadSchema: {},
+    producesErrorLog: true,
+  },
+  {
     type: 'ielts_writing_task1',
     title: 'Описание данных IELTS (Task 1)',
     hint: 'Описать график или таблицу',

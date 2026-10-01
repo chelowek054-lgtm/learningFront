@@ -29,6 +29,8 @@ import { NotImplementedActivity } from '@/shared/ui';
 // Тип Activity → рендерер. Незакрытые типы падают на плейсхолдер.
 const RENDERERS: Record<string, ActivityRenderer> = {
   ielts_writing_task2: IeltsWritingActivity,
+  toefl_writing_independent: IeltsWritingActivity,
+  toefl_writing_integrated: IeltsWritingActivity,
   concept_recall: ConceptRecallActivity,
   code_task: CodeTaskActivity,
   material_read: MaterialReadActivity,
