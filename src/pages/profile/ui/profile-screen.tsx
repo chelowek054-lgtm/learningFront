@@ -63,7 +63,13 @@ function ThemePicker() {
   );
 }
 
-export function ProfileScreen({ onOpenActivities }: { onOpenActivities?: () => void }) {
+export function ProfileScreen({
+  onOpenActivities,
+  onOpenProgress,
+}: {
+  onOpenActivities?: () => void;
+  onOpenProgress?: () => void;
+}) {
   const { user, logout, refresh, subject } = useSession();
   const online = useIsOnline();
   const [due, setDue] = useState<number | null>(null);
@@ -126,6 +132,13 @@ export function ProfileScreen({ onOpenActivities }: { onOpenActivities?: () => v
           }
         />
       </Card>
+
+      {onOpenProgress && (
+        <Card onPress={onOpenProgress}>
+          <Label>Прогресс</Label>
+          <Muted>Удержание, рост по рубрикам, закрытие ошибок и граница знаний</Muted>
+        </Card>
+      )}
 
       <Card>
         <Label>Оформление</Label>
