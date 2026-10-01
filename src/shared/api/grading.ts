@@ -8,7 +8,7 @@ export interface SubmitParams {
   activityId: string;
   userId: string;
   answer: unknown;
-  jobType: 'grade_writing' | 'grade_concept';
+  jobType: 'grade_writing' | 'grade_concept' | 'grade_code';
   rubricId: string;
 }
 

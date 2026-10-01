@@ -19,6 +19,7 @@ import {
   ML_MODULE_TITLE,
   mlActivityTypes,
 } from '@/entities/module';
+import { CodeTaskActivity } from '@/features/code-task';
 import { ConceptRecallActivity } from '@/features/concept-recall';
 import { ConceptQuestionActivity, ConceptStudyActivity } from '@/features/concept-study';
 import { IeltsWritingActivity, ieltsWritingLocalGrader } from '@/features/ielts-writing';
@@ -29,6 +30,7 @@ import { NotImplementedActivity } from '@/shared/ui';
 const RENDERERS: Record<string, ActivityRenderer> = {
   ielts_writing_task2: IeltsWritingActivity,
   concept_recall: ConceptRecallActivity,
+  code_task: CodeTaskActivity,
   material_read: MaterialReadActivity,
   concept_study: ConceptStudyActivity,
   concept_contrast: ConceptQuestionActivity,
