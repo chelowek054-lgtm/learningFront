@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { SrsCardRecord, SyncPullResult, SyncPushPayload } from '../engine';
+import type { Activity, SrsCardRecord, SyncPullResult, SyncPushPayload } from '../engine';
 import { SqliteLocalStore } from './db/sqlite-local-store.web';
 import { syncNow } from './sync-service';
 
 // Сеть подменяем: проверяем, что уходит на сервер и как применяется ответ.
 const pushed: SyncPushPayload[] = [];
+const pullSince: (string | undefined)[] = [];
 let pullResult: SyncPullResult;
+let currentUser: string | null = 'u';
 let ackAll = true;
 
 vi.mock('./sync-client', () => ({
@@ -15,9 +17,14 @@ vi.mock('./sync-client', () => ({
       const ids = [...p.srsCards, ...p.responses].map((x) => x.id);
       return { ackIds: ackAll ? ids : [] };
     },
-    pull: async () => pullResult,
+    pull: async (since?: string) => {
+      pullSince.push(since);
+      return pullResult;
+    },
   }),
 }));
+
+vi.mock('./current-user', () => ({ getCurrentUserId: async () => currentUser }));
 
 const card = (id: string, extra: Partial<SrsCardRecord> = {}): SrsCardRecord => ({
   id,
@@ -34,6 +41,8 @@ const card = (id: string, extra: Partial<SrsCardRecord> = {}): SrsCardRecord => 
 
 beforeEach(() => {
   pushed.length = 0;
+  pullSince.length = 0;
+  currentUser = 'u';
   ackAll = true;
   pullResult = { activities: [], responses: [], finishedJobs: [], srsCards: [] };
 });
@@ -118,5 +127,81 @@ describe('syncNow: результаты задач', () => {
     ];
     await syncNow(store);
     expect(await store.listPendingJobs()).toEqual([]);
+  });
+});
+
+const activity = (id: string, createdAt: string): Activity => ({
+  id,
+  userId: 'u',
+  module: 'languages',
+  type: 'ielts_writing_task2',
+  connectivity: 'online',
+  payload: {},
+  createdAt,
+});
+
+describe('syncNow: инкрементальность (T-0048)', () => {
+  it('первый pull полный, следующий просит только новое по курсору сервера', async () => {
+    const store = new SqliteLocalStore();
+    pullResult = { ...pullResult, cursor: '2026-10-01T10:00:00.000Z', userId: 'u' };
+
+    await syncNow(store);
+    await syncNow(store);
+
+    expect(pullSince).toEqual([undefined, '2026-10-01T10:00:00.000Z']);
+  });
+
+  it('после первого sync активности, созданные раньше, больше не уходят', async () => {
+    const store = new SqliteLocalStore();
+    await store.upsertActivity(activity('old', '2020-01-01T00:00:00.000Z'));
+    pullResult = { ...pullResult, cursor: 'c1', userId: 'u' };
+
+    await syncNow(store);
+    expect(pushed[0].activities.map((a) => a.id)).toEqual(['old']); // первый раз — всё
+
+    await store.upsertActivity(activity('new', new Date(Date.now() + 1000).toISOString()));
+    await syncNow(store);
+    expect(pushed[1].activities.map((a) => a.id)).toEqual(['new']);
+  });
+
+  it('курсор чужого аккаунта не применяется: новый пользователь получает всё', async () => {
+    const store = new SqliteLocalStore();
+    pullResult = { ...pullResult, cursor: 'c-of-u', userId: 'u' };
+    await syncNow(store);
+
+    currentUser = 'other';
+    pullResult = { ...pullResult, cursor: 'c-of-other', userId: 'other' };
+    await syncNow(store);
+
+    expect(pullSince).toEqual([undefined, undefined]);
+  });
+
+  it('если sync оборвался на pull, курсор не сдвигается', async () => {
+    const store = new SqliteLocalStore();
+    pullResult = { ...pullResult, cursor: 'c1', userId: 'u' };
+    await syncNow(store);
+
+    pullResult = { ...pullResult, cursor: 'c2', userId: 'u' };
+    const failing = store.upsertActivity.bind(store);
+    store.upsertActivity = async () => {
+      throw new Error('диск полон');
+    };
+    pullResult.activities = [activity('a', '2026-10-01T00:00:00.000Z')];
+    await expect(syncNow(store)).rejects.toThrow();
+    store.upsertActivity = failing;
+    pullResult.activities = [];
+    await syncNow(store);
+
+    expect(pullSince).toEqual([undefined, 'c1', 'c1']);
+  });
+
+  it('без известного пользователя или курсора состояние не сохраняется', async () => {
+    const store = new SqliteLocalStore();
+    currentUser = null;
+    pullResult = { ...pullResult, cursor: 'c1', userId: 'u' };
+    await syncNow(store);
+    await syncNow(store);
+
+    expect(pullSince).toEqual([undefined, undefined]);
   });
 });

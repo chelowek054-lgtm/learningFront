@@ -11,6 +11,8 @@ import type {
 import { api } from './http';
 
 interface PullBody {
+  userId: string;
+  cursor: string;
   activities: Activity[];
   responses: Response[];
   jobs: JobRecord[];
@@ -25,9 +27,12 @@ export function createSyncClient(): SyncClient {
         body: JSON.stringify(payload),
       });
     },
-    async pull(): Promise<SyncPullResult> {
-      const r = await api<PullBody>('/sync/pull');
+    async pull(since?: string): Promise<SyncPullResult> {
+      const query = since ? `?since=${encodeURIComponent(since)}` : '';
+      const r = await api<PullBody>(`/sync/pull${query}`);
       return {
+        userId: r.userId,
+        cursor: r.cursor,
         activities: r.activities,
         responses: r.responses,
         finishedJobs: r.jobs,
