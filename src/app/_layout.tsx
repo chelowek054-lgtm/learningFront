@@ -3,12 +3,13 @@
 // и незачем плодить редиректы между вкладками.
 import { Stack } from 'expo-router';
 import Head from 'expo-router/head';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { StatusBar } from 'expo-status-bar';
 
 import { SessionProvider, useSession } from '@/entities/session';
 import { AuthScreen } from '@/pages/auth';
 import { OnboardingScreen } from '@/pages/onboarding';
+import { getLocalStore, startAutoSync } from '@/shared/api';
 import { ModuleRegistryProvider } from '@/shared/lib';
 import { ThemeProvider, useTheme } from '@/shared/ui';
 import { getModuleRegistry } from '@/widgets/module-registry';
@@ -26,6 +27,16 @@ function DocumentHead() {
   );
 }
 
+/**
+ * Фоновая синхронизация (T-0046): со входа и до выхода следит за сетью и
+ * возвратом из фона. Монтируется только при открытой сессии — до неё sync
+ * ходил бы на сервер без токена.
+ */
+function AutoSync() {
+  useEffect(() => startAutoSync(getLocalStore()), []);
+  return null;
+}
+
 function Gate() {
   const { status, user } = useSession();
   const { colors, dark } = useTheme();
@@ -37,6 +48,7 @@ function Gate() {
   return (
     <>
       <StatusBar style={dark ? 'light' : 'dark'} />
+      <AutoSync />
       <Stack
         screenOptions={{
           headerShown: false,
