@@ -58,6 +58,7 @@ function Gate() {
       >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="review" options={{ presentation: 'card' }} />
+        <Stack.Screen name="progress" options={{ presentation: 'card' }} />
         <Stack.Screen name="placement" options={{ presentation: 'card' }} />
         <Stack.Screen name="activities" options={{ presentation: 'card' }} />
       </Stack>
