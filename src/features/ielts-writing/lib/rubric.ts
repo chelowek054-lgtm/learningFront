@@ -2,6 +2,7 @@
 // клиент только отправляет работу на ту рубрику, что соответствует типу.
 const RUBRIC_BY_TYPE: Record<string, string> = {
   ielts_writing_task2: 'ielts_writing_task2',
+  ielts_writing_task1: 'ielts_writing_task1',
   toefl_writing_independent: 'toefl_writing_independent',
   toefl_writing_integrated: 'toefl_writing_integrated',
 };
