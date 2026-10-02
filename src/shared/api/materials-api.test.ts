@@ -56,6 +56,8 @@ vi.mock('./http', () => ({
   ApiError: h.FakeApiError,
   NetworkError: h.FakeNetworkError,
   getBaseUrl: () => 'http://x',
+  apiUrl: (p: string) => `http://x/v1${p}`,
+  CLIENT_HEADERS: { 'X-Client-Version': '1.0.0' },
 }));
 vi.mock('./token', () => ({ getToken: async () => 't' }));
 
