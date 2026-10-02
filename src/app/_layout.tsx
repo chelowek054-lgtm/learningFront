@@ -9,7 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SessionProvider, useSession } from '@/entities/session';
 import { AuthScreen } from '@/pages/auth';
 import { OnboardingScreen } from '@/pages/onboarding';
-import { getLocalStore, onClientOutdated, startAutoSync } from '@/shared/api';
+import { getLocalStore, installErrorReporter, onClientOutdated, startAutoSync } from '@/shared/api';
 import { ModuleRegistryProvider } from '@/shared/lib';
 import { Lead, Muted, Screen, ThemeProvider, Title, useTheme } from '@/shared/ui';
 import { getModuleRegistry } from '@/widgets/module-registry';
@@ -34,6 +34,8 @@ function DocumentHead() {
  */
 function AutoSync() {
   useEffect(() => startAutoSync(getLocalStore()), []);
+  // Необработанные ошибки уходят на сервер (T-0050); отчёты принимаются только от вошедшего.
+  useEffect(() => installErrorReporter(), []);
   return null;
 }
 
