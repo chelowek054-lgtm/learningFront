@@ -98,6 +98,45 @@ export const expandNode = (conceptId: string, direction: string) =>
     body: JSON.stringify({ concept_id: conceptId, direction }),
   });
 
+// ---- узлы и вопросы из материала пользователя (T-0015, T-0016) ----
+
+export interface MaterialNodeProposal {
+  key: string;
+  title: string;
+  summary: string;
+  sections: { heading: string; body: string }[];
+  /** id фрагментов материала, на которых стоит узел. */
+  fragments: string[];
+}
+
+export interface MaterialProposal {
+  materialId: string;
+  nodes: MaterialNodeProposal[];
+  edges: { from: string; to: string; type: string }[];
+  /** Материал длиннее, чем модель прочитала за раз. */
+  truncated: boolean;
+}
+
+/** Предложение узлов по материалу: в граф ничего не попадает до подтверждения. */
+export const proposeFromMaterial = (materialId: string) =>
+  api<MaterialProposal>(`/graph/materials/${seg(materialId)}/propose`, { method: 'POST' });
+
+export const acceptFromMaterial = (
+  materialId: string,
+  domain: string,
+  proposal: Pick<MaterialProposal, 'nodes' | 'edges'>,
+) =>
+  api<{ created: number; graph: Graph }>(`/graph/materials/${seg(materialId)}/accept`, {
+    method: 'POST',
+    body: JSON.stringify({ domain, nodes: proposal.nodes, edges: proposal.edges }),
+  });
+
+export const questionsFromMaterial = (materialId: string, count = 5) =>
+  api<{ created: number; questions: { id: string; prompt: string }[] }>(
+    `/graph/materials/${seg(materialId)}/questions?count=${count}`,
+    { method: 'POST' },
+  );
+
 // ---- адаптивный плейсмент (KG4) ----
 
 export interface ProbeOption {
