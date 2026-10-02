@@ -1,6 +1,7 @@
 // Сборка реестра модулей с рендерерами (WS5–WS7). Живёт в widgets: может импортировать
 // features (рендереры) и entities (метаданные). entities этого делать не может (импорт вниз).
 import {
+  CONTRACT_VERSION,
   createModuleRegistry,
   type ActivityRenderer,
   type ActivityTypeDef,
@@ -54,7 +55,15 @@ function buildManifest(id: string, title: string, types: ActivityTypeDef[]): Mod
     const grader = LOCAL_GRADERS[t.type];
     if (grader) localGraders[t.type] = grader;
   }
-  return { id, title, activityTypes: types, renderers, localGraders };
+  return {
+    id,
+    title,
+    version: '1.0',
+    contract: CONTRACT_VERSION,
+    activityTypes: types,
+    renderers,
+    localGraders,
+  };
 }
 
 export const moduleManifests: ModuleManifest[] = [

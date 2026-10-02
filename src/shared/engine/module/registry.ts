@@ -1,4 +1,5 @@
 // Реестр модулей: табличный lookup по type. НИ ОДНОГО `if module === ...` (инвариант №3).
+import { ManifestError, checkManifestHeader } from './manifest-check';
 import type { ActivityRenderer, ActivityTypeDef, LocalGrader, ModuleManifest } from './manifest';
 
 interface TypeEntry {
@@ -11,8 +12,13 @@ export class ModuleRegistry {
   private readonly typeIndex = new Map<string, TypeEntry>();
 
   registerModule(manifest: ModuleManifest): void {
+    checkManifestHeader(manifest);
     if (this.modules.has(manifest.id)) {
-      throw new Error(`Module already registered: ${manifest.id}`);
+      throw new ManifestError(
+        'duplicate_id',
+        manifest.id,
+        'идентификатор уже занят другим модулем',
+      );
     }
     for (const def of manifest.activityTypes) {
       const existing = this.typeIndex.get(def.type);
