@@ -52,6 +52,10 @@ export interface SchedulerConfig {
 export interface ModuleManifest {
   id: string;
   title: string;
+  /** Версия самого модуля (1.2 или 1.2.3). */
+  version: string;
+  /** Версия контракта ядра, под которую написан модуль (C-0001). */
+  contract: string;
   activityTypes: ActivityTypeDef[];
   renderers: Record<string, ActivityRenderer>;
   localGraders?: Record<string, LocalGrader>;

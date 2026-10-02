@@ -21,6 +21,7 @@ export type {
   SchedulerConfig,
 } from './module/manifest';
 export { ModuleRegistry, createModuleRegistry } from './module/registry';
+export { CONTRACT_VERSION, ManifestError } from './module/manifest-check';
 
 // Планировщик FSRS
 export type { Rating, Scheduler, FsrsCardState } from './scheduler/scheduler';

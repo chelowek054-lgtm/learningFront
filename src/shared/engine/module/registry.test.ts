@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { createModuleRegistry } from './registry';
+import { CONTRACT_VERSION } from './manifest-check';
 import type { ModuleManifest } from './manifest';
 
 function fakeModule(id: string, types: string[]): ModuleManifest {
   return {
     id,
     title: `Fake ${id}`,
+    version: '1.0',
+    contract: CONTRACT_VERSION,
     activityTypes: types.map((type) => ({
       type,
       title: `Название ${type}`,
@@ -59,7 +62,7 @@ describe('ModuleRegistry', () => {
   it('запрещает повторную регистрацию модуля', () => {
     const reg = createModuleRegistry();
     reg.registerModule(fakeModule('alpha', ['card_flip']));
-    expect(() => reg.registerModule(fakeModule('alpha', ['other']))).toThrow(/already registered/);
+    expect(() => reg.registerModule(fakeModule('alpha', ['other']))).toThrow(/уже занят/);
   });
 
   it('запрещает коллизию типов между модулями', () => {
