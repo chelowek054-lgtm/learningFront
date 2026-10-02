@@ -66,9 +66,11 @@ function ThemePicker() {
 export function ProfileScreen({
   onOpenActivities,
   onOpenProgress,
+  onOpenMaterials,
 }: {
   onOpenActivities?: () => void;
   onOpenProgress?: () => void;
+  onOpenMaterials?: () => void;
 }) {
   const { user, logout, refresh, subject } = useSession();
   const online = useIsOnline();
@@ -137,6 +139,13 @@ export function ProfileScreen({
         <Card onPress={onOpenProgress}>
           <Label>Прогресс</Label>
           <Muted>Удержание, рост по рубрикам, закрытие ошибок и граница знаний</Muted>
+        </Card>
+      )}
+
+      {onOpenMaterials && (
+        <Card onPress={onOpenMaterials}>
+          <Label>Мои материалы</Label>
+          <Muted>Загрузить PDF или Markdown и читать по фрагментам, в том числе офлайн</Muted>
         </Card>
       )}
 

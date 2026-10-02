@@ -3,6 +3,9 @@ import { getToken } from './token';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
+/** Адрес backend: нужен тем, кто шлёт запрос мимо `api` (загрузка с прогрессом). */
+export const getBaseUrl = (): string => BASE_URL;
+
 export class ApiError extends Error {
   constructor(
     public status: number,
