@@ -19,6 +19,9 @@ import {
   ML_MODULE_ID,
   ML_MODULE_TITLE,
   mlActivityTypes,
+  MNEMONIC_MODULE_ID,
+  MNEMONIC_MODULE_TITLE,
+  mnemonicActivityTypes,
 } from '@/entities/module';
 import { CodeTaskActivity } from '@/features/code-task';
 import { ConceptRecallActivity } from '@/features/concept-recall';
@@ -26,6 +29,7 @@ import { ConceptQuestionActivity, ConceptStudyActivity } from '@/features/concep
 import { IeltsWritingActivity, ieltsWritingLocalGrader } from '@/features/ielts-writing';
 import { ReadingDrillActivity } from '@/features/reading-drill';
 import { MaterialReadActivity } from '@/features/material-read';
+import { MnemonicActivity } from '@/features/mnemonic-recall';
 import { NotImplementedActivity } from '@/shared/ui';
 
 // Тип Activity → рендерер. Незакрытые типы падают на плейсхолдер.
@@ -39,6 +43,7 @@ const RENDERERS: Record<string, ActivityRenderer> = {
   code_task: CodeTaskActivity,
   material_read: MaterialReadActivity,
   concept_study: ConceptStudyActivity,
+  concept_mnemonic: MnemonicActivity,
   concept_contrast: ConceptQuestionActivity,
   concept_apply: ConceptQuestionActivity,
 };
@@ -70,6 +75,7 @@ export const moduleManifests: ModuleManifest[] = [
   buildManifest(LANGUAGES_MODULE_ID, LANGUAGES_MODULE_TITLE, languagesActivityTypes),
   buildManifest(ML_MODULE_ID, ML_MODULE_TITLE, mlActivityTypes),
   buildManifest(KNOWLEDGE_MODULE_ID, KNOWLEDGE_MODULE_TITLE, knowledgeActivityTypes),
+  buildManifest(MNEMONIC_MODULE_ID, MNEMONIC_MODULE_TITLE, mnemonicActivityTypes),
 ];
 
 export function initModuleRegistry(): ModuleRegistry {
