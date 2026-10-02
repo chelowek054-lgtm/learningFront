@@ -71,6 +71,25 @@ export const getNode = (id: string) => api<GraphNode>(`/graph/nodes/${seg(id)}`)
 export const buildCanon = (domain: string, topic: string) =>
   api<Graph>('/graph/canon/build', { method: 'POST', body: JSON.stringify({ domain, topic }) });
 
+export interface GoalSplit {
+  subdomains: { key: string; title: string; summary: string; prereqs: string[] }[];
+  budget: { requests: number; subdomains: number; limit: number };
+}
+
+/** Разбиение цели на субдомены: ничего не строит, человек сначала смотрит и правит. */
+export const splitGoal = (domain: string, topic: string) =>
+  api<GoalSplit>('/graph/goal/split', {
+    method: 'POST',
+    body: JSON.stringify({ domain, topic }),
+  });
+
+/** Построить граф цели по (поправленному) разбиению: запрос к модели на каждый субдомен. */
+export const buildGoal = (domain: string, topic: string, subdomains: GoalSplit['subdomains']) =>
+  api<{ graph: Graph } & Pick<GoalSplit, 'budget'>>('/graph/goal/build', {
+    method: 'POST',
+    body: JSON.stringify({ domain, topic, subdomains }),
+  });
+
 export const recomputeCentrality = (domain: string) =>
   api<CentralityRow[]>('/graph/canon/recompute-centrality', {
     method: 'POST',

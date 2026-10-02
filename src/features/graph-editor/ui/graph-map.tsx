@@ -7,17 +7,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
-import { buildCanon, getGraph, type Graph, type GraphNode } from '@/shared/api';
+import { getGraph, type Graph, type GraphNode } from '@/shared/api';
+import { GoalPlanner } from './goal-planner';
 import {
   Body,
-  Button,
   Card,
   Empty,
   Field,
   Label,
   Lead,
   Muted,
-  Note,
   Pill,
   Screen,
   space,
@@ -35,8 +34,6 @@ export function GraphMap({ domain, subjectTitle }: { domain: string; subjectTitl
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [topic, setTopic] = useState(subjectTitle);
-  const [building, setBuilding] = useState(false);
-  const [buildError, setBuildError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -72,17 +69,6 @@ export function GraphMap({ domain, subjectTitle }: { domain: string; subjectTitl
   // Пока это было закрыто админом, «появится, как только будет готова» не
   // сбывалось никогда — строить было некому.
   if (nodes.length === 0) {
-    async function build() {
-      setBuilding(true);
-      setBuildError(null);
-      try {
-        setGraph(await buildCanon(domain, topic.trim()));
-      } catch (e) {
-        setBuildError(`Не удалось построить карту: ${String(e).slice(0, 200)}`);
-      } finally {
-        setBuilding(false);
-      }
-    }
     return (
       <Screen>
         <Label>Карты пока нет</Label>
@@ -90,14 +76,7 @@ export function GraphMap({ domain, subjectTitle }: { domain: string; subjectTitl
           Соберём её из вашей темы: получится черновик, по которому дальше строится путь.
         </Muted>
         <Field placeholder="тема" value={topic} onChangeText={setTopic} />
-        {buildError && <Note tone="danger">{buildError}</Note>}
-        <Button
-          label="Построить карту"
-          onPress={() => void build()}
-          busy={building}
-          disabled={!topic.trim()}
-        />
-        {building && <Muted>Это занимает около минуты.</Muted>}
+        <GoalPlanner domain={domain} topic={topic} onBuilt={setGraph} />
       </Screen>
     );
   }
