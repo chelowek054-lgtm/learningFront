@@ -4,6 +4,7 @@ import { hasLocalDraftSignal, writingRubricId } from './rubric';
 describe('рубрика письма по типу Activity', () => {
   it('каждый тип письма идёт на свою рубрику', () => {
     expect(writingRubricId('ielts_writing_task2')).toBe('ielts_writing_task2');
+    expect(writingRubricId('ielts_writing_task1')).toBe('ielts_writing_task1');
     expect(writingRubricId('toefl_writing_independent')).toBe('toefl_writing_independent');
     expect(writingRubricId('toefl_writing_integrated')).toBe('toefl_writing_integrated');
   });
@@ -14,6 +15,7 @@ describe('рубрика письма по типу Activity', () => {
 
   it('черновой офлайн-сигнал только для IELTS: он считается по критериям IELTS', () => {
     expect(hasLocalDraftSignal('ielts_writing_task2')).toBe(true);
+    expect(hasLocalDraftSignal('ielts_writing_task1')).toBe(false); // критерии Task 1 другие
     expect(hasLocalDraftSignal('toefl_writing_independent')).toBe(false);
     expect(hasLocalDraftSignal('toefl_writing_integrated')).toBe(false);
   });

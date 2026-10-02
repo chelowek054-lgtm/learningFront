@@ -8,6 +8,8 @@ import { useIsOnline } from '@/shared/lib';
 import { GradeView, useTheme, type Palette } from '@/shared/ui';
 import { ieltsWritingLocalGrader } from '../lib/local-grader';
 import { hasLocalDraftSignal, writingRubricId } from '../lib/rubric';
+import { countWords, parseTaskData, wordsShort } from '../lib/task-data';
+import { TaskDataView } from './task-data-view';
 
 type Phase = 'edit' | 'submitting' | 'graded' | 'queued';
 
@@ -21,6 +23,10 @@ export function IeltsWritingActivity({ activity }: ActivityRendererProps) {
   const [grade, setGrade] = useState<Grade | null>(null);
 
   const prompt = String((activity.payload as { prompt?: string }).prompt ?? '');
+  // Task 1: данные задания и минимум слов приходят в payload.
+  const data = parseTaskData((activity.payload as { data?: unknown }).data);
+  const minWords = (activity.payload as { minWords?: unknown }).minWords;
+  const short = wordsShort(essay, minWords);
 
   // Мгновенный черновой сигнал (офлайн-fallback), пересчитывается по мере ввода.
   const draft = useMemo<Grade>(() => {
@@ -65,6 +71,7 @@ export function IeltsWritingActivity({ activity }: ActivityRendererProps) {
   return (
     <View style={styles.box}>
       {!!prompt && <Text style={styles.prompt}>{prompt}</Text>}
+      {data && <TaskDataView data={data} />}
 
       {phase !== 'graded' && (
         <>
@@ -76,6 +83,12 @@ export function IeltsWritingActivity({ activity }: ActivityRendererProps) {
             onChangeText={setEssay}
             editable={phase === 'edit'}
           />
+          {typeof minWords === 'number' && (
+            <Text style={short > 0 ? styles.queued : styles.done}>
+              Слов: {countWords(essay)} из {minWords}
+              {short > 0 ? ` — не хватает ${short}` : ''}
+            </Text>
+          )}
           {hasLocalDraftSignal(activity.type) && <GradeView grade={draft} />}
           <Pressable style={styles.btn} onPress={submit} disabled={phase === 'submitting'}>
             {phase === 'submitting' ? (
