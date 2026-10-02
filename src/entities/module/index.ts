@@ -3,3 +3,4 @@
 export { LANGUAGES_MODULE_ID, LANGUAGES_MODULE_TITLE, languagesActivityTypes } from './languages';
 export { ML_MODULE_ID, ML_MODULE_TITLE, mlActivityTypes } from './ml';
 export { KNOWLEDGE_MODULE_ID, KNOWLEDGE_MODULE_TITLE, knowledgeActivityTypes } from './knowledge';
+export { MNEMONIC_MODULE_ID, MNEMONIC_MODULE_TITLE, mnemonicActivityTypes } from './mnemonic';

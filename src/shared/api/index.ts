@@ -14,6 +14,13 @@ export {
   type AuthUser,
 } from './auth-api';
 export { createSyncClient } from './sync-client';
+export { flushEvidence, postEvidence, submitEvidence, type Evidence } from './evidence-api';
+export {
+  getStudyMethods,
+  setStudyMethod,
+  type StudyMethodChoice,
+  type StudyMethodOption,
+} from './methods-api';
 export { createJobQueue } from './job-queue';
 export { getLocalStore } from './local-store';
 export { syncNow } from './sync-service';

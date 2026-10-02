@@ -9,6 +9,8 @@ const pullSince: (string | undefined)[] = [];
 let pullResult: SyncPullResult;
 let currentUser: string | null = 'u';
 let ackAll = true;
+let flushFails = false;
+let flushed = 0;
 
 vi.mock('./sync-client', () => ({
   createSyncClient: () => ({
@@ -25,6 +27,15 @@ vi.mock('./sync-client', () => ({
 }));
 
 vi.mock('./current-user', () => ({ getCurrentUserId: async () => currentUser }));
+
+// Очередь свидетельств (T-0062) уходит вместе с sync; её сеть здесь не нужна.
+vi.mock('./evidence-api', () => ({
+  flushEvidence: async () => {
+    flushed += 1;
+    if (flushFails) throw new Error('нет связи');
+    return 0;
+  },
+}));
 
 const card = (id: string, extra: Partial<SrsCardRecord> = {}): SrsCardRecord => ({
   id,
@@ -44,6 +55,8 @@ beforeEach(() => {
   pullSince.length = 0;
   currentUser = 'u';
   ackAll = true;
+  flushFails = false;
+  flushed = 0;
   pullResult = { activities: [], responses: [], finishedJobs: [], srsCards: [] };
 });
 
@@ -203,5 +216,20 @@ describe('syncNow: инкрементальность (T-0048)', () => {
     await syncNow(store);
 
     expect(pullSince).toEqual([undefined, undefined]);
+  });
+});
+
+describe('syncNow: очередь свидетельств об освоении', () => {
+  it('отправляет накопленные свидетельства вместе с синхронизацией', async () => {
+    await syncNow(new SqliteLocalStore());
+
+    expect(flushed).toBe(1);
+  });
+
+  it('сбой очереди не роняет синхронизацию', async () => {
+    flushFails = true;
+
+    await expect(syncNow(new SqliteLocalStore())).resolves.toBeUndefined();
+    expect(flushed).toBe(1);
   });
 });

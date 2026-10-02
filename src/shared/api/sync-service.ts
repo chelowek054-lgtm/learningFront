@@ -9,6 +9,7 @@
 // очищается, и чужой курсор скрыл бы от нового пользователя его историю.
 import type { LocalStore } from '@/shared/engine';
 import { getCurrentUserId } from './current-user';
+import { flushEvidence } from './evidence-api';
 import { createSyncClient } from './sync-client';
 
 const STATE_KEY = 'sync';
@@ -87,5 +88,13 @@ export async function syncNow(store: LocalStore): Promise<void> {
   if (userId && pull.cursor && (!pull.userId || pull.userId === userId)) {
     const next: SyncState = { userId, cursor: pull.cursor, pushedAt: startedAt };
     await store.setSyncState(STATE_KEY, JSON.stringify(next));
+  }
+
+  // Свидетельства, накопленные без связи, уходят вместе с синхронизацией. Их сбой не должен
+  // ронять sync: очередь сохранится до следующего раза.
+  try {
+    await flushEvidence(store);
+  } catch {
+    // остаётся в очереди
   }
 }

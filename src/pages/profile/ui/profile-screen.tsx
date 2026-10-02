@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { targetLabel, useSession } from '@/entities/session';
 import { getLocalStore, syncNow, updateProfile } from '@/shared/api';
+import { StudyMethodPicker } from '@/features/study-method';
 import { useIsOnline } from '@/shared/lib';
 import { Pressable, Text, View } from 'react-native';
 import {
@@ -148,6 +149,11 @@ export function ProfileScreen({
           <Muted>Загрузить PDF или Markdown и читать по фрагментам, в том числе офлайн</Muted>
         </Card>
       )}
+
+      <Card>
+        <Label>Способ запоминания</Label>
+        <StudyMethodPicker />
+      </Card>
 
       <Card>
         <Label>Оформление</Label>
