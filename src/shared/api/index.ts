@@ -19,6 +19,7 @@ export { getLocalStore } from './local-store';
 export { syncNow } from './sync-service';
 export { ClientOutdatedError, onClientOutdated } from './client-outdated';
 export { APP_VERSION } from './app-version';
+export { installErrorReporter } from './error-reporter';
 export { createAutoSync, startAutoSync } from './auto-sync';
 export { submitForGrading, type SubmitParams } from './grading';
 export {
