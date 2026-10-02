@@ -7,6 +7,7 @@ export default function ProfileTab() {
     <ProfileScreen
       onOpenActivities={() => router.push('/activities')}
       onOpenProgress={() => router.push('/progress')}
+      onOpenMaterials={() => router.push('/materials')}
     />
   );
 }

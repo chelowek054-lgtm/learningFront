@@ -56,3 +56,22 @@ export {
   type CentralityRow,
   type NodeTier,
 } from './graph-api';
+export {
+  cacheMaterial,
+  cacheMaterialList,
+  cachedMaterial,
+  cachedMaterialList,
+  deleteMaterial,
+  dropCachedMaterial,
+  getMaterial,
+  listMaterials,
+  loadMaterial,
+  loadMaterialList,
+  uploadErrorMessage,
+  uploadMaterial,
+  MAX_UPLOAD_BYTES,
+  type MaterialFragment,
+  type MaterialFull,
+  type MaterialSummary,
+  type PickedFile,
+} from './materials-api';
