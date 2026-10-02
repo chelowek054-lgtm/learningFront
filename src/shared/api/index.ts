@@ -17,6 +17,8 @@ export { createSyncClient } from './sync-client';
 export { createJobQueue } from './job-queue';
 export { getLocalStore } from './local-store';
 export { syncNow } from './sync-service';
+export { ClientOutdatedError, onClientOutdated } from './client-outdated';
+export { APP_VERSION } from './app-version';
 export { createAutoSync, startAutoSync } from './auto-sync';
 export { submitForGrading, type SubmitParams } from './grading';
 export {

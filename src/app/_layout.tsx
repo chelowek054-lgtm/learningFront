@@ -3,15 +3,15 @@
 // и незачем плодить редиректы между вкладками.
 import { Stack } from 'expo-router';
 import Head from 'expo-router/head';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 
 import { SessionProvider, useSession } from '@/entities/session';
 import { AuthScreen } from '@/pages/auth';
 import { OnboardingScreen } from '@/pages/onboarding';
-import { getLocalStore, startAutoSync } from '@/shared/api';
+import { getLocalStore, onClientOutdated, startAutoSync } from '@/shared/api';
 import { ModuleRegistryProvider } from '@/shared/lib';
-import { ThemeProvider, useTheme } from '@/shared/ui';
+import { Lead, Muted, Screen, ThemeProvider, Title, useTheme } from '@/shared/ui';
 import { getModuleRegistry } from '@/widgets/module-registry';
 
 /**
@@ -67,6 +67,26 @@ function Gate() {
   );
 }
 
+/**
+ * Сервер отверг версию приложения (426): вместо непонятной ошибки на каждом экране
+ * показываем одно понятное сообщение поверх всего (T-0033).
+ */
+function OutdatedGate({ children }: { children: React.ReactNode }) {
+  const [minVersion, setMinVersion] = useState<string | null | undefined>(undefined);
+  useEffect(() => onClientOutdated((e) => setMinVersion(e.minClientVersion)), []);
+  if (minVersion === undefined) return <>{children}</>;
+  return (
+    <Screen>
+      <Title>Нужно обновить приложение</Title>
+      <Lead>Эта версия больше не поддерживается сервером.</Lead>
+      <Muted>
+        {minVersion ? `Установите версию ${minVersion} или новее из магазина приложений. ` : ''}
+        Ваши данные сохранены на устройстве и никуда не пропадут.
+      </Muted>
+    </Screen>
+  );
+}
+
 export default function RootLayout() {
   const registry = useMemo(() => getModuleRegistry(), []);
   return (
@@ -74,7 +94,9 @@ export default function RootLayout() {
       <SessionProvider>
         <ModuleRegistryProvider registry={registry}>
           <DocumentHead />
-          <Gate />
+          <OutdatedGate>
+            <Gate />
+          </OutdatedGate>
         </ModuleRegistryProvider>
       </SessionProvider>
     </ThemeProvider>

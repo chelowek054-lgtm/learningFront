@@ -1,7 +1,7 @@
 // Материалы пользователя (T-0014): список, чтение, загрузка PDF/Markdown, удаление.
 // Читать материал можно без сети: открытое и список кладутся в локальный кэш.
 import type { LocalStore } from '@/shared/engine';
-import { api, ApiError, getBaseUrl, NetworkError } from './http';
+import { api, ApiError, apiUrl, CLIENT_HEADERS, getBaseUrl, NetworkError } from './http';
 import { getToken } from './token';
 
 export interface MaterialFragment {
@@ -83,11 +83,12 @@ export async function uploadMaterial(
   form.append('module', opts.module);
   if (opts.title) form.append('title', opts.title);
 
-  const url = `${getBaseUrl()}/content/materials`;
+  const url = apiUrl('/content/materials');
   return new Promise<MaterialSummary>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', url);
     if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    xhr.setRequestHeader('X-Client-Version', CLIENT_HEADERS['X-Client-Version']);
     xhr.upload.onprogress = (ev) => {
       if (ev.lengthComputable && opts.onProgress) opts.onProgress(ev.loaded / ev.total);
     };
