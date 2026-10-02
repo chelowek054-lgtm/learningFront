@@ -5,6 +5,8 @@ const TITLES: Record<string, string> = {
   toefl_writing_integrated: 'Пересказ TOEFL',
   concept_check: 'Проверка понимания',
   ml_code_review: 'Ревью кода',
+  reading_drill: 'Чтение',
+  ielts_writing_task1: 'Описание данных IELTS',
 };
 
 export function rubricTitle(rubricId: string): string {
