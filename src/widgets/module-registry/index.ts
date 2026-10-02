@@ -23,6 +23,7 @@ import { CodeTaskActivity } from '@/features/code-task';
 import { ConceptRecallActivity } from '@/features/concept-recall';
 import { ConceptQuestionActivity, ConceptStudyActivity } from '@/features/concept-study';
 import { IeltsWritingActivity, ieltsWritingLocalGrader } from '@/features/ielts-writing';
+import { ReadingDrillActivity } from '@/features/reading-drill';
 import { MaterialReadActivity } from '@/features/material-read';
 import { NotImplementedActivity } from '@/shared/ui';
 
@@ -30,6 +31,7 @@ import { NotImplementedActivity } from '@/shared/ui';
 const RENDERERS: Record<string, ActivityRenderer> = {
   ielts_writing_task2: IeltsWritingActivity,
   ielts_writing_task1: IeltsWritingActivity,
+  reading_drill: ReadingDrillActivity,
   toefl_writing_independent: IeltsWritingActivity,
   toefl_writing_integrated: IeltsWritingActivity,
   concept_recall: ConceptRecallActivity,
