@@ -2,7 +2,7 @@
 // Раньше выход прятался в углу главной — теперь у него есть своё место.
 import { useEffect, useState } from 'react';
 import { targetLabel, useSession } from '@/entities/session';
-import { getLocalStore, syncNow, updateProfile } from '@/shared/api';
+import { deleteAccount, getLocalStore, syncNow, updateProfile } from '@/shared/api';
 import { StudyMethodPicker } from '@/features/study-method';
 import { useIsOnline } from '@/shared/lib';
 import { Pressable, Text, View } from 'react-native';
@@ -10,6 +10,7 @@ import {
   Button,
   Card,
   Empty,
+  Field,
   Label,
   Muted,
   Note,
@@ -78,6 +79,9 @@ export function ProfileScreen({
   const [due, setDue] = useState<number | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [synced, setSynced] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -89,6 +93,16 @@ export function ProfileScreen({
       }
     })();
   }, []);
+
+  async function removeAccount() {
+    setDeleteError(null);
+    try {
+      await deleteAccount(deletePassword);
+      await logout();
+    } catch {
+      setDeleteError('Не удалось удалить: проверьте пароль и связь.');
+    }
+  }
 
   async function sync() {
     setSyncing(true);
@@ -184,6 +198,31 @@ export function ProfileScreen({
       )}
 
       {!user && <Empty text="Нет данных пользователя" />}
+
+      <Card>
+        <Label>Мои данные</Label>
+        <Muted>Удаление стирает аккаунт и все ваши данные без возможности восстановления.</Muted>
+        {deleting ? (
+          <>
+            <Field
+              placeholder="пароль для подтверждения"
+              secureTextEntry
+              value={deletePassword}
+              onChangeText={setDeletePassword}
+            />
+            {deleteError && <Note tone="danger">{deleteError}</Note>}
+            <Button
+              label="Удалить навсегда"
+              variant="danger"
+              onPress={() => void removeAccount()}
+              disabled={!online || deletePassword.length === 0}
+            />
+            <Button label="Отмена" variant="quiet" onPress={() => setDeleting(false)} />
+          </>
+        ) : (
+          <Button label="Удалить аккаунт" variant="quiet" onPress={() => setDeleting(true)} />
+        )}
+      </Card>
 
       <Button label="Выйти" variant="danger" onPress={() => void logout()} />
     </Screen>

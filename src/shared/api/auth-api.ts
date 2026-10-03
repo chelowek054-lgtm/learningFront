@@ -19,7 +19,8 @@ export async function register(email: string, password: string): Promise<void> {
   const r = await api<TokenResponse>('/auth/register', {
     method: 'POST',
     auth: false,
-    body: JSON.stringify({ email, password }),
+    // Регистрация возможна только с согласием на политику данных: экран не вызывает её без галочки.
+    body: JSON.stringify({ email, password, acceptPolicy: true }),
   });
   await setToken(r.access_token);
 }
@@ -75,3 +76,10 @@ export function updateProfile(profile: Record<string, unknown>): Promise<AuthUse
     body: JSON.stringify({ profile }),
   });
 }
+
+/** Удалить аккаунт со всеми данными (R-0018). Сервер требует подтверждение и пароль. */
+export const deleteAccount = (password: string) =>
+  api<{ erased: Record<string, number> }>('/me/data/delete-account', {
+    method: 'POST',
+    body: JSON.stringify({ confirm: true, password }),
+  });

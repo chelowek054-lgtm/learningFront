@@ -14,6 +14,7 @@ export {
   type AuthUser,
 } from './auth-api';
 export { createSyncClient } from './sync-client';
+export { deleteAccount } from './auth-api';
 export {
   clarifyGoal,
   confirmGoal,
