@@ -1,6 +1,6 @@
 // Экран входа/регистрации (WS1) + вход в восстановление пароля.
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Button, Display, Field, Muted, Note, Screen, space } from '@/shared/ui';
 import { useSession } from '@/entities/session';
 import { ApiError, NetworkError } from '@/shared/api';
@@ -28,6 +28,7 @@ export function AuthScreen() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [accepted, setAccepted] = useState(false);
 
   if (mode === 'reset') {
     return (
@@ -88,10 +89,22 @@ export function AuthScreen() {
       {notice && <Note tone="ok">{notice}</Note>}
       {error && <Note tone="danger">{error}</Note>}
 
+      {mode === 'register' && (
+        <Pressable
+          onPress={() => setAccepted(!accepted)}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: accepted }}
+          style={{ flexDirection: 'row', gap: space.sm, alignItems: 'center' }}
+        >
+          <Muted>{accepted ? '☑' : '☐'} Согласен с политикой хранения и обработки данных</Muted>
+        </Pressable>
+      )}
+
       <Button
         label={mode === 'login' ? 'Войти' : 'Зарегистрироваться'}
         onPress={submit}
         busy={busy}
+        disabled={mode === 'register' && !accepted}
       />
       <Button
         label={mode === 'login' ? 'Нет аккаунта? Регистрация' : 'Уже есть аккаунт? Вход'}
