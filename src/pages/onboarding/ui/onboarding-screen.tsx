@@ -8,7 +8,9 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { MASTERY_TARGETS, toSubjectId, useSession, type TargetBloom } from '@/entities/session';
-import { updateProfile } from '@/shared/api';
+import { GoalIntakeDialog, subjectOf } from '@/features/goal-intake';
+import { updateProfile, type GoalSummary } from '@/shared/api';
+import { useIsOnline } from '@/shared/lib';
 import {
   Button,
   Display,
@@ -31,6 +33,9 @@ export function OnboardingScreen() {
   const [target, setTarget] = useState<TargetBloom>(subject?.target ?? 'apply');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const online = useIsOnline();
+  // Уточняющие вопросы требуют сети и модели; без них — прямая форма, как раньше.
+  const [direct, setDirect] = useState(false);
 
   const subjectTitle = title.trim();
   const ready = subjectTitle.length > 1;
@@ -50,6 +55,33 @@ export function OnboardingScreen() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function confirmed(summary: GoalSummary) {
+    // Цель подтверждена на сервере: сохраняем предмет и выходим из онбординга.
+    const subject = subjectOf(summary, toSubjectId);
+    await updateProfile({
+      ...(user?.profile ?? {}),
+      onboarded: true,
+      subject,
+    });
+    await refresh();
+  }
+
+  if (online && !direct) {
+    return (
+      <Screen>
+        <View style={{ gap: space.xs, marginTop: space.xxl }}>
+          <Display>С чего начнём</Display>
+          <Muted>Путь строится под предмет — расскажите, чего хотите, своими словами.</Muted>
+        </View>
+        <GoalIntakeDialog
+          initialText={subject?.title ?? ''}
+          onConfirmed={confirmed}
+          onFallback={() => setDirect(true)}
+        />
+      </Screen>
+    );
   }
 
   return (

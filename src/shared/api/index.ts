@@ -14,6 +14,16 @@ export {
   type AuthUser,
 } from './auth-api';
 export { createSyncClient } from './sync-client';
+export {
+  clarifyGoal,
+  confirmGoal,
+  getGoalIntake,
+  summarizeGoal,
+  type GoalAnswer,
+  type GoalIntakeState,
+  type GoalQuestion,
+  type GoalSummary,
+} from './goal-intake-api';
 export { flushEvidence, postEvidence, submitEvidence, type Evidence } from './evidence-api';
 export {
   getStudyMethods,

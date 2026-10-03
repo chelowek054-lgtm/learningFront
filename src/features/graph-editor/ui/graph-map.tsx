@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import { getGraph, type Graph, type GraphNode } from '@/shared/api';
+import { GoalGate } from './goal-gate';
 import { GoalPlanner } from './goal-planner';
 import {
   Body,
@@ -76,7 +77,9 @@ export function GraphMap({ domain, subjectTitle }: { domain: string; subjectTitl
           Соберём её из вашей темы: получится черновик, по которому дальше строится путь.
         </Muted>
         <Field placeholder="тема" value={topic} onChangeText={setTopic} />
-        <GoalPlanner domain={domain} topic={topic} onBuilt={setGraph} />
+        <GoalGate domain={domain}>
+          <GoalPlanner domain={domain} topic={topic} onBuilt={setGraph} />
+        </GoalGate>
       </Screen>
     );
   }
