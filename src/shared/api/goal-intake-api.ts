@@ -50,3 +50,25 @@ export const confirmGoal = (domain: string, summary: GoalSummary) =>
 
 export const getGoalIntake = (domain: string) =>
   api<GoalIntakeState>(`/graph/goal/intake/${seg(domain)}`);
+
+export interface VolumeVariant {
+  bloom: string;
+  /** true — посчитано по построенной цели, false — оценка по областям под ней. */
+  precise: boolean;
+  domainCount: number;
+  conceptCount: number;
+  /** Области под целью, в которых графа ещё нет. */
+  unbuilt: string[];
+}
+
+export interface GoalVolume {
+  goal: string;
+  registered: boolean;
+  variants: { full?: VolumeVariant; intuitive?: VolumeVariant };
+  /** false — цель и так «понять», выбирать не из чего. */
+  differs?: boolean;
+}
+
+/** Объём пути до построения: сколько областей и понятий лежит под целью, полный и интуитивный вариант. */
+export const getGoalVolume = (domain: string, target: string) =>
+  api<GoalVolume>(`/graph/goal/${seg(domain)}/volume?target=${encodeURIComponent(target)}`);

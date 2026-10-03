@@ -5,7 +5,9 @@ import {
   canConfirm,
   collectAnswers,
   editSummary,
+  needsChoice,
   recapLine,
+  volumeLine,
   subjectOf,
 } from './dialog';
 
@@ -74,5 +76,31 @@ describe('диалог постановки цели', () => {
       title: 'Машинное обучение',
       target: 'create',
     });
+  });
+
+  it('выбор предлагается, только если есть базовые области и варианты различаются', () => {
+    const v = { bloom: 'apply', precise: true, domainCount: 2, conceptCount: 9, unbuilt: [] };
+    const base = {
+      goal: 'ml',
+      registered: true,
+      variants: { full: v, intuitive: { ...v, conceptCount: 3 } },
+    };
+
+    expect(needsChoice({ ...base, differs: true })).toBe(true);
+    expect(needsChoice({ ...base, differs: false })).toBe(false);
+    expect(needsChoice({ goal: 'ml', registered: false, variants: {} })).toBe(false);
+    expect(needsChoice(null)).toBe(false);
+  });
+
+  it('объём называется с правильным склонением и пометкой оценки', () => {
+    const exact = { bloom: 'apply', precise: true, domainCount: 5, conceptCount: 61, unbuilt: [] };
+
+    expect(volumeLine(exact)).toBe('5 областей, 61 понятие');
+    expect(volumeLine({ ...exact, precise: false, domainCount: 2, conceptCount: 23 })).toBe(
+      '2 области, около 23 понятия',
+    );
+    expect(volumeLine({ ...exact, domainCount: 11, conceptCount: 12 })).toBe(
+      '11 областей, 12 понятий',
+    );
   });
 });
