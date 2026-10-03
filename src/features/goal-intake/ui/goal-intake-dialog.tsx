@@ -8,7 +8,9 @@ import { MASTERY_TARGETS, toSubjectId } from '@/entities/session';
 import {
   clarifyGoal,
   confirmGoal,
+  getGoalVolume,
   summarizeGoal,
+  type GoalVolume,
   type GoalQuestion,
   type GoalSummary,
 } from '@/shared/api';
@@ -30,10 +32,12 @@ import {
   canConfirm,
   collectAnswers,
   editSummary,
+  needsChoice,
   recapLine,
+  volumeLine,
 } from '../model/dialog';
 
-type Stage = 'ask' | 'clarify' | 'recap';
+type Stage = 'ask' | 'clarify' | 'recap' | 'volume';
 
 export function GoalIntakeDialog({
   initialText = '',
@@ -50,6 +54,7 @@ export function GoalIntakeDialog({
   const [questions, setQuestions] = useState<GoalQuestion[]>([]);
   const [values, setValues] = useState<Record<string, string>>({});
   const [summary, setSummary] = useState<GoalSummary | null>(null);
+  const [volume, setVolume] = useState<GoalVolume | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -87,7 +92,15 @@ export function GoalIntakeDialog({
     setBusy(true);
     setError(null);
     try {
-      await confirmGoal(toSubjectId(summary.area), summary);
+      const domain = toSubjectId(summary.area);
+      await confirmGoal(domain, summary);
+      // Перед построением показываем объём пути, если под целью есть базовые области.
+      const preview = await getGoalVolume(domain, summary.level).catch(() => null);
+      if (needsChoice(preview)) {
+        setVolume(preview);
+        setStage('volume');
+        return;
+      }
       await onConfirmed(summary);
     } catch (e) {
       setError(`Не удалось подтвердить: ${String(e).slice(0, 160)}`);
@@ -145,6 +158,42 @@ export function GoalIntakeDialog({
   }
 
   if (!summary) return null;
+
+  if (stage === 'volume' && volume?.variants.full && volume.variants.intuitive) {
+    const { full, intuitive } = volume.variants;
+    const choose = async (short: boolean) => {
+      setBusy(true);
+      setError(null);
+      try {
+        // Интуитивный вариант — цель «понять»: сервер строит и проверяет путь по ней.
+        const chosen = short ? { ...summary, level: intuitive.bloom } : summary;
+        if (short) await confirmGoal(toSubjectId(summary.area), chosen);
+        await onConfirmed(chosen);
+      } catch (e) {
+        setError(`Не удалось продолжить: ${String(e).slice(0, 160)}`);
+      } finally {
+        setBusy(false);
+      }
+    };
+    return (
+      <View style={{ gap: space.md }}>
+        <Label>Что лежит под этой целью</Label>
+        <Muted>Чтобы дойти до цели, нужны базовые области. Выберите, насколько глубоко идти.</Muted>
+        <Body>Полный путь: {volumeLine(full)}</Body>
+        <Body>Интуитивный: {volumeLine(intuitive)} — без глубоких деталей</Body>
+        {full.unbuilt.length > 0 && <Muted>Карты для части областей ещё не построены.</Muted>}
+        {error && <Note tone="danger">{error}</Note>}
+        <Button label="Полный путь" onPress={() => void choose(false)} busy={busy} />
+        <Button
+          label="Интуитивный вариант"
+          variant="quiet"
+          onPress={() => void choose(true)}
+          disabled={busy}
+        />
+      </View>
+    );
+  }
+
   return (
     <View style={{ gap: space.md }}>
       <Label>Правильно ли понята цель</Label>
