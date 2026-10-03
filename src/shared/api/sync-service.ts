@@ -8,6 +8,7 @@
 // Состояние привязано к аккаунту: локальная база при смене пользователя не
 // очищается, и чужой курсор скрыл бы от нового пользователя его историю.
 import type { LocalStore } from '@/shared/engine';
+import { serverVersionWins } from '../engine/scheduler/card-merge';
 import { getCurrentUserId } from './current-user';
 import { flushEvidence } from './evidence-api';
 import { createSyncClient } from './sync-client';
@@ -69,11 +70,14 @@ export async function syncNow(store: LocalStore): Promise<void> {
   for (const a of pull.activities) await store.upsertActivity(a);
   for (const r of pull.responses) await store.appendResponse({ ...r, synced: true });
 
-  // Новые карточки — только те, которых ещё нет локально (сохраняем прогресс повторений).
-  // Пришедшая с сервера карточка уже синхронна с ним: повторно её не отправляем.
-  const existing = new Set((await store.listSrsCards()).map((c) => c.id));
+  // Новые карточки берём как есть. Уже известные заменяем серверной версией, только если у неё
+  // более позднее ревью (R-0019): повторение, сделанное на другом устройстве, не теряется, а
+  // локальный прогресс, который свежее, остаётся. Пришедшая версия синхронна с сервером —
+  // повторно её не отправляем.
+  const local = new Map((await store.listSrsCards()).map((c) => [c.id, c]));
   for (const c of pull.srsCards) {
-    if (existing.has(c.id)) continue;
+    const mine = local.get(c.id);
+    if (mine && !serverVersionWins(mine.fsrsState, c.fsrsState)) continue;
     await store.upsertSrsCard(c);
     await store.markSrsCardSynced(c.id);
   }

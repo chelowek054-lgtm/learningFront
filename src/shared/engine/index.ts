@@ -26,6 +26,7 @@ export { CONTRACT_VERSION, ManifestError } from './module/manifest-check';
 // Планировщик FSRS
 export type { Rating, Scheduler, FsrsCardState } from './scheduler/scheduler';
 export { createScheduler } from './scheduler/scheduler';
+export { compareCardStates, serverVersionWins } from './scheduler/card-merge';
 
 // Порты (реализуются адаптерами вне ядра)
 export type {
