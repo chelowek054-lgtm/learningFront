@@ -110,6 +110,34 @@ describe('syncNow: прогресс повторений', () => {
     await syncNow(store);
     expect((await store.getSrsCard('c1'))?.fsrsState).toEqual({ reps: 7 });
   });
+
+  it('повторение с другого устройства принимается, если ревью позже', async () => {
+    const store = new SqliteLocalStore();
+    await store.upsertSrsCard(
+      card('c1', { fsrsState: { reps: 1, last_review: '2026-10-01T10:00:00Z' } }),
+    );
+    pullResult.srsCards = [
+      card('c1', { fsrsState: { reps: 2, last_review: '2026-10-03T10:00:00Z' } }),
+    ];
+    await syncNow(store);
+    expect((await store.getSrsCard('c1'))?.fsrsState).toMatchObject({ reps: 2 });
+    // принятая серверная версия не уходит обратно
+    pushed.length = 0;
+    await syncNow(store);
+    expect(pushed.flatMap((p) => p.srsCards)).toEqual([]);
+  });
+
+  it('локальное ревью, которое свежее серверного, остаётся', async () => {
+    const store = new SqliteLocalStore();
+    await store.upsertSrsCard(
+      card('c1', { fsrsState: { reps: 3, last_review: '2026-10-04T10:00:00Z' } }),
+    );
+    pullResult.srsCards = [
+      card('c1', { fsrsState: { reps: 2, last_review: '2026-10-03T10:00:00Z' } }),
+    ];
+    await syncNow(store);
+    expect((await store.getSrsCard('c1'))?.fsrsState).toMatchObject({ reps: 3 });
+  });
 });
 
 describe('syncNow: результаты задач', () => {
