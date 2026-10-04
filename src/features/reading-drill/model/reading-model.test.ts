@@ -6,6 +6,7 @@ import {
   isCorrect,
   parseReadingDrill,
   secondsLeft,
+  wrongChoiceIds,
   toGrade,
 } from './reading-model';
 
@@ -83,6 +84,13 @@ describe('проверка ответов', () => {
     expect(g).toMatchObject({ rubricId: 'reading_drill', overall: 1, errors: [] });
     expect(g.criteria[0]).toMatchObject({ score: 1, max: 3, comment: '' });
     expect(toGrade(gradeReading(drill, {}), true).criteria[0].comment).toContain('Время вышло');
+  });
+
+  it('разбор дистракторов просят только по ошибкам в вопросах с выбором', () => {
+    expect(wrongChoiceIds(drill, gradeReading(drill, { q1: 'a', q2: 'x', q3: 'no' }))).toEqual([
+      'q1',
+    ]);
+    expect(wrongChoiceIds(drill, gradeReading(drill, { q1: 'b' }))).toEqual([]);
   });
 
   it('считает отвеченные', () => {

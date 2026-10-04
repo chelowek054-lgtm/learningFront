@@ -137,3 +137,9 @@ export function formatClock(totalSec: number): string {
 export function answeredCount(drill: ReadingDrill, answers: Record<string, string>): number {
   return drill.questions.filter((q) => (answers[q.id] ?? '').trim() !== '').length;
 }
+
+/** Вопросы с выбором, на которых ошиблись: для них при сети просят разбор дистракторов. */
+export function wrongChoiceIds(drill: ReadingDrill, result: ReadingResult): string[] {
+  const wrong = new Set(result.details.filter((d) => !d.correct).map((d) => d.id));
+  return drill.questions.filter((q) => q.type === 'mcq' && wrong.has(q.id)).map((q) => q.id);
+}
