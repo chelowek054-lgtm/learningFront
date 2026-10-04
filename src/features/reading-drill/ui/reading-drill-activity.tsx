@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useSession } from '@/entities/session';
 import type { ActivityRendererProps } from '@/shared/engine';
-import { getLocalStore } from '@/shared/api';
+import { createJobQueue, getLocalStore } from '@/shared/api';
 import { newId } from '@/shared/lib';
 import {
   Body,
@@ -27,6 +27,7 @@ import {
   parseReadingDrill,
   secondsLeft,
   toGrade,
+  wrongChoiceIds,
   type ReadingQuestion,
   type ReadingResult,
 } from '../model/reading-model';
@@ -74,6 +75,16 @@ export function ReadingDrillActivity({ activity, onComplete }: ActivityRendererP
         localCreatedAt: new Date().toISOString(),
         synced: false,
       });
+      // Разбор «почему неверно» приходит фоновой задачей при сети и дрилл не блокирует.
+      const queue = createJobQueue(getLocalStore());
+      for (const questionId of wrongChoiceIds(drill, graded)) {
+        await queue.enqueue({
+          id: newId(),
+          userId: user.id,
+          type: 'explain_distractors',
+          inputRef: { activityId: activity.id, questionId },
+        });
+      }
     }
   }
 
