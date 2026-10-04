@@ -11,6 +11,7 @@ import type { LocalStore } from '@/shared/engine';
 import { serverVersionWins } from '../engine/scheduler/card-merge';
 import { getCurrentUserId } from './current-user';
 import { flushEvidence } from './evidence-api';
+import { flushVoice } from './voice-outbox';
 import { createSyncClient } from './sync-client';
 
 const STATE_KEY = 'sync';
@@ -40,6 +41,14 @@ export async function syncNow(store: LocalStore): Promise<void> {
   const userId = await getCurrentUserId();
   const previous = await loadState(store, userId);
   const startedAt = new Date().toISOString();
+
+  // 0. Записи голоса, накопленные без связи: загрузка ставит job расшифровки, и он уйдёт тем же
+  // push. Сбой не роняет sync — запись остаётся в очереди до следующего раза.
+  try {
+    await flushVoice(store);
+  } catch {
+    // остаётся в очереди
+  }
 
   // 1. PUSH локальных изменений.
   // Активности меняются редко и приходят в основном с сервера, поэтому шлём

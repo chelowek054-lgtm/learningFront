@@ -29,6 +29,7 @@ import { ConceptQuestionActivity, ConceptStudyActivity } from '@/features/concep
 import { IeltsWritingActivity, ieltsWritingLocalGrader } from '@/features/ielts-writing';
 import { ListeningDrillActivity } from '@/features/listening-drill';
 import { ReadingDrillActivity } from '@/features/reading-drill';
+import { SpeakingActivity } from '@/features/speaking';
 import { MaterialReadActivity } from '@/features/material-read';
 import { MnemonicActivity } from '@/features/mnemonic-recall';
 import { NotImplementedActivity } from '@/shared/ui';
@@ -39,6 +40,7 @@ const RENDERERS: Record<string, ActivityRenderer> = {
   ielts_writing_task1: IeltsWritingActivity,
   reading_drill: ReadingDrillActivity,
   listening_drill: ListeningDrillActivity,
+  speaking_response: SpeakingActivity,
   toefl_writing_independent: IeltsWritingActivity,
   toefl_writing_integrated: IeltsWritingActivity,
   concept_recall: ConceptRecallActivity,

@@ -28,6 +28,8 @@ vi.mock('./sync-client', () => ({
 
 vi.mock('./current-user', () => ({ getCurrentUserId: async () => currentUser }));
 
+vi.mock('./voice-outbox', () => ({ flushVoice: async () => 0 }));
+
 // Очередь свидетельств (T-0062) уходит вместе с sync; её сеть здесь не нужна.
 vi.mock('./evidence-api', () => ({
   flushEvidence: async () => {
