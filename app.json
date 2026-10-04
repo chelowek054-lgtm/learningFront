@@ -33,7 +33,12 @@
           "imageWidth": 76
         }
       ],
-      "expo-audio"
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Praxis записывает устные ответы для разбора. Запись удаляется с устройства после отправки."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

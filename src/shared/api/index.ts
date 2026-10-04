@@ -42,6 +42,7 @@ export { ClientOutdatedError, onClientOutdated } from './client-outdated';
 export { APP_VERSION } from './app-version';
 export { installErrorReporter } from './error-reporter';
 export { createAutoSync, startAutoSync } from './auto-sync';
+export { flushVoice, pendingVoice, queueVoice } from './voice-outbox';
 export { submitForGrading, type SubmitParams } from './grading';
 export {
   nextProbe,
