@@ -1,6 +1,6 @@
 // Listening-дрилл (T-0037, R-0022): разбор payload, лимит прослушиваний, состояние кэша аудио.
 // Всё чистое. Проверка ответов — та же, что у чтения: вопросы и их формат общие.
-import { parseQuestions, type QuizQuestion } from '../../../shared/lib/quiz';
+import { parseQuestions, type QuizQuestion } from '../../../shared/engine';
 
 /** Сколько раз можно слушать, если задание не сказало иначе (как на экзамене — один раз). */
 export const DEFAULT_MAX_PLAYS = 1;

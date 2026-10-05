@@ -8,7 +8,7 @@
 // Состояние привязано к аккаунту: локальная база при смене пользователя не
 // очищается, и чужой курсор скрыл бы от нового пользователя его историю.
 import type { LocalStore } from '@/shared/engine';
-import { serverVersionWins } from '../engine/scheduler/card-merge';
+import { serverVersionWins } from '../engine';
 import { getCurrentUserId } from './current-user';
 import { flushEvidence } from './evidence-api';
 import { flushVoice } from './voice-outbox';

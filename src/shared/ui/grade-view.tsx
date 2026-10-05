@@ -1,10 +1,19 @@
 // Отображение результата скоринга (Grade). Переиспользуется Writing/Concept.
 import { View } from 'react-native';
-import type { Grade } from '@/shared/engine';
 import { Body, Lead, Muted, Note } from './kit';
 import { space } from './theme';
 
-export function GradeView({ grade }: { grade: Grade }) {
+/** Что показывает отображение. Форма совпадает с Grade движка, но UI-кит движка не знает (A-0023). */
+export interface GradeViewData {
+  gradedOfflineFallback?: boolean;
+  caveat?: string;
+  overall?: number;
+  criteria: { name: string; score: number; max: number; comment?: string }[];
+  errors: { excerpt: string; correction: string; explanation?: string }[];
+  exemplar?: string;
+}
+
+export function GradeView({ grade }: { grade: GradeViewData }) {
   return (
     <View style={{ gap: space.sm, marginTop: space.sm }}>
       {grade.gradedOfflineFallback && <Note tone="warn">черновая оценка (офлайн)</Note>}

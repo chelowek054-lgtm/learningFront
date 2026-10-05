@@ -10,7 +10,7 @@ import {
   type QuestionType,
   type QuizQuestion,
   type QuizResult,
-} from '../../../shared/lib/quiz';
+} from '../../../shared/engine';
 
 export { isCorrect };
 export type { QuestionResult, QuestionType };

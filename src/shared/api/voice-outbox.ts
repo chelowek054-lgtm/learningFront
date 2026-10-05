@@ -3,7 +3,7 @@
 // успешной загрузки (T-0044); дальше на сервере живёт только расшифровка.
 import { File } from 'expo-file-system';
 import type { LocalStore } from '@/shared/engine';
-import { newId } from '../lib/id';
+import { newId } from '../lib';
 import { getCurrentUserId } from './current-user';
 import { apiUrl, ApiError, CLIENT_HEADERS, NetworkError, getBaseUrl } from './http';
 import { getToken } from './token';
