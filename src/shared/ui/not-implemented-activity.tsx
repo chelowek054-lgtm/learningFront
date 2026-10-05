@@ -1,10 +1,9 @@
 // Заглушка рендерера Activity: тип есть в реестре, а рендерера ещё нет.
 import { StyleSheet, View } from 'react-native';
-import type { ActivityRendererProps } from '@/shared/engine';
 import { Body, Muted } from './kit';
 import { radius, space, useTheme } from './theme';
 
-export function NotImplementedActivity({ activity }: ActivityRendererProps) {
+export function NotImplementedActivity({ activity }: { activity: { type: string } }) {
   const { colors } = useTheme();
   return (
     <View

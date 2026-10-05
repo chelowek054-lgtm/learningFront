@@ -13,7 +13,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useColorScheme } from 'react-native';
-import { getThemeMode, setThemeMode, type ThemeMode } from '@/shared/api';
+import { getThemeMode, setThemeMode, type ThemeMode } from './theme-storage';
 import {
   darkPalette,
   fontSize,

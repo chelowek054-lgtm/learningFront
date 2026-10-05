@@ -6,7 +6,8 @@ import { Pressable, View } from 'react-native';
 import { useSession } from '@/entities/session';
 import { getLocalStore } from '@/shared/api';
 import type { ActivityRendererProps } from '@/shared/engine';
-import { gradeQuestions, newId, type QuizQuestion, type QuizResult } from '@/shared/lib';
+import { gradeQuestions, type QuizQuestion, type QuizResult } from '@/shared/engine';
+import { newId } from '@/shared/lib';
 import {
   Body,
   Button,

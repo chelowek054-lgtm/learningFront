@@ -4,6 +4,17 @@
 
 export const ENGINE_VERSION = '0.0.0';
 
+// Вопросы с проверкой ответа (дриллы чтения и аудирования): чистая логика.
+export {
+  gradeQuestions,
+  isCorrect,
+  parseQuestions,
+  type QuestionResult,
+  type QuestionType,
+  type QuizQuestion,
+  type QuizResult,
+} from './quiz/quiz';
+
 // Типы
 export type { Activity, Connectivity } from './types/activity';
 export type { Grade, GradeCriterion, GradeError } from './types/grade';

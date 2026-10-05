@@ -12,7 +12,7 @@ import {
 let currentUser: string | null = 'u';
 vi.mock('./current-user', () => ({ getCurrentUserId: async () => currentUser }));
 vi.mock('expo-file-system', () => ({ File: class {} }));
-vi.mock('expo-crypto', () => ({ randomUUID: () => `id-${Math.random()}` }));
+vi.mock('../lib', () => ({ newId: () => `id-${Math.random()}` }));
 vi.mock('./token', () => ({ getToken: async () => null }));
 vi.mock('./http', () => {
   class ApiError extends Error {

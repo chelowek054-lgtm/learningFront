@@ -1,4 +1,4 @@
-// Пользовательские настройки интерфейса (native). Web-вариант — preferences.web.ts.
+// Хранение режима темы (native). Web-вариант — theme-storage.web.ts.
 // Не секреты, но SecureStore здесь просто доступное KV-хранилище: отдельной
 // зависимости ради одной строки заводить незачем.
 import * as SecureStore from 'expo-secure-store';

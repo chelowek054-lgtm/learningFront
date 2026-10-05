@@ -2,7 +2,6 @@
 export { SqliteLocalStore, createSqliteLocalStore } from './db/sqlite-local-store';
 export { api, apiUrl, ApiError, CLIENT_HEADERS, NetworkError } from './http';
 export { getToken, setToken, clearToken } from './token';
-export { getThemeMode, setThemeMode, type ThemeMode } from './preferences';
 export {
   register,
   login,
