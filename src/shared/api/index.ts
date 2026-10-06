@@ -108,3 +108,14 @@ export {
   type MaterialSummary,
   type PickedFile,
 } from './materials-api';
+export {
+  deleteSource,
+  getSourceProgress,
+  listSources,
+  sourceErrorMessage,
+  uploadSource,
+  type IngestStatus,
+  type SourceFields,
+  type SourceItem,
+  type SourceProgress,
+} from './sources-api';
