@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { targetLabel, useSession } from '@/entities/session';
 import { deleteAccount, getLocalStore, syncNow, updateProfile } from '@/shared/api';
+import { PushSettings } from '@/features/push-settings';
 import { StudyMethodPicker } from '@/features/study-method';
 import { useIsOnline } from '@/shared/lib';
 import { Pressable, Text, View } from 'react-native';
@@ -172,6 +173,8 @@ export function ProfileScreen({
           <Muted>Загрузить учебник в общий граф и следить за разбором</Muted>
         </Card>
       )}
+
+      <PushSettings />
 
       <Card>
         <Label>Способ запоминания</Label>

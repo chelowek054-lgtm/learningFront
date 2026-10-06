@@ -120,6 +120,19 @@ export {
   type Verdict,
 } from './prior-test-api';
 export {
+  getPushState,
+  registerPushDevice,
+  removePushDevice,
+  setPushEnabled,
+  type PushState,
+} from './push-api';
+export {
+  forgetPushDevice,
+  obtainPushToken,
+  pushSupported,
+  type PushTokenResult,
+} from './push-device';
+export {
   listNotifications,
   markNotificationsRead,
   type CourseNotification,
