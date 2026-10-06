@@ -109,6 +109,17 @@ export {
   type PickedFile,
 } from './materials-api';
 export {
+  chainAnswer,
+  chainProbe,
+  priorReport,
+  type AreaReport,
+  type ChainAnswerResult,
+  type ChainProbe,
+  type ChainProbeResult,
+  type PriorReport,
+  type Verdict,
+} from './prior-test-api';
+export {
   listNotifications,
   markNotificationsRead,
   type CourseNotification,
