@@ -9,5 +9,14 @@ export const noticesFor = (all: CourseNotification[], domain: string): CourseNot
 export const hasDraftNote = (n: Pick<CourseNotification, 'data'>): boolean =>
   (n.data.drafts ?? 0) > 0;
 
-export const noticeTone = (n: Pick<CourseNotification, 'data'>): 'warn' | 'ok' =>
-  hasDraftNote(n) ? 'warn' : 'ok';
+/** Изменившееся пройденное — предупреждение (его стоит повторить), проверка — хорошая новость. */
+export const noticeTone = (
+  n: Pick<CourseNotification, 'data'> & { kind?: string },
+): 'warn' | 'ok' =>
+  n.kind === 'concept_changed'
+    ? 'warn'
+    : n.kind === 'concept_verified'
+      ? 'ok'
+      : hasDraftNote(n)
+        ? 'warn'
+        : 'ok';

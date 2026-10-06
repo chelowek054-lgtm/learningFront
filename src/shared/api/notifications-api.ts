@@ -3,11 +3,17 @@ import { api } from './http';
 
 export interface CourseNotification {
   id: string;
-  kind: 'course_ready' | 'course_extended';
+  kind: 'course_ready' | 'course_extended' | 'concept_verified' | 'concept_changed';
   domain: string;
   title: string;
   body: string;
-  data: { steps?: number; drafts?: number; added?: number };
+  data: {
+    steps?: number;
+    drafts?: number;
+    added?: number;
+    // concept_verified / concept_changed: какие понятия и что изменилось
+    concepts?: { id: string; title: string; what?: string }[];
+  };
   createdAt: string | null;
   read: boolean;
 }

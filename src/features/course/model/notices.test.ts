@@ -21,6 +21,11 @@ describe('уведомления на экране курса', () => {
     expect(noticesFor([], 'algebra')).toEqual([]);
   });
 
+  it('правка пройденного предупреждает, проверка — хорошая новость', () => {
+    expect(noticeTone(n({ kind: 'concept_changed', data: { concepts: [] } }))).toBe('warn');
+    expect(noticeTone(n({ kind: 'concept_verified', data: { drafts: 3 } }))).toBe('ok');
+  });
+
   it('уведомление с черновиками предупреждает, без них — сообщает об успехе', () => {
     expect(hasDraftNote(n())).toBe(true);
     expect(noticeTone(n())).toBe('warn');
