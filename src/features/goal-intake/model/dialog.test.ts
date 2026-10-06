@@ -4,8 +4,13 @@ import {
   canAsk,
   canConfirm,
   collectAnswers,
+  assumedFields,
+  assumedLine,
+  cleanConstraints,
+  directIntake,
   editSummary,
   needsChoice,
+  parseHours,
   recapLine,
   volumeLine,
   subjectOf,
@@ -55,6 +60,8 @@ describe('диалог постановки цели', () => {
       goal: 'ML глубже',
       level: 'apply',
       wishes: ['сети', 'деревья'],
+      knows: '',
+      constraints: {},
     });
   });
 
@@ -101,6 +108,68 @@ describe('диалог постановки цели', () => {
     );
     expect(volumeLine({ ...exact, domainCount: 11, conceptCount: 12 })).toBe(
       '11 областей, 12 понятий',
+    );
+  });
+});
+
+describe('пять полей цели', () => {
+  const base = { area: 'Английский', goal: 'сдать IELTS', level: 'apply', wishes: [] };
+
+  it('часы в неделю: число от нуля до ста, иначе не задано', () => {
+    expect(parseHours(' 6,5 ')).toBe(6.5);
+    expect(parseHours('0')).toBeUndefined();
+    expect(parseHours('500')).toBeUndefined();
+    expect(parseHours('много')).toBeUndefined();
+  });
+
+  it('пустые ограничения не хранятся', () => {
+    expect(cleanConstraints({ deadline: ' ', format: 'видео', hoursPerWeek: 0 })).toEqual({
+      format: 'видео',
+    });
+    expect(cleanConstraints(undefined)).toEqual({});
+  });
+
+  it('правка пересказа чистит новые поля', () => {
+    const s = editSummary(base, { knows: '  читаю свободно ', constraints: { deadline: ' ' } });
+    expect(s.knows).toBe('читаю свободно');
+    expect(s.constraints).toEqual({});
+  });
+
+  it('что не названо, перечислено как предположенное', () => {
+    expect(assumedFields(base, true)).toEqual(['knows', 'constraints']);
+    expect(assumedFields({ ...base, goal: 'Английский' }, false)).toEqual([
+      'goal',
+      'level',
+      'knows',
+      'constraints',
+    ]);
+    const full = { ...base, knows: 'читаю', constraints: { hoursPerWeek: 4 } };
+    expect(assumedFields(full, true)).toEqual([]);
+    expect(assumedLine([])).toBe('');
+    expect(assumedLine(['knows', 'constraints'])).toBe(
+      'Не указано, предположили: что уже знаете, срок и время на занятия.',
+    );
+  });
+
+  it('пересказ называет всё, что известно', () => {
+    const line = recapLine({
+      ...base,
+      knows: 'читаю свободно',
+      constraints: { deadline: '3 месяца', hoursPerWeek: 6 },
+    });
+    expect(line).toContain('уже знаете: читаю свободно');
+    expect(line).toContain('срок 3 месяца');
+    expect(line).toContain('6 ч в неделю');
+  });
+});
+
+describe('прямая форма без сети', () => {
+  it('в профиль идёт только названное', () => {
+    expect(
+      directIntake({ goal: ' работа ', knows: '', deadline: '3 месяца', hours: '6', format: ' ' }),
+    ).toEqual({ goal: 'работа', constraints: { deadline: '3 месяца', hoursPerWeek: 6 } });
+    expect(directIntake({ goal: '', knows: '', deadline: '', hours: 'мало', format: '' })).toEqual(
+      {},
     );
   });
 });

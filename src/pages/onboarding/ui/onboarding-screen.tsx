@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { MASTERY_TARGETS, toSubjectId, useSession, type TargetBloom } from '@/entities/session';
-import { GoalIntakeDialog, subjectOf } from '@/features/goal-intake';
+import { directIntake, GoalIntakeDialog, subjectOf } from '@/features/goal-intake';
 import { updateProfile, type GoalSummary } from '@/shared/api';
 import { useIsOnline } from '@/shared/lib';
 import {
@@ -31,6 +31,12 @@ export function OnboardingScreen() {
   // При смене предмета подставляем прежние значения — не заставлять набирать заново.
   const [title, setTitle] = useState(subject?.title ?? '');
   const [target, setTarget] = useState<TargetBloom>(subject?.target ?? 'apply');
+  // Те же поля цели, что в диалоге: без сети уточнять нечем, но назвать их человек может сам.
+  const [goal, setGoal] = useState('');
+  const [knows, setKnows] = useState('');
+  const [deadline, setDeadline] = useState('');
+  const [hours, setHours] = useState('');
+  const [format, setFormat] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const online = useIsOnline();
@@ -47,7 +53,13 @@ export function OnboardingScreen() {
       await updateProfile({
         ...(user?.profile ?? {}),
         onboarded: true,
-        subject: { id: toSubjectId(subjectTitle), title: subjectTitle, target },
+        subject: {
+          id: toSubjectId(subjectTitle),
+          title: subjectTitle,
+          target,
+          // Пока без сети цель не подтверждена на сервере: поля лежат в профиле и пойдут в диалог онлайн.
+          intake: directIntake({ goal, knows, deadline, hours, format }),
+        },
       });
       await refresh();
     } catch (e) {
@@ -98,6 +110,24 @@ export function OnboardingScreen() {
         value={title}
         onChangeText={setTitle}
       />
+
+      <Label>Зачем это нужно</Label>
+      <Field placeholder="работа, экзамен, интерес…" value={goal} onChangeText={setGoal} />
+      <Label>Что уже знаете</Label>
+      <Field placeholder="можно оставить пустым" multiline value={knows} onChangeText={setKnows} />
+      <Label>Срок, время и формат</Label>
+      <Field
+        placeholder="срок, например: через 3 месяца"
+        value={deadline}
+        onChangeText={setDeadline}
+      />
+      <Field
+        placeholder="часов в неделю"
+        keyboardType="numeric"
+        value={hours}
+        onChangeText={setHours}
+      />
+      <Field placeholder="формат занятий" value={format} onChangeText={setFormat} />
 
       <Label>До какого уровня</Label>
       {/* Те же формулировки, что на экране проверки уровня: человек читает их

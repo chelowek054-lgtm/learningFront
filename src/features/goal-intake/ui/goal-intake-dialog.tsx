@@ -28,11 +28,14 @@ import {
 } from '@/shared/ui';
 import {
   answeredCount,
+  assumedFields,
+  assumedLine,
   canAsk,
   canConfirm,
   collectAnswers,
   editSummary,
   needsChoice,
+  parseHours,
   recapLine,
   volumeLine,
 } from '../model/dialog';
@@ -55,6 +58,9 @@ export function GoalIntakeDialog({
   const [values, setValues] = useState<Record<string, string>>({});
   const [summary, setSummary] = useState<GoalSummary | null>(null);
   const [volume, setVolume] = useState<GoalVolume | null>(null);
+  // Выбирал ли человек уровень сам: без этого уровень по умолчанию считается предположенным.
+  const [levelChosen, setLevelChosen] = useState(false);
+  const [hoursText, setHoursText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -78,7 +84,11 @@ export function GoalIntakeDialog({
     setBusy(true);
     setError(null);
     try {
-      setSummary(await summarizeGoal(text.trim(), collectAnswers(questions, values)));
+      const got = await summarizeGoal(text.trim(), collectAnswers(questions, values));
+      setSummary(got);
+      // Сервер перечисляет предположенное: если уровень не назван, человек его ещё не выбирал.
+      setLevelChosen(!(got.assumed ?? []).includes('level'));
+      setHoursText(got.constraints?.hoursPerWeek ? String(got.constraints.hoursPerWeek) : '');
       setStage('recap');
     } catch (e) {
       setError(`Не удалось подвести итог: ${String(e).slice(0, 160)}`);
@@ -93,7 +103,7 @@ export function GoalIntakeDialog({
     setError(null);
     try {
       const domain = toSubjectId(summary.area);
-      await confirmGoal(domain, summary);
+      await confirmGoal(domain, editSummary(summary, {}));
       // Перед построением показываем объём пути, если под целью есть базовые области.
       const preview = await getGoalVolume(domain, summary.level).catch(() => null);
       if (needsChoice(preview)) {
@@ -209,7 +219,42 @@ export function GoalIntakeDialog({
         value={summary.goal}
         onChangeText={(v) => setSummary({ ...summary, goal: v })}
       />
+      <Field
+        placeholder="что уже знаете (можно оставить пустым)"
+        multiline
+        value={summary.knows ?? ''}
+        onChangeText={(v) => setSummary({ ...summary, knows: v })}
+      />
+      <Field
+        placeholder="срок, например: через 3 месяца"
+        value={summary.constraints?.deadline ?? ''}
+        onChangeText={(v) =>
+          setSummary({ ...summary, constraints: { ...summary.constraints, deadline: v } })
+        }
+      />
+      <Field
+        placeholder="часов в неделю"
+        keyboardType="numeric"
+        value={hoursText}
+        onChangeText={(v) => {
+          setHoursText(v);
+          setSummary({
+            ...summary,
+            constraints: { ...summary.constraints, hoursPerWeek: parseHours(v) },
+          });
+        }}
+      />
+      <Field
+        placeholder="формат занятий, например: короткие уроки"
+        value={summary.constraints?.format ?? ''}
+        onChangeText={(v) =>
+          setSummary({ ...summary, constraints: { ...summary.constraints, format: v } })
+        }
+      />
       {summary.wishes.length > 0 && <Muted>Важно: {summary.wishes.join('; ')}</Muted>}
+      {assumedLine(assumedFields(summary, levelChosen)) !== '' && (
+        <Note tone="warn">{assumedLine(assumedFields(summary, levelChosen))}</Note>
+      )}
 
       <Label>До какого уровня</Label>
       <View style={{ gap: space.sm }}>
@@ -218,7 +263,10 @@ export function GoalIntakeDialog({
           return (
             <Pressable
               key={t.bloom}
-              onPress={() => setSummary({ ...summary, level: t.bloom })}
+              onPress={() => {
+                setLevelChosen(true);
+                setSummary({ ...summary, level: t.bloom });
+              }}
               accessibilityRole="radio"
               accessibilityState={{ selected: active }}
               style={{
