@@ -246,6 +246,8 @@ export interface CourseStep {
   reason: StepReason;
   activities: CourseActivity[];
   done: boolean;
+  /** Проверен ли шаг специалистом; сервер присылает на момент запроса. Источников здесь нет. */
+  status?: 'verified' | 'draft';
 }
 
 export interface Course {
@@ -255,6 +257,8 @@ export interface Course {
   completed: number;
   total: number;
   current: CourseStep | null;
+  /** Сколько шагов ещё черновики. */
+  draftSteps?: number;
 }
 
 export const buildCourse = (domain: string, targetBloom: string) =>
