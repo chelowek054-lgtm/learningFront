@@ -1,5 +1,6 @@
 // Auth-запросы к backend (WS1).
 import { api } from './http';
+import { forgetPushDevice } from './push-device';
 import { setToken, clearToken } from './token';
 
 export interface AuthUser {
@@ -63,6 +64,8 @@ export function confirmPasswordReset(
 }
 
 export async function logout(): Promise<void> {
+  // Пока токен входа ещё действует: сказать серверу, что этому телефону уведомления больше не нужны.
+  await forgetPushDevice();
   await clearToken();
 }
 
