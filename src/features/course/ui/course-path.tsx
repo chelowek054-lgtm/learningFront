@@ -29,6 +29,7 @@ import {
   Title,
   useTheme,
 } from '@/shared/ui';
+import { draftNotice, isDraft } from '../model/draft';
 
 /** Каждая стадия развития объясняется пользователю, а не остаётся кодом. */
 const REASON: Record<StepReason, string> = {
@@ -122,6 +123,7 @@ export function CoursePath({
         Пройдено {course.completed} из {course.total}
       </Muted>
       <Progress value={course.completed / Math.max(1, course.total)} />
+      {draftNotice(course) !== '' && <Note tone="warn">{draftNotice(course)}</Note>}
 
       {course.current && (
         <Card tone="accent">
@@ -209,6 +211,7 @@ function StepRow({
           <Body>{step.title}</Body>
           <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
             <Pill text={REASON[step.reason]} />
+            {isDraft(step) && <Pill text="Черновик" tone="muted" />}
             <Pill
               text={step.tier === 'core' ? 'Основа' : 'Ответвление'}
               tone={step.tier === 'core' ? 'core' : 'muted'}
