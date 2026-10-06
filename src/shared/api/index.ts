@@ -25,6 +25,7 @@ export {
   type GoalAnswer,
   type GoalIntakeState,
   type GoalQuestion,
+  type GoalConstraints,
   type GoalSummary,
 } from './goal-intake-api';
 export { flushEvidence, postEvidence, submitEvidence, type Evidence } from './evidence-api';

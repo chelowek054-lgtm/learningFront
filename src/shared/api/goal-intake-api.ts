@@ -13,12 +13,23 @@ export interface GoalAnswer {
   answer: string | null;
 }
 
-/** Пересказ цели: «область, цель, уровень, пожелания». */
+/** Ограничения: что человек назвал; пустое не хранится. */
+export interface GoalConstraints {
+  deadline?: string;
+  hoursPerWeek?: number;
+  format?: string;
+}
+
+/** Пять полей цели (R-0041): область, уровень, зачем, что уже знает, ограничения (+ пожелания). */
 export interface GoalSummary {
   area: string;
   goal: string;
   level: string;
   wishes: string[];
+  knows?: string;
+  constraints?: GoalConstraints;
+  /** Поля, которых человек не назвал и система подставила сама (сервер, на момент пересказа). */
+  assumed?: string[];
 }
 
 export interface GoalIntakeState {
