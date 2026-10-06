@@ -126,12 +126,17 @@ export {
 } from './notifications-api';
 export {
   deleteSource,
+  fillSourceGaps,
   getSourceProgress,
+  listSourceGaps,
   listSources,
   sourceErrorMessage,
   uploadSource,
+  type GapFillResult,
+  type GapFillStatus,
   type IngestStatus,
   type SourceFields,
+  type SourceGap,
   type SourceItem,
   type SourceProgress,
 } from './sources-api';
