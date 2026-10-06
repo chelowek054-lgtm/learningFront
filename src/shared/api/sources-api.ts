@@ -53,6 +53,41 @@ export const deleteSource = (id: string, keepVerified = false) =>
     { method: 'DELETE' },
   );
 
+/** Область под целью, которой нет в графе (T-0084): готовый запрос и ход разбора её документов. */
+export interface SourceGap {
+  key: string;
+  title: string;
+  query: string;
+  state: 'idle' | 'running';
+  documents: SourceProgress[];
+}
+
+export type GapFillStatus =
+  'queued' | 'nothing_found' | 'nothing_queued' | 'already_running' | 'bad_query';
+
+export interface GapFillResult {
+  area: string;
+  status: GapFillStatus;
+  queued: { documentId: string; title: string; created: boolean }[];
+  skipped: { url: string; reason: string }[];
+  problems?: string[];
+}
+
+export const listSourceGaps = (goal: string, target = 'understand') =>
+  api<{ goal: string; target: string; registered: boolean; gaps: SourceGap[] }>(
+    `/graph/sources/gaps/${encodeURIComponent(goal)}?target=${encodeURIComponent(target)}`,
+  );
+
+export const fillSourceGaps = (
+  goal: string,
+  areas: { area: string; query?: string }[],
+  target = 'understand',
+) =>
+  api<{ results: GapFillResult[] }>(`/graph/sources/gaps/${encodeURIComponent(goal)}/fill`, {
+    method: 'POST',
+    body: JSON.stringify({ target, areas }),
+  });
+
 /** Причина отказа сервера по-русски: статус человеку ничего не говорит, а текст сервера понятен. */
 export function sourceErrorMessage(e: unknown): string {
   if (e instanceof NetworkError) return 'Нет связи с сервером: загрузить файл можно только онлайн.';
