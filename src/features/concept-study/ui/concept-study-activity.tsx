@@ -18,12 +18,18 @@ interface Content {
 }
 
 export function ConceptStudyActivity({ activity, onComplete }: ActivityRendererProps) {
-  const payload = activity.payload as { title?: string; content?: Content };
+  const payload = activity.payload as { title?: string; content?: Content; status?: string };
   const content = payload.content;
 
   return (
     <View style={{ gap: space.md }}>
       <Title>{payload.title ?? 'Концепция'}</Title>
+      {payload.status === 'draft' && (
+        <Note tone="warn">
+          Черновик: понятие собрано автоматически и ещё не проверено специалистом. Учиться по нему
+          можно, но возможны неточности.
+        </Note>
+      )}
       {content?.summary ? <Lead>{content.summary}</Lead> : null}
 
       {(content?.sections ?? []).map((s) => (

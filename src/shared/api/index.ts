@@ -109,6 +109,11 @@ export {
   type PickedFile,
 } from './materials-api';
 export {
+  listNotifications,
+  markNotificationsRead,
+  type CourseNotification,
+} from './notifications-api';
+export {
   deleteSource,
   getSourceProgress,
   listSources,

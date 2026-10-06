@@ -9,7 +9,10 @@ import {
   buildCourse,
   completeStep,
   getCourse,
+  listNotifications,
+  markNotificationsRead,
   type Course,
+  type CourseNotification,
   type CourseStep,
   type StepReason,
 } from '@/shared/api';
@@ -30,6 +33,7 @@ import {
   useTheme,
 } from '@/shared/ui';
 import { draftNotice, isDraft } from '../model/draft';
+import { noticesFor, noticeTone } from '../model/notices';
 
 /** Каждая стадия развития объясняется пользователю, а не остаётся кодом. */
 const REASON: Record<StepReason, string> = {
@@ -57,6 +61,7 @@ export function CoursePath({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
+  const [notices, setNotices] = useState<CourseNotification[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -74,6 +79,18 @@ export function CoursePath({
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Уведомления о курсе («готов», «дополнен»): без сети их просто нет, экран от этого не страдает.
+  useEffect(() => {
+    listNotifications()
+      .then((all) => setNotices(noticesFor(all, domain)))
+      .catch(() => setNotices([]));
+  }, [domain]);
+
+  async function dismiss(id: string) {
+    setNotices((prev) => prev.filter((n) => n.id !== id));
+    await markNotificationsRead([id]).catch(() => undefined);
+  }
 
   async function run(fn: () => Promise<Course>) {
     setBusy(true);
@@ -123,6 +140,13 @@ export function CoursePath({
         Пройдено {course.completed} из {course.total}
       </Muted>
       <Progress value={course.completed / Math.max(1, course.total)} />
+      {notices.map((n) => (
+        <Card key={n.id}>
+          <Label>{n.title}</Label>
+          <Note tone={noticeTone(n)}>{n.body}</Note>
+          <Button label="Понятно" variant="quiet" onPress={() => void dismiss(n.id)} />
+        </Card>
+      ))}
       {draftNotice(course) !== '' && <Note tone="warn">{draftNotice(course)}</Note>}
 
       {course.current && (
