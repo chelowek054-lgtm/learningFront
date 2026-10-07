@@ -9,7 +9,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { MASTERY_TARGETS, toSubjectId, useSession, type TargetBloom } from '@/entities/session';
 import { directIntake, GoalIntakeDialog, subjectOf } from '@/features/goal-intake';
-import { updateProfile, type GoalSummary } from '@/shared/api';
+import { startGraphBuild, updateProfile, type GoalSummary } from '@/shared/api';
 import { useIsOnline } from '@/shared/lib';
 import {
   Button,
@@ -77,6 +77,9 @@ export function OnboardingScreen() {
       onboarded: true,
       subject,
     });
+    // Сборку графа запускаем сразу: она идёт на сервере в фоне, ход виден на экране карты.
+    // Не вышло запустить — на карте останется кнопка «Собрать карту», онбординг не ломаем.
+    await startGraphBuild(subject.id).catch(() => undefined);
     await refresh();
   }
 

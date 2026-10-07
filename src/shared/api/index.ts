@@ -125,6 +125,7 @@ export {
   getProfile,
   requestProfile,
   saveProfile,
+  startGraphBuild,
   type AreaCoverage,
   type BuildReport,
   type ConceptLevel,

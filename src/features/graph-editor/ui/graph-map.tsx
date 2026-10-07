@@ -10,20 +10,8 @@ import { ActivityIndicator, View } from 'react-native';
 import { getGraph, type Graph, type GraphNode } from '@/shared/api';
 import { hasStages, groupByStage, LEVEL_TEXT } from '../model/stage-groups';
 import { GoalGate } from './goal-gate';
-import { GoalPlanner } from './goal-planner';
-import {
-  Body,
-  Card,
-  Empty,
-  Field,
-  Label,
-  Lead,
-  Muted,
-  Pill,
-  Screen,
-  space,
-  TopBar,
-} from '@/shared/ui';
+import { GraphBuildPanel } from './graph-build-panel';
+import { Body, Card, Empty, Label, Lead, Muted, Pill, Screen, space, TopBar } from '@/shared/ui';
 
 const EDGE_LABEL: Record<string, string> = {
   prereq: 'нужно раньше',
@@ -31,11 +19,10 @@ const EDGE_LABEL: Record<string, string> = {
   related: 'рядом',
 };
 
-export function GraphMap({ domain, subjectTitle }: { domain: string; subjectTitle: string }) {
+export function GraphMap({ domain }: { domain: string; subjectTitle?: string }) {
   const [graph, setGraph] = useState<Graph | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
-  const [topic, setTopic] = useState(subjectTitle);
 
   const load = useCallback(async () => {
     try {
@@ -73,13 +60,8 @@ export function GraphMap({ domain, subjectTitle }: { domain: string; subjectTitl
   if (nodes.length === 0) {
     return (
       <Screen>
-        <Label>Карты пока нет</Label>
-        <Muted>
-          Соберём её из вашей темы: получится черновик, по которому дальше строится путь.
-        </Muted>
-        <Field placeholder="тема" value={topic} onChangeText={setTopic} />
         <GoalGate domain={domain}>
-          <GoalPlanner domain={domain} topic={topic} onBuilt={setGraph} />
+          <GraphBuildPanel domain={domain} onBuilt={setGraph} />
         </GoalGate>
       </Screen>
     );

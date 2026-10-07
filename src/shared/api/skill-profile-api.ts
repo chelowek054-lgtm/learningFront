@@ -47,6 +47,10 @@ export interface ProfileState {
   profile: SkillProfile | null;
   concepts?: number;
   error?: string | null;
+  /** Когда статус менялся в последний раз; для «строится уже N мин». */
+  updatedAt?: string | null;
+  /** «Строится», но задача давно не двигалась (сервер перезапускали): можно запустить заново. */
+  stale?: boolean;
 }
 
 export interface BuildReport {
@@ -79,6 +83,10 @@ export const getProfile = (domain: string) => api<ProfileState>(`/graph/profile/
 
 export const requestProfile = (domain: string) =>
   api<ProfileState>(`/graph/profile/${seg(domain)}`, { method: 'POST' });
+
+/** Собрать граф по подтверждённой цели в фоне: ответ сразу, ход — через getProfile. */
+export const startGraphBuild = (domain: string) =>
+  api<ProfileState>(`/graph/profile/${seg(domain)}/start`, { method: 'POST' });
 
 export const saveProfile = (domain: string, profile: SkillProfile) =>
   api<ProfileState>(`/graph/profile/${seg(domain)}`, {
