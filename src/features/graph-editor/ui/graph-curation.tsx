@@ -28,7 +28,13 @@ import {
   type GraphNode,
 } from '@/shared/api';
 
-export function GraphCuration({ domain }: { domain: string }) {
+export function GraphCuration({
+  domain,
+  onOpenOutline,
+}: {
+  domain: string;
+  onOpenOutline?: () => void;
+}) {
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const [graph, setGraph] = useState<Graph | null>(null);
@@ -103,7 +109,7 @@ export function GraphCuration({ domain }: { domain: string }) {
     return (
       <View style={styles.pad}>
         <GoalGate domain={domain}>
-          <GraphBuildPanel domain={domain} onBuilt={setGraph} />
+          <GraphBuildPanel domain={domain} onBuilt={setGraph} onOpenOutline={onOpenOutline} />
         </GoalGate>
       </View>
     );

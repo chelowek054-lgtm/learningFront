@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ProfileState } from '@/shared/api';
-import { buildView, elapsedLabel, isPending } from './build-progress';
+import { buildView, canResume, elapsedLabel, isPending } from './build-progress';
 
 const NOW = Date.parse('2026-10-07T12:10:00Z');
 const state = (patch: Partial<ProfileState>): ProfileState => ({
@@ -18,11 +18,32 @@ describe('ход сборки графа', () => {
     expect(buildView({ exists: false, status: null, profile: null }, NOW).kind).toBe('idle');
   });
 
-  it('идущая сборка показывает, сколько она длится, и просит ждать', () => {
+  it('контур ещё составляется: около минуты', () => {
     const v = buildView(state({}), NOW);
+    expect(v).toMatchObject({ kind: 'drafting', minutes: 10 });
+    expect(v.message).toContain('около минуты');
+    expect(isPending(state({}))).toBe(true);
+  });
+
+  it('наполнение идёт по областям: показывает время и просит ждать', () => {
+    const v = buildView(state({ progress: { phase: 'fill', areas: {} } }), NOW);
     expect(v).toMatchObject({ kind: 'running', minutes: 10 });
     expect(v.message).toContain('5–10 минут');
-    expect(isPending(state({}))).toBe(true);
+  });
+
+  it('контур готов и ждёт подтверждения: опрашивать не нужно', () => {
+    const s = state({ status: 'outline' });
+    expect(buildView(s, NOW).kind).toBe('outline');
+    expect(isPending(s)).toBe(false);
+  });
+
+  it('продолжать можно, только если контур уже есть', () => {
+    expect(canResume(state({ status: 'failed' }))).toBe(false);
+    const withAreas = state({
+      status: 'failed',
+      profile: { skill: 'x', level: 'apply', size: 32, areas: [{ key: 'a' } as never] },
+    });
+    expect(canResume(withAreas)).toBe(true);
   });
 
   it('прерванная сборка (сервер перезапускали) не опрашивается и предлагает запуск заново', () => {

@@ -30,3 +30,4 @@ export {
   TopBar,
   Empty,
 } from './kit';
+export { AreaProgress, type AreaProgressItem, type AreaStatus } from './area-progress';

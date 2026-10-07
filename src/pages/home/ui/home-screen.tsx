@@ -10,12 +10,13 @@ import { RefreshControl, View } from 'react-native';
 
 import { useSession } from '@/entities/session';
 import { GoalReachedCard } from '@/features/goal-reached';
-import { elapsedLabel, isPending, POLL_MS } from '@/features/graph-editor';
+import { canResume, elapsedLabel, isPending, POLL_MS } from '@/features/graph-editor';
 import {
   ApiError,
   getCourse,
   getGraph,
   getLocalStore,
+  fillGraph,
   getProfile,
   startGraphBuild,
   syncNow,
@@ -105,7 +106,8 @@ export function HomeScreen({
     if (!subject) return;
     setRestarting(true);
     try {
-      setBuild(await startGraphBuild(subject.id));
+      // Контур уже есть — продолжаем наполнение, а не начинаем с нуля.
+      setBuild(await (canResume(build) ? fillGraph(subject.id) : startGraphBuild(subject.id)));
       setNow(Date.now());
     } finally {
       setRestarting(false);

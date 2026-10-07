@@ -26,6 +26,8 @@ export interface ProfileArea {
   title: string;
   summary: string;
   role: 'goal' | 'foundation';
+  /** «Уже владею»: наполнение сводится к опорным понятиям (R-0055). */
+  known?: boolean;
   weight: number;
   prereqs: string[];
   stages: ProfileStage[];
@@ -41,6 +43,14 @@ export interface SkillProfile {
 
 export type ProfileStatus = 'building' | 'outline' | 'draft' | 'confirmed' | 'failed';
 
+export type AreaProgressState = 'waiting' | 'working' | 'done' | 'failed';
+
+/** Ход наполнения по областям; есть только у сборки с понятиями (R-0056). */
+export interface BuildProgress {
+  phase: string;
+  areas: Record<string, AreaProgressState>;
+}
+
 export interface ProfileState {
   exists: boolean;
   status: ProfileStatus | null;
@@ -51,6 +61,7 @@ export interface ProfileState {
   updatedAt?: string | null;
   /** «Строится», но задача давно не двигалась (сервер перезапускали): можно запустить заново. */
   stale?: boolean;
+  progress?: BuildProgress | null;
 }
 
 export interface BuildReport {
@@ -88,6 +99,10 @@ export const requestProfile = (domain: string) =>
 export const startGraphBuild = (domain: string) =>
   api<ProfileState>(`/graph/profile/${seg(domain)}/start`, { method: 'POST' });
 
+/** Подтвердить контур и собрать карту в фоне: понятия по областям параллельно, затем граф. */
+export const fillGraph = (domain: string) =>
+  api<ProfileState>(`/graph/profile/${seg(domain)}/fill`, { method: 'POST' });
+
 export const saveProfile = (domain: string, profile: SkillProfile) =>
   api<ProfileState>(`/graph/profile/${seg(domain)}`, {
     method: 'PUT',
@@ -101,3 +116,16 @@ export const buildFromProfile = (domain: string) =>
 
 export const getCoverage = (domain: string) =>
   api<CoverageReport>(`/graph/profile/${seg(domain)}/coverage`);
+
+/** Области с их статусом сборки в порядке контура; пусто, пока наполнение не началось. */
+export function areaProgressItems(
+  state: ProfileState | null,
+): { key: string; title: string; status: AreaProgressState }[] {
+  const progress = state?.progress;
+  if (!progress || !state?.profile) return [];
+  return state.profile.areas.map((a) => ({
+    key: a.key,
+    title: a.title,
+    status: progress.areas[a.key] ?? 'waiting',
+  }));
+}
