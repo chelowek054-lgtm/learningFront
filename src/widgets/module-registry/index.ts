@@ -24,8 +24,8 @@ import {
   mnemonicActivityTypes,
 } from '@/entities/module';
 import { CodeTaskActivity } from '@/features/code-task';
-import { ConceptRecallActivity } from '@/features/concept-recall';
 import { ConceptQuestionActivity, ConceptStudyActivity } from '@/features/concept-study';
+import { RecallRenderer } from './recall-renderer';
 import { IeltsWritingActivity, ieltsWritingLocalGrader } from '@/features/ielts-writing';
 import { ListeningDrillActivity } from '@/features/listening-drill';
 import { ReadingDrillActivity } from '@/features/reading-drill';
@@ -43,7 +43,7 @@ const RENDERERS: Record<string, ActivityRenderer> = {
   speaking_response: SpeakingActivity,
   toefl_writing_independent: IeltsWritingActivity,
   toefl_writing_integrated: IeltsWritingActivity,
-  concept_recall: ConceptRecallActivity,
+  concept_recall: RecallRenderer,
   code_task: CodeTaskActivity,
   material_read: MaterialReadActivity,
   concept_study: ConceptStudyActivity,
