@@ -1,6 +1,7 @@
 export { SessionProvider, useSession } from './session-context';
 export {
   MASTERY_TARGETS,
+  nextTarget,
   readSubject,
   targetLabel,
   toSubjectId,
