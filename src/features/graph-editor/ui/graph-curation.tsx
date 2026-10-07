@@ -15,9 +15,10 @@ import {
   View,
 } from 'react-native';
 import { useTheme, type Palette } from '@/shared/ui';
+import { GoalGate } from './goal-gate';
+import { GraphBuildPanel } from './graph-build-panel';
 import {
   approveNode,
-  buildCanon,
   expandNode,
   getGraph,
   getNode,
@@ -34,7 +35,6 @@ export function GraphCuration({ domain }: { domain: string }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [direction, setDirection] = useState('');
-  const [topic, setTopic] = useState('');
   const [editSummary, setEditSummary] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -102,27 +102,9 @@ export function GraphCuration({ domain }: { domain: string }) {
   if (nodes.length === 0) {
     return (
       <View style={styles.pad}>
-        <Text style={styles.empty}>Граф «{domain}» пуст.</Text>
-        {/* Тема раньше была константой «Трансформеры»: кнопка всегда строила
-            один и тот же граф, чем бы область ни называлась. */}
-        <TextInput
-          style={styles.input}
-          placeholder="тема для построения"
-          placeholderTextColor={colors.muted}
-          value={topic}
-          onChangeText={setTopic}
-        />
-        <Pressable
-          style={styles.btn}
-          onPress={() => run(() => buildCanon(domain, topic.trim()))}
-          disabled={busy || !topic.trim()}
-        >
-          {busy ? (
-            <ActivityIndicator color={colors.onAccent} />
-          ) : (
-            <Text style={styles.btnText}>Построить граф</Text>
-          )}
-        </Pressable>
+        <GoalGate domain={domain}>
+          <GraphBuildPanel domain={domain} onBuilt={setGraph} />
+        </GoalGate>
       </View>
     );
   }
