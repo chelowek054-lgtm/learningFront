@@ -5,7 +5,10 @@ import {
   conceptCount,
   coverageLine,
   groupByStage,
+  knownLine,
+  removeArea,
   removeConcept,
+  toggleKnown,
   toggleOptional,
 } from './profile-model';
 
@@ -90,5 +93,35 @@ describe('профиль навыка: правка', () => {
     expect(
       coverageLine({ ...report, summary: { total: 1, verified: 0, missing: 0, coverage: 1 } }),
     ).toBe('охвачено 100%');
+  });
+});
+
+describe('контур: «уже владею» и состав', () => {
+  const goalArea: ProfileArea = { ...area, key: 'main', role: 'goal', prereqs: ['base'] };
+  const baseArea: ProfileArea = { ...area, key: 'base', role: 'foundation', prereqs: [] };
+  const outline: SkillProfile = {
+    skill: 'Навык',
+    level: 'apply',
+    size: 32,
+    areas: [baseArea, goalArea],
+  };
+
+  it('отметка ставится на основе и снимается, у цели её нет', () => {
+    const marked = toggleKnown(outline, 'base');
+    expect(marked.areas[0].known).toBe(true);
+    expect(toggleKnown(marked, 'base').areas[0].known).toBe(false);
+    expect(toggleKnown(outline, 'main')).toEqual(outline);
+  });
+
+  it('убранная область исчезает из предпосылок остальных; цель убрать нельзя', () => {
+    const next = removeArea(outline, 'base');
+    expect(next.areas.map((a) => a.key)).toEqual(['main']);
+    expect(next.areas[0].prereqs).toEqual([]);
+    expect(removeArea(outline, 'main')).toBe(outline);
+  });
+
+  it('итог отметок читается одной строкой', () => {
+    expect(knownLine(outline)).toBe('ни одной области не отмечено как знакомая');
+    expect(knownLine(toggleKnown(outline, 'base'))).toBe('уже владею: 1 из 1');
   });
 });

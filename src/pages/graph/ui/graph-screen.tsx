@@ -8,7 +8,7 @@ import { useSession } from '@/entities/session';
 import { GraphCuration, GraphMap } from '@/features/graph-editor';
 import { Empty, space, Title, useTheme } from '@/shared/ui';
 
-export function GraphScreen() {
+export function GraphScreen({ onOpenOutline }: { onOpenOutline?: () => void }) {
   const { colors } = useTheme();
   const { isAdmin, subject } = useSession();
 
@@ -20,9 +20,9 @@ export function GraphScreen() {
       {!subject ? (
         <Empty text="Сначала выберите предмет — карта строится под него." />
       ) : isAdmin ? (
-        <GraphCuration domain={subject.id} />
+        <GraphCuration domain={subject.id} onOpenOutline={onOpenOutline} />
       ) : (
-        <GraphMap domain={subject.id} subjectTitle={subject.title} />
+        <GraphMap domain={subject.id} subjectTitle={subject.title} onOpenOutline={onOpenOutline} />
       )}
     </SafeAreaView>
   );

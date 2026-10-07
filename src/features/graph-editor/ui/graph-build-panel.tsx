@@ -1,17 +1,29 @@
-// Сборка карты по подтверждённой цели: запуск, видимый ход и итог (R-0049, T-0090).
+// Сборка карты по подтверждённой цели: запуск, видимый ход и итог (R-0049, R-0055, R-0056).
 // Сборка идёт на сервере в фоне; экран только спрашивает статус, поэтому его можно закрыть.
+// Две фазы: быстрый контур (человек его проверяет) и наполнение по областям (ход виден по каждой).
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
-import { getGraph, getProfile, startGraphBuild, type Graph, type ProfileState } from '@/shared/api';
-import { Button, Card, Label, Muted, Note, space } from '@/shared/ui';
-import { buildView, elapsedLabel, isPending, POLL_MS } from '../model/build-progress';
+import {
+  areaProgressItems,
+  fillGraph,
+  getGraph,
+  getProfile,
+  startGraphBuild,
+  type Graph,
+  type ProfileState,
+} from '@/shared/api';
+import { AreaProgress, Button, Card, Label, Muted, Note, space } from '@/shared/ui';
+import { buildView, canResume, elapsedLabel, isPending, POLL_MS } from '../model/build-progress';
 
 export function GraphBuildPanel({
   domain,
   onBuilt,
+  onOpenOutline,
 }: {
   domain: string;
   onBuilt: (graph: Graph) => void;
+  /** Открыть экран состава навыка (контур); без него контур не показывается отдельно. */
+  onOpenOutline?: () => void;
 }) {
   const [state, setState] = useState<ProfileState | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -56,7 +68,8 @@ export function GraphBuildPanel({
     setError(null);
     setEmpty(false);
     try {
-      setState(await startGraphBuild(domain));
+      // Контур уже составлен — продолжаем наполнение, а не начинаем с нуля.
+      setState(await (canResume(state) ? fillGraph(domain) : startGraphBuild(domain)));
       setNow(Date.now());
     } catch (e) {
       setError(`Не удалось запустить сборку: ${String(e).slice(0, 200)}`);
@@ -69,13 +82,35 @@ export function GraphBuildPanel({
 
   const view = buildView(state, now);
 
-  if (view.kind === 'running') {
+  if (view.kind === 'drafting' || view.kind === 'running') {
+    const items = areaProgressItems(state);
     return (
       <Card>
-        <Label>Карта собирается · {elapsedLabel(view.minutes)}</Label>
+        <Label>
+          {view.kind === 'drafting' ? 'Составляем контур' : 'Карта собирается'} ·{' '}
+          {elapsedLabel(view.minutes)}
+        </Label>
         <ActivityIndicator style={{ alignSelf: 'flex-start' }} />
         <Muted>{view.message}</Muted>
+        {items.length > 0 && <AreaProgress items={items} />}
         {error && <Note tone="warn">{error}</Note>}
+      </Card>
+    );
+  }
+
+  if (view.kind === 'outline') {
+    return (
+      <Card>
+        <Label>Состав навыка готов</Label>
+        <Muted>{view.message}</Muted>
+        {onOpenOutline && <Button label="Проверить состав" onPress={onOpenOutline} />}
+        <Button
+          label="Собрать карту сразу"
+          variant="quiet"
+          onPress={() => void start()}
+          busy={busy}
+        />
+        {error && <Note tone="danger">{error}</Note>}
       </Card>
     );
   }
@@ -93,7 +128,13 @@ export function GraphBuildPanel({
       </Muted>
       {error && <Note tone="danger">{error}</Note>}
       <Button
-        label={failedLike || empty ? 'Запустить заново' : 'Собрать карту'}
+        label={
+          failedLike && canResume(state)
+            ? 'Продолжить сборку'
+            : failedLike || empty
+              ? 'Запустить заново'
+              : 'Собрать карту'
+        }
         onPress={() => void start()}
         busy={busy}
       />

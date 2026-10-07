@@ -99,3 +99,32 @@ export function coverageLine(report: CoverageReport): string {
   if (s.verified > 0) parts.push(`проверено ${s.verified}`);
   return parts.join(' · ');
 }
+
+/** «Уже владею» у области: наполнение свелось бы к опорным понятиям. У области цели отметки нет. */
+export const toggleKnown = (profile: SkillProfile, areaKey: string): SkillProfile => ({
+  ...profile,
+  areas: profile.areas.map((a) =>
+    a.key === areaKey && a.role !== 'goal' ? { ...a, known: !a.known } : a,
+  ),
+});
+
+/** Убрать область контура; остальные теряют её из предпосылок. Область цели убрать нельзя. */
+export function removeArea(profile: SkillProfile, areaKey: string): SkillProfile {
+  const target = profile.areas.find((a) => a.key === areaKey);
+  if (!target || target.role === 'goal') return profile;
+  return {
+    ...profile,
+    areas: profile.areas
+      .filter((a) => a.key !== areaKey)
+      .map((a) => ({ ...a, prereqs: a.prereqs.filter((p) => p !== areaKey) })),
+  };
+}
+
+/** «Знаю 2 из 5 областей»: что человек уже отметил в контуре. */
+export const knownLine = (profile: SkillProfile): string => {
+  const base = profile.areas.filter((a) => a.role !== 'goal');
+  const known = base.filter((a) => a.known).length;
+  return known === 0
+    ? 'ни одной области не отмечено как знакомая'
+    : `уже владею: ${known} из ${base.length}`;
+};

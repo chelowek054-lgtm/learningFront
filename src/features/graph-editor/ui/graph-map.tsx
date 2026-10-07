@@ -7,11 +7,24 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
-import { getGraph, type Graph, type GraphNode } from '@/shared/api';
+import { getGraph, getProfile, type Graph, type GraphNode } from '@/shared/api';
+import { isPending, POLL_MS } from '../model/build-progress';
 import { hasStages, groupByStage, LEVEL_TEXT } from '../model/stage-groups';
 import { GoalGate } from './goal-gate';
 import { GraphBuildPanel } from './graph-build-panel';
-import { Body, Card, Empty, Label, Lead, Muted, Pill, Screen, space, TopBar } from '@/shared/ui';
+import {
+  Body,
+  Card,
+  Empty,
+  Label,
+  Lead,
+  Muted,
+  Note,
+  Pill,
+  Screen,
+  space,
+  TopBar,
+} from '@/shared/ui';
 
 const EDGE_LABEL: Record<string, string> = {
   prereq: 'нужно раньше',
@@ -19,14 +32,24 @@ const EDGE_LABEL: Record<string, string> = {
   related: 'рядом',
 };
 
-export function GraphMap({ domain }: { domain: string; subjectTitle?: string }) {
+export function GraphMap({
+  domain,
+  onOpenOutline,
+}: {
+  domain: string;
+  subjectTitle?: string;
+  onOpenOutline?: () => void;
+}) {
   const [graph, setGraph] = useState<Graph | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const [building, setBuilding] = useState(false);
 
   const load = useCallback(async () => {
     try {
       setGraph(await getGraph(domain));
+      // Готовые области видны сразу; пока остальные дособираются, это сказано словами, а не молчанием.
+      setBuilding(isPending(await getProfile(domain).catch(() => null)));
     } catch {
       setFailed(true);
     }
@@ -35,6 +58,12 @@ export function GraphMap({ domain }: { domain: string; subjectTitle?: string }) 
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!building) return;
+    const timer = setInterval(() => void load(), POLL_MS);
+    return () => clearInterval(timer);
+  }, [building, load]);
 
   const nodes = graph?.nodes ?? [];
   const selected = nodes.find((n) => n.id === selectedId) ?? null;
@@ -61,7 +90,7 @@ export function GraphMap({ domain }: { domain: string; subjectTitle?: string }) 
     return (
       <Screen>
         <GoalGate domain={domain}>
-          <GraphBuildPanel domain={domain} onBuilt={setGraph} />
+          <GraphBuildPanel domain={domain} onBuilt={setGraph} onOpenOutline={onOpenOutline} />
         </GoalGate>
       </Screen>
     );
@@ -99,6 +128,9 @@ export function GraphMap({ domain }: { domain: string; subjectTitle?: string }) 
     // Профиль навыка: карта идёт по этапам, у понятия видны уровень и «необязательное».
     return (
       <Screen>
+        {building && (
+          <Note tone="warn">Карта ещё дособирается: готовые области уже можно открыть.</Note>
+        )}
         {groupByStage(nodes).map((g, i) => (
           <Section
             key={g.title}
@@ -114,6 +146,9 @@ export function GraphMap({ domain }: { domain: string; subjectTitle?: string }) 
 
   return (
     <Screen>
+      {building && (
+        <Note tone="warn">Карта ещё дособирается: готовые области уже можно открыть.</Note>
+      )}
       <Section
         title="Основа"
         hint="Без этого остальное не встанет"
