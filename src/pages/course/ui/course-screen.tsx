@@ -29,6 +29,12 @@ function toActivity(a: StepActivity, userId: string, moduleId: string): Activity
 // STEP_LABEL здесь больше нет: названия типов живут в ActivityTypeDef, иначе
 // словарь разъезжается — на «Сегодня» те же типы печатались слугами.
 
+/** Название понятия, которому посвящён шаг: человек должен видеть, что именно он вспоминает. */
+function conceptTitle(activity: StepActivity): string | null {
+  const title = (activity.payload as { title?: unknown } | undefined)?.title;
+  return typeof title === 'string' && title.trim() !== '' ? title : null;
+}
+
 export function CourseScreen() {
   const { user, subject } = useSession();
   const registry = useModuleRegistry();
@@ -105,8 +111,11 @@ export function CourseScreen() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
         <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md }}>
-          <TopBar title={registry.getActivityTitle(activity.type)} onBack={back} />
-          <Label>{`шаг ${index + 1} из ${running.length}`}</Label>
+          <TopBar
+            title={conceptTitle(activity) ?? registry.getActivityTitle(activity.type)}
+            onBack={back}
+          />
+          <Label>{`${registry.getActivityTitle(activity.type)} · задание ${index + 1} из ${running.length}`}</Label>
           <ActivityDispatcher
             key={activity.id}
             activity={toActivity(
