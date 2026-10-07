@@ -10,6 +10,8 @@ export default function TodayTab() {
       onOpenReview={() => router.push('/review')}
       onOpenPlacement={() => router.push('/placement')}
       onOpenCourse={() => router.navigate('/course')}
+      onOpenGraph={() => router.navigate('/graph')}
+      onOpenSkillProfile={() => router.push('/skill-profile')}
     />
   );
 }

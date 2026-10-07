@@ -39,7 +39,7 @@ export interface SkillProfile {
   areas: ProfileArea[];
 }
 
-export type ProfileStatus = 'building' | 'draft' | 'confirmed' | 'failed';
+export type ProfileStatus = 'building' | 'outline' | 'draft' | 'confirmed' | 'failed';
 
 export interface ProfileState {
   exists: boolean;

@@ -55,3 +55,9 @@ export function readSubject(profile: Record<string, unknown> | undefined): Subje
     : 'understand';
   return { id: raw.id, title: raw.title, target };
 }
+
+/** Ступень выше текущей — что предложить, когда цель достигнута; выше «создать» нет. */
+export function nextTarget(current: TargetBloom): (typeof MASTERY_TARGETS)[number] | null {
+  const i = MASTERY_TARGETS.findIndex((t) => t.bloom === current);
+  return i >= 0 && i < MASTERY_TARGETS.length - 1 ? MASTERY_TARGETS[i + 1] : null;
+}
