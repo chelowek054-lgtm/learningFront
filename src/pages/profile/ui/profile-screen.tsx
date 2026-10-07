@@ -71,11 +71,13 @@ export function ProfileScreen({
   onOpenProgress,
   onOpenMaterials,
   onOpenSources,
+  onOpenSkillProfile,
 }: {
   onOpenActivities?: () => void;
   onOpenProgress?: () => void;
   onOpenMaterials?: () => void;
   onOpenSources?: () => void;
+  onOpenSkillProfile?: () => void;
 }) {
   const { user, logout, refresh, subject } = useSession();
   const online = useIsOnline();
@@ -164,6 +166,13 @@ export function ProfileScreen({
         <Card onPress={onOpenMaterials}>
           <Label>Мои материалы</Label>
           <Muted>Загрузить PDF или Markdown и читать по фрагментам, в том числе офлайн</Muted>
+        </Card>
+      )}
+
+      {subject && onOpenSkillProfile && (
+        <Card onPress={onOpenSkillProfile}>
+          <Label>Профиль навыка</Label>
+          <Muted>Что нужно знать для вашей цели: области, этапы, уровень сложности</Muted>
         </Card>
       )}
 

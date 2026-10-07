@@ -120,6 +120,23 @@ export {
   type Verdict,
 } from './prior-test-api';
 export {
+  buildFromProfile,
+  getCoverage,
+  getProfile,
+  requestProfile,
+  saveProfile,
+  type AreaCoverage,
+  type BuildReport,
+  type ConceptLevel,
+  type CoverageReport,
+  type ProfileArea,
+  type ProfileConcept,
+  type ProfileStage,
+  type ProfileState,
+  type ProfileStatus,
+  type SkillProfile,
+} from './skill-profile-api';
+export {
   getPushState,
   registerPushDevice,
   removePushDevice,

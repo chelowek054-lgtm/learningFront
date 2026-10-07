@@ -25,6 +25,11 @@ export interface GraphNode {
    * `approved` — вычитано. Отдельно от `status` выше: тот про персональный слой.
    */
   reviewStatus?: string;
+  /** Этап, уровень и необязательность понятия (T-0087): метки профиля навыка; у старых узлов их нет. */
+  stage?: string | null;
+  stageOrder?: number | null;
+  level?: 'basic' | 'middle' | 'advanced' | null;
+  optional?: boolean;
   /**
    * `true` — узел из облегчённого списка: в `content` только `summary`, полной
    * теории нет. Такой `content` нельзя сохранять целиком — сначала `getNode`.
