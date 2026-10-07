@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import { getGraph, type Graph, type GraphNode } from '@/shared/api';
+import { hasStages, groupByStage, LEVEL_TEXT } from '../model/stage-groups';
 import { GoalGate } from './goal-gate';
 import { GoalPlanner } from './goal-planner';
 import {
@@ -112,6 +113,23 @@ export function GraphMap({ domain, subjectTitle }: { domain: string; subjectTitl
     );
   }
 
+  if (hasStages(nodes)) {
+    // Профиль навыка: карта идёт по этапам, у понятия видны уровень и «необязательное».
+    return (
+      <Screen>
+        {groupByStage(nodes).map((g, i) => (
+          <Section
+            key={g.title}
+            title={`${i + 1 <= 99 && g.title !== 'Прочее' ? `${i + 1}. ` : ''}${g.title}`}
+            hint=""
+            nodes={g.nodes}
+            onPick={setSelectedId}
+          />
+        ))}
+      </Screen>
+    );
+  }
+
   return (
     <Screen>
       <Section
@@ -147,10 +165,16 @@ function Section({
       <Label>
         {title} · {nodes.length}
       </Label>
-      <Muted>{hint}</Muted>
+      {hint !== '' && <Muted>{hint}</Muted>}
       {nodes.map((n) => (
         <Card key={n.id} onPress={() => onPick(n.id)}>
           <Body>{n.title}</Body>
+          {(n.level || n.optional) && (
+            <View style={{ flexDirection: 'row', gap: space.sm }}>
+              {n.level && <Pill text={LEVEL_TEXT[n.level]} />}
+              {n.optional && <Pill text="необязательное" tone="muted" />}
+            </View>
+          )}
         </Card>
       ))}
     </View>

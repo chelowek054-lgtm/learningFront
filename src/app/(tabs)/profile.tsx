@@ -9,6 +9,7 @@ export default function ProfileTab() {
       onOpenProgress={() => router.push('/progress')}
       onOpenMaterials={() => router.push('/materials')}
       onOpenSources={() => router.push('/sources')}
+      onOpenSkillProfile={() => router.push('/skill-profile')}
     />
   );
 }
