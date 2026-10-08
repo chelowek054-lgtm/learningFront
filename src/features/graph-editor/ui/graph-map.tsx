@@ -7,13 +7,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
-import { getGraph, getProfile, type Graph, type GraphNode } from '@/shared/api';
+import {
+  getGraph,
+  getProfile,
+  masteryMap,
+  type Graph,
+  type GraphNode,
+  type MasteryMap,
+} from '@/shared/api';
 import { isPending, POLL_MS } from '../model/build-progress';
 import { hasStages, groupByStage, LEVEL_TEXT } from '../model/stage-groups';
 import { GoalGate } from './goal-gate';
 import { GraphBuildPanel } from './graph-build-panel';
+import { SchemeView } from './scheme-view';
 import {
   Body,
+  Button,
   Card,
   Empty,
   Label,
@@ -35,19 +44,25 @@ const EDGE_LABEL: Record<string, string> = {
 export function GraphMap({
   domain,
   onOpenOutline,
+  onStudy,
 }: {
   domain: string;
   subjectTitle?: string;
   onOpenOutline?: () => void;
+  onStudy?: () => void;
 }) {
   const [graph, setGraph] = useState<Graph | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [building, setBuilding] = useState(false);
+  const [mastery, setMastery] = useState<MasteryMap | null>(null);
+  const [mode, setMode] = useState<'scheme' | 'list'>('scheme');
 
   const load = useCallback(async () => {
     try {
       setGraph(await getGraph(domain));
+      // Освоенность нужна схеме для состояний; без неё схема остаётся читаемой.
+      setMastery(await masteryMap(domain).catch(() => null));
       // Готовые области видны сразу; пока остальные дособираются, это сказано словами, а не молчанием.
       setBuilding(isPending(await getProfile(domain).catch(() => null)));
     } catch {
@@ -96,6 +111,18 @@ export function GraphMap({
     );
   }
 
+  if (mode === 'scheme' && !selected) {
+    return (
+      <Screen>
+        {building && (
+          <Note tone="warn">Карта ещё дособирается: готовые области уже можно открыть.</Note>
+        )}
+        <ModeSwitch mode={mode} onChange={setMode} />
+        <SchemeView graph={graph} mastery={mastery} onStudy={onStudy} />
+      </Screen>
+    );
+  }
+
   if (selected) {
     return (
       <Screen>
@@ -131,6 +158,7 @@ export function GraphMap({
         {building && (
           <Note tone="warn">Карта ещё дособирается: готовые области уже можно открыть.</Note>
         )}
+        <ModeSwitch mode={mode} onChange={setMode} />
         {groupByStage(nodes).map((g, i) => (
           <Section
             key={g.title}
@@ -149,6 +177,7 @@ export function GraphMap({
       {building && (
         <Note tone="warn">Карта ещё дособирается: готовые области уже можно открыть.</Note>
       )}
+      <ModeSwitch mode={mode} onChange={setMode} />
       <Section
         title="Основа"
         hint="Без этого остальное не встанет"
@@ -162,6 +191,29 @@ export function GraphMap({
         onPick={setSelectedId}
       />
     </Screen>
+  );
+}
+
+function ModeSwitch({
+  mode,
+  onChange,
+}: {
+  mode: 'scheme' | 'list';
+  onChange: (m: 'scheme' | 'list') => void;
+}) {
+  return (
+    <View style={{ flexDirection: 'row', gap: space.sm }}>
+      <Button
+        label="Схема"
+        variant={mode === 'scheme' ? 'primary' : 'quiet'}
+        onPress={() => onChange('scheme')}
+      />
+      <Button
+        label="Список"
+        variant={mode === 'list' ? 'primary' : 'quiet'}
+        onPress={() => onChange('list')}
+      />
+    </View>
   );
 }
 

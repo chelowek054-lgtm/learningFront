@@ -8,7 +8,13 @@ import { useSession } from '@/entities/session';
 import { GraphCuration, GraphMap } from '@/features/graph-editor';
 import { Empty, space, Title, useTheme } from '@/shared/ui';
 
-export function GraphScreen({ onOpenOutline }: { onOpenOutline?: () => void }) {
+export function GraphScreen({
+  onOpenOutline,
+  onStudy,
+}: {
+  onOpenOutline?: () => void;
+  onStudy?: () => void;
+}) {
   const { colors } = useTheme();
   const { isAdmin, subject } = useSession();
 
@@ -22,7 +28,12 @@ export function GraphScreen({ onOpenOutline }: { onOpenOutline?: () => void }) {
       ) : isAdmin ? (
         <GraphCuration domain={subject.id} onOpenOutline={onOpenOutline} />
       ) : (
-        <GraphMap domain={subject.id} subjectTitle={subject.title} onOpenOutline={onOpenOutline} />
+        <GraphMap
+          domain={subject.id}
+          subjectTitle={subject.title}
+          onOpenOutline={onOpenOutline}
+          onStudy={onStudy}
+        />
       )}
     </SafeAreaView>
   );
