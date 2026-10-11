@@ -327,3 +327,20 @@ export const weakNodes = (domain: string) =>
   api<{ conceptId: string; title: string; estimate: number }[]>(
     `/graph/course/${seg(domain)}/weak`,
   );
+
+// ---- личный слой схемы (T-0115, T-0118) ----
+
+export const createOwnNode = (domain: string, title: string, summary: string) =>
+  api<{ userConceptId: string }>('/graph/nodes', {
+    method: 'POST',
+    body: JSON.stringify({ domain, title, content: { summary, sections: [], references: [] } }),
+  });
+
+export const deleteOwnNode = (userConceptId: string) =>
+  api<void>(`/graph/user-nodes/${seg(userConceptId)}`, { method: 'DELETE' });
+
+export const createUserEdge = (domain: string, fromId: string, toId: string, type = 'prereq') =>
+  api<{ id: string }>('/graph/user-edges', {
+    method: 'POST',
+    body: JSON.stringify({ domain, from_id: fromId, to_id: toId, type }),
+  });
