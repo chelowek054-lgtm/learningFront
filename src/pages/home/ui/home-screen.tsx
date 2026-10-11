@@ -38,6 +38,7 @@ import {
 } from '@/shared/ui';
 
 import { nextAction } from '../model/next-action';
+import { TodayTiles } from './today-tiles';
 
 export function HomeScreen({
   onOpenReview,
@@ -46,6 +47,7 @@ export function HomeScreen({
   onOpenGraph,
   onOpenSkillProfile,
   onOpenLibrary,
+  onOpenMaterials,
 }: {
   onOpenReview: () => void;
   onOpenPlacement: () => void;
@@ -53,6 +55,7 @@ export function HomeScreen({
   onOpenGraph: () => void;
   onOpenSkillProfile: () => void;
   onOpenLibrary?: () => void;
+  onOpenMaterials?: () => void;
 }) {
   const { user, subject } = useSession();
   const online = useIsOnline();
@@ -214,6 +217,46 @@ export function HomeScreen({
           <Body>Выбрать предмет</Body>
           <Muted>{action.reason}</Muted>
         </Card>
+      )}
+
+      {subject && (
+        <TodayTiles
+          tiles={[
+            {
+              id: 'review',
+              title: 'Повторение',
+              text:
+                dueCount > 0 ? `Карточек к повторению: ${dueCount}` : 'На сегодня всё повторено',
+              onPress: onOpenReview,
+            },
+            {
+              id: 'done',
+              title: 'Освоено',
+              text: course
+                ? `Пройдено ${course.completed} из ${course.total}`
+                : 'Курс ещё не начат',
+              onPress: onOpenCourse,
+            },
+            {
+              id: 'level',
+              title: 'Проверка уровня',
+              text: 'Определить, что вы уже знаете',
+              onPress: onOpenPlacement,
+            },
+            {
+              id: 'reading',
+              title: 'Читать дальше',
+              text: 'Ваши материалы по фрагментам',
+              onPress: onOpenMaterials,
+            },
+            {
+              id: 'goal',
+              title: 'Цель',
+              text: `${subject.title}: ${subject.target}`,
+              onPress: onOpenLibrary,
+            },
+          ]}
+        />
       )}
 
       {/* Вторичное — одной спокойной строкой, чтобы не превратиться в список. */}
