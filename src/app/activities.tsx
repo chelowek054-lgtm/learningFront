@@ -6,6 +6,7 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 
+import { useSession } from '@/entities/session';
 import { getLocalStore } from '@/shared/api';
 import type { Activity } from '@/shared/engine';
 import { useModuleRegistry } from '@/shared/lib';
@@ -14,6 +15,7 @@ import { ActivityDispatcher } from '@/widgets/activity-dispatcher';
 
 export default function ActivitiesRoute() {
   const router = useRouter();
+  const { user } = useSession();
   const registry = useModuleRegistry();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [running, setRunning] = useState<Activity | null>(null);
@@ -21,6 +23,16 @@ export default function ActivitiesRoute() {
   useEffect(() => {
     void (async () => setActivities(await getLocalStore().listActivities()))();
   }, []);
+
+  // Служебный экран только для администратора: по прямому адресу обычному человеку он не открывается (R-0060).
+  if (!user?.is_superuser) {
+    return (
+      <Screen>
+        <TopBar title="Недоступно" onBack={() => router.back()} />
+        <Empty text="Раздел доступен только администратору." />
+      </Screen>
+    );
+  }
 
   if (running) {
     return (

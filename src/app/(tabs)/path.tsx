@@ -8,6 +8,7 @@ import { useSession } from '@/entities/session';
 import { CourseScreen } from '@/pages/course';
 import { GraphScreen } from '@/pages/graph';
 import { Button, space, useTheme } from '@/shared/ui';
+import { SubjectBar } from '@/widgets/subject-bar';
 
 export default function PathTab() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function PathTab() {
   const { subject } = useSession();
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+      <SubjectBar onOpenLibrary={() => router.push('/library')} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, padding: space.md }}>
         <Button
           label="Шаги"

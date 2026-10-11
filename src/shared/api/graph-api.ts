@@ -248,6 +248,7 @@ export interface CourseStep {
   /** Область и этап понятия: по ним путь группируется (T-0122). */
   domain?: string;
   stage?: string;
+  stageOrder?: number;
   level?: 'basic' | 'middle' | 'advanced';
   optional?: boolean;
   title: string;

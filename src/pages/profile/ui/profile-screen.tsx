@@ -133,20 +133,10 @@ export function ProfileScreen({
         ) : (
           <Muted>Предмет не выбран</Muted>
         )}
-        {/* Сброс возвращает в онбординг: гейт в app/_layout показывает его,
-            пока profile.onboarded не выставлен. Отдельного экрана не нужно. */}
-        <Button
-          label="Сменить предмет"
-          variant="quiet"
-          onPress={() =>
-            void (async () => {
-              // Профиль заменяется целиком, поэтому переносим остальное:
-              // иначе смена предмета стирала бы всё, что в нём накопилось.
-              await updateProfile({ ...(user?.profile ?? {}), onboarded: false });
-              await refresh();
-            })()
-          }
-        />
+        {/* Смена предмета — выбор из «Моей библиотеки»: онбординг не сбрасывается (R-0059). */}
+        {onOpenLibrary && (
+          <Button label="Сменить предмет" variant="quiet" onPress={onOpenLibrary} />
+        )}
       </Card>
 
       {onOpenLibrary && (

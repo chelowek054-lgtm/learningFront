@@ -84,7 +84,7 @@ describe('состояния освоения и вид узла', () => {
     expect(tagsOf(node('a', { level: 'middle', optional: true, reviewStatus: 'draft' }))).toEqual([
       'средний',
       'необязательное',
-      'не проверено',
+      'не проверено куратором',
     ]);
     expect(tagsOf(node('b', { kind: 'personal', level: null }))).toEqual(['своё']);
     expect(tagsOf(node('c', { reviewStatus: 'approved', level: null }))).toEqual([]);

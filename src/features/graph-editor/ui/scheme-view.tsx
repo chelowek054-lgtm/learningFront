@@ -4,9 +4,11 @@
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import {
+  ApiError,
   createOwnNode,
   createUserEdge,
   deleteOwnNode,
+  patchUserNode,
   type Graph,
   type GraphNode,
   type MasteryMap,
@@ -18,6 +20,7 @@ import {
   isFiltering,
   layoutScheme,
   lookOf,
+  masteryEstimates,
   masteryStates,
   matches,
   NO_FILTERS,
@@ -44,6 +47,7 @@ export function SchemeView({
   graph,
   mastery,
   onStudy,
+  studyLabel = 'Изучать',
   domain,
   onChanged,
 }: {
@@ -53,6 +57,7 @@ export function SchemeView({
   mastery: MasteryMap | null;
   /** Открыть курс; шаг по понятию выбирает сам курс. */
   onStudy?: () => void;
+  studyLabel?: string;
 }) {
   const { colors } = useTheme();
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
@@ -61,7 +66,8 @@ export function SchemeView({
   const [zoomIndex, setZoomIndex] = useState(2);
   const [legendOpen, setLegendOpen] = useState(() => remembered('graph-legend-open', true));
 
-  const states = useMemo(() => masteryStates(mastery), [mastery]);
+  const states = useMemo(() => masteryStates(mastery, graph.nodes), [mastery, graph.nodes]);
+  const estimates = useMemo(() => masteryEstimates(mastery), [mastery]);
   const layout = useMemo(() => layoutScheme(graph.nodes, collapsed), [graph.nodes, collapsed]);
   const byId = useMemo(() => new Map(graph.nodes.map((n) => [n.id, n])), [graph.nodes]);
   const highlight = useMemo(
@@ -76,13 +82,24 @@ export function SchemeView({
   async function addOwn() {
     const title = ownTitle.trim();
     if (!title || !domain) return;
+    const from = selected;
+    let madeId: string | null = null;
     try {
       const made = await createOwnNode(domain, title, title);
-      if (selected) await createUserEdge(domain, selected, made.userConceptId);
+      madeId = made.userConceptId;
+      if (from) await createUserEdge(domain, from, madeId);
       setNote('Добавлено.');
-    } catch {
-      queueEdit({ kind: 'add-node', domain, title, summary: title, linkTo: selected ?? undefined });
-      setNote('Нет связи: понятие добавится, когда она появится.');
+    } catch (e) {
+      if (e instanceof ApiError && e.status >= 400 && e.status < 500) {
+        setNote('Сервер отклонил правку. Проверьте название.');
+      } else if (madeId && from) {
+        // Узел уже создан: в очередь идёт только связь, иначе при повторе появился бы второй узел.
+        queueEdit({ kind: 'add-edge', domain, from, to: madeId });
+        setNote('Понятие добавлено, связь появится, когда будет сеть.');
+      } else {
+        queueEdit({ kind: 'add-node', domain, title, summary: title, linkTo: from ?? undefined });
+        setNote('Нет связи: понятие добавится, когда она появится.');
+      }
     }
     setOwnTitle('');
     onChanged?.();
@@ -98,6 +115,18 @@ export function SchemeView({
       setNote('Не удалось убрать: нет связи.');
     }
   }
+
+  async function renameOwn(node: GraphNode, title: string) {
+    if (!node.userConceptId || !title.trim()) return;
+    try {
+      await patchUserNode(node.userConceptId, { title: title.trim() });
+      setNote('Переименовано.');
+      onChanged?.();
+    } catch {
+      setNote('Не удалось переименовать: нет связи.');
+    }
+  }
+
   const filtering = isFiltering(filters);
   const selectedNode = selected ? (byId.get(selected) ?? null) : null;
 
@@ -234,6 +263,8 @@ export function SchemeView({
                         position: 'absolute',
                         left: c.x,
                         top: 0,
+                        // Зона нажатия заголовка — не меньше 44 px при любом масштабе.
+                        minHeight: Math.ceil(44 / zoom) - 10,
                         width: collapsed.has(c.key) ? 56 : NODE_W,
                       }}
                     >
@@ -254,6 +285,7 @@ export function SchemeView({
                     const s = segmentBetween(a, b);
                     const on = highlight?.edges.has(e.id) ?? false;
                     const dim = highlight && !on;
+                    const mine = e.kind === 'personal';
                     return (
                       <View
                         key={e.id}
@@ -263,9 +295,11 @@ export function SchemeView({
                           left: s.left,
                           top: s.top,
                           width: s.length,
-                          height: on ? 3 : 1.5,
-                          backgroundColor: on ? colors.accent : colors.muted,
-                          opacity: dim ? 0.12 : e.type === 'prereq' ? 0.55 : 0.3,
+                          height: on ? 3 : mine ? 2.5 : 1.5,
+                          // Личная связь — цветом и пунктиром, как личный узел отличается овалом.
+                          backgroundColor: on ? colors.accent : mine ? colors.core : colors.muted,
+                          borderStyle: mine ? 'dashed' : 'solid',
+                          opacity: dim ? 0.12 : mine ? 0.9 : e.type === 'prereq' ? 0.55 : 0.3,
                           transform: [{ rotate: `${s.angle}deg` }],
                         }}
                       />
@@ -279,6 +313,7 @@ export function SchemeView({
                     const look = lookOf(n, state);
                     const inPath = highlight?.nodes.has(n.id) ?? true;
                     const hit = !filtering || matches(n, filters, states);
+                    const tags = tagsOf(n);
                     const border =
                       n.id === selected
                         ? colors.accent
@@ -287,6 +322,7 @@ export function SchemeView({
                           : look.emphasis === 'learning'
                             ? colors.core
                             : colors.line;
+                    const dot = 6 + (scaleOf(n) - 1) * 30;
                     return (
                       <Pressable
                         key={n.id}
@@ -300,8 +336,14 @@ export function SchemeView({
                           height: NODE_H,
                           paddingHorizontal: space.sm,
                           justifyContent: 'center',
+                          overflow: 'hidden',
                           borderRadius: n.kind === 'personal' ? NODE_H / 2 : radius.sm,
-                          borderWidth: look.emphasis === 'frontier' || n.id === selected ? 2.5 : 1,
+                          borderWidth:
+                            look.emphasis === 'frontier' ||
+                            look.emphasis === 'learning' ||
+                            n.id === selected
+                              ? 2.5
+                              : 1,
                           borderStyle: look.dashed ? 'dashed' : 'solid',
                           borderColor: border,
                           backgroundColor: state === 'locked' ? colors.surfaceAlt : colors.surface,
@@ -311,20 +353,36 @@ export function SchemeView({
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
                           <View
                             style={{
-                              width: 8 * scaleOf(n),
-                              height: 8 * scaleOf(n),
-                              borderRadius: 8,
+                              width: dot,
+                              height: dot,
+                              borderRadius: dot,
                               backgroundColor: state === 'known' ? colors.core : colors.accent,
                             }}
                           />
                           <Text
-                            numberOfLines={2}
+                            numberOfLines={1}
                             style={{ flex: 1, color: colors.ink, fontSize: 12 }}
                           >
                             {state === 'locked' ? '🔒 ' : ''}
                             {n.title}
                           </Text>
                         </View>
+                        {/* Метки на самом узле: уровень, необязательное, не проверено, своё, «сейчас». */}
+                        <Text numberOfLines={1} style={{ color: colors.muted, fontSize: 10 }}>
+                          {[...(state === 'learning' ? ['сейчас'] : []), ...tags].join(' · ')}
+                        </Text>
+                        {state === 'learning' && (
+                          <View
+                            style={{
+                              position: 'absolute',
+                              left: 0,
+                              bottom: 0,
+                              height: 4,
+                              width: `${Math.max(8, Math.round((estimates[n.id] ?? 0) * 100))}%`,
+                              backgroundColor: colors.core,
+                            }}
+                          />
+                        )}
                       </Pressable>
                     );
                   })}
@@ -344,8 +402,14 @@ export function SchemeView({
           onClose={() => setSelected(null)}
           onPick={setSelected}
           onStudy={onStudy}
+          studyLabel={states[selectedNode.id] === 'learning' ? 'Продолжить' : studyLabel}
           onRemove={
             selectedNode.kind === 'personal' ? () => void removeOwn(selectedNode) : undefined
+          }
+          onRename={
+            selectedNode.kind === 'personal'
+              ? (title) => void renameOwn(selectedNode, title)
+              : undefined
           }
         />
       )}
@@ -361,17 +425,23 @@ function NodeCard({
   onClose,
   onPick,
   onStudy,
+  studyLabel,
   onRemove,
+  onRename,
 }: {
   node: GraphNode;
   onRemove?: () => void;
+  onRename?: (title: string) => void;
   state: MasteryState | undefined;
   graph: Graph;
   byId: Map<string, GraphNode>;
   onClose: () => void;
   onPick: (id: string) => void;
   onStudy?: () => void;
+  studyLabel: string;
 }) {
+  const { colors } = useTheme();
+  const [title, setTitle] = useState(node.title);
   const before = graph.edges.filter((e) => e.to === node.id && e.type === 'prereq');
   const after = graph.edges.filter((e) => e.from === node.id && e.type === 'prereq');
   const link = (id: string) => {
@@ -405,7 +475,31 @@ function NodeCard({
         </View>
       )}
       {onStudy && state !== 'locked' && state !== 'known' && (
-        <Button label="Изучать" onPress={onStudy} />
+        <Button label={studyLabel} onPress={onStudy} />
+      )}
+      {onRename && (
+        <View style={{ gap: space.sm }}>
+          <TextInput
+            value={title}
+            onChangeText={setTitle}
+            placeholder="название"
+            placeholderTextColor={colors.muted}
+            style={{
+              borderWidth: 1,
+              borderColor: colors.line,
+              borderRadius: radius.sm,
+              padding: space.sm,
+              color: colors.ink,
+              backgroundColor: colors.surface,
+            }}
+          />
+          <Button
+            label="Переименовать"
+            variant="quiet"
+            disabled={!title.trim() || title.trim() === node.title}
+            onPress={() => onRename(title)}
+          />
+        </View>
       )}
       {onRemove && <Button label="Убрать своё понятие" variant="danger" onPress={onRemove} />}
       <Button label="Закрыть" variant="quiet" onPress={onClose} />
