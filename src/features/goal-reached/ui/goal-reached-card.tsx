@@ -17,11 +17,12 @@ export function GoalReachedCard({ onAddArea }: { onAddArea: () => void }) {
     setError(null);
     try {
       const profile = user?.profile ?? {};
+      // Сначала курс: если он не построился, цель в профиле не меняется, и повтор не перескочит ступень.
+      await buildCourse(subject.id, higher.bloom);
       await updateProfile({
         ...profile,
         subject: { ...(profile.subject as object), target: higher.bloom },
       });
-      await buildCourse(subject.id, higher.bloom);
       await refresh();
     } catch {
       setError('Не удалось поднять уровень. Попробуйте ещё раз.');
@@ -31,8 +32,12 @@ export function GoalReachedCard({ onAddArea }: { onAddArea: () => void }) {
   }
 
   async function another() {
-    await updateProfile({ ...(user?.profile ?? {}), onboarded: false });
-    await refresh();
+    try {
+      await updateProfile({ ...(user?.profile ?? {}), onboarded: false });
+      await refresh();
+    } catch {
+      setError('Не удалось начать новый предмет. Попробуйте ещё раз.');
+    }
   }
 
   return (
@@ -40,7 +45,9 @@ export function GoalReachedCard({ onAddArea }: { onAddArea: () => void }) {
       <Label>Цель достигнута</Label>
       <Body>{subject.title}: всё освоено до выбранного уровня</Body>
       <Muted>
-        Можно пойти выше, шире или взяться за другое — повторение продолжит удерживать знания.
+        {higher
+          ? 'Можно пойти выше, шире или взяться за другое — повторение продолжит удерживать знания.'
+          : 'Выше уровня «создать» идти некуда: можно шире или взяться за другое — повторение продолжит удерживать знания.'}
       </Muted>
       {error && <Note tone="danger">{error}</Note>}
       {higher && (

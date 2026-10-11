@@ -1,9 +1,10 @@
 // Плашки «Сегодня» (T-0120, R-0063): самостоятельные мини-виджеты под главным действием дня.
-// Видимость плашки запоминается на устройстве; скрытые возвращаются через «Настроить».
+// Видимость и порядок плашек запоминаются на устройстве (на телефоне — до закрытия приложения).
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { rememberFlag, remembered } from '@/shared/lib';
+import { rememberFlag, remembered, rememberedText, rememberText } from '@/shared/lib';
 import { Card, Label, Muted, space } from '@/shared/ui';
+import { moveId, orderTiles } from '../model/tiles-model';
 
 export interface Tile {
   id: string;
@@ -12,11 +13,26 @@ export interface Tile {
   onPress?: () => void;
 }
 
+const ORDER_KEY = 'tiles-order';
+
 export function TodayTiles({ tiles }: { tiles: Tile[] }) {
   const [editing, setEditing] = useState(false);
   const [, force] = useState(0);
   const shown = (id: string) => remembered(`tile:${id}`, true);
-  const visible = tiles.filter((t) => editing || shown(t.id));
+  const ordered = orderTiles(tiles, rememberedText(ORDER_KEY));
+  const visible = ordered.filter((t) => editing || shown(t.id));
+
+  function move(id: string, delta: -1 | 1) {
+    rememberText(
+      ORDER_KEY,
+      moveId(
+        ordered.map((t) => t.id),
+        id,
+        delta,
+      ).join(','),
+    );
+    force((n) => n + 1);
+  }
 
   return (
     <View style={{ gap: space.sm }}>
@@ -27,14 +43,22 @@ export function TodayTiles({ tiles }: { tiles: Tile[] }) {
               <Label>{t.title}</Label>
               <Muted>{t.text}</Muted>
               {editing && (
-                <Pressable
-                  onPress={() => {
-                    rememberFlag(`tile:${t.id}`, !shown(t.id));
-                    force((n) => n + 1);
-                  }}
-                >
-                  <Muted>{shown(t.id) ? 'Скрыть плашку' : 'Показать плашку'}</Muted>
-                </Pressable>
+                <View style={{ flexDirection: 'row', gap: space.md, flexWrap: 'wrap' }}>
+                  <Pressable onPress={() => move(t.id, -1)}>
+                    <Muted>↑ выше</Muted>
+                  </Pressable>
+                  <Pressable onPress={() => move(t.id, 1)}>
+                    <Muted>↓ ниже</Muted>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => {
+                      rememberFlag(`tile:${t.id}`, !shown(t.id));
+                      force((n) => n + 1);
+                    }}
+                  >
+                    <Muted>{shown(t.id) ? 'Скрыть' : 'Показать'}</Muted>
+                  </Pressable>
+                </View>
               )}
             </Card>
           </View>

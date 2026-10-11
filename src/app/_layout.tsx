@@ -1,15 +1,23 @@
 // Корневой layout: провайдеры, вход в приложение и стек экранов.
 // Гейт стоит здесь, а не внутри роутов: пока сессии нет, показывать нечего,
 // и незачем плодить редиректы между вкладками.
-import { Stack } from 'expo-router';
+import * as Notifications from 'expo-notifications';
+import { Stack, useRouter } from 'expo-router';
 import Head from 'expo-router/head';
 import { useEffect, useMemo, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { Platform } from 'react-native';
 
 import { SessionProvider, useSession } from '@/entities/session';
 import { AuthScreen } from '@/pages/auth';
 import { OnboardingScreen } from '@/pages/onboarding';
-import { getLocalStore, installErrorReporter, onClientOutdated, startAutoSync } from '@/shared/api';
+import {
+  getLocalStore,
+  installErrorReporter,
+  onClientOutdated,
+  startAutoSync,
+  targetForNotification,
+} from '@/shared/api';
 import { ModuleRegistryProvider } from '@/shared/lib';
 import { Lead, Muted, Screen, ThemeProvider, Title, useTheme } from '@/shared/ui';
 import { getModuleRegistry } from '@/widgets/module-registry';
@@ -39,7 +47,20 @@ function AutoSync() {
   return null;
 }
 
+/** Нажатие на уведомление открывает экран, о котором оно (T-0111). Только на устройстве: в вебе слушателя нет. */
+function useNotificationRoute() {
+  const router = useRouter();
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    const sub = Notifications.addNotificationResponseReceivedListener((r) => {
+      router.navigate(targetForNotification(r.notification.request.content.data));
+    });
+    return () => sub.remove();
+  }, [router]);
+}
+
 function Gate() {
+  useNotificationRoute();
   const { status, user } = useSession();
   const { colors, dark } = useTheme();
 
@@ -60,7 +81,6 @@ function Gate() {
       >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="review" options={{ presentation: 'card' }} />
-        <Stack.Screen name="progress" options={{ presentation: 'card' }} />
         <Stack.Screen name="materials" options={{ presentation: 'card' }} />
         <Stack.Screen name="placement" options={{ presentation: 'card' }} />
         <Stack.Screen name="activities" options={{ presentation: 'card' }} />

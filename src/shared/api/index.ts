@@ -186,3 +186,4 @@ export {
   type SourceItem,
   type SourceProgress,
 } from './sources-api';
+export { targetForNotification, type NotificationTarget } from './notification-route';

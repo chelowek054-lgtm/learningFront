@@ -4,7 +4,7 @@
 // дорост ветки были открыты всем, а под заголовком узла печаталась служебная
 // строка «tier · centrality N · origin · status». Карта нужна человеку, чтобы
 // снять тревогу «я не понимаю масштаб», а не чтобы править канон.
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 import {
@@ -20,8 +20,8 @@ import { hasStages, groupByStage, LEVEL_TEXT } from '../model/stage-groups';
 import { GoalGate } from './goal-gate';
 import { GraphBuildPanel } from './graph-build-panel';
 import { SchemeView } from './scheme-view';
-import { clearEdits, loadCache, pendingEdits, saveCache } from '../model/offline';
-import { createOwnNode, createUserEdge } from '@/shared/api';
+import { dropEdit, loadCache, pendingEdits, saveCache, type PendingEdit } from '../model/offline';
+import { ApiError, createOwnNode, createUserEdge } from '@/shared/api';
 import {
   Body,
   Button,
@@ -43,6 +43,36 @@ const EDGE_LABEL: Record<string, string> = {
   related: 'рядом',
 };
 
+/** Применить одну отложенную правку. */
+async function applyEdit(e: PendingEdit): Promise<void> {
+  if (e.kind === 'add-node') {
+    const made = await createOwnNode(e.domain, e.title, e.summary);
+    if (e.linkTo) await createUserEdge(e.domain, e.linkTo, made.userConceptId);
+  } else {
+    await createUserEdge(e.domain, e.from, e.to);
+  }
+}
+
+/**
+ * Отложенные правки личного слоя уходят по одной и удаляются из очереди сразу после успеха.
+ * Нет сети — стоп до следующей загрузки; отказ сервера (4xx) значит, что правка уже не пройдёт, её убираем,
+ * чтобы она не блокировала загрузку графа навсегда.
+ */
+async function replayQueue(domain: string): Promise<void> {
+  for (const e of pendingEdits().filter((x) => x.domain === domain)) {
+    try {
+      await applyEdit(e);
+      dropEdit(e);
+    } catch (err) {
+      if (err instanceof ApiError && err.status >= 400 && err.status < 500) {
+        dropEdit(e);
+        continue;
+      }
+      return;
+    }
+  }
+}
+
 export function GraphMap({
   domain,
   onOpenOutline,
@@ -60,17 +90,14 @@ export function GraphMap({
   const [mastery, setMastery] = useState<MasteryMap | null>(null);
   const [mode, setMode] = useState<'scheme' | 'list'>('scheme');
 
+  const loading = useRef(false);
+
   const load = useCallback(async () => {
+    // Опрос и повторные вызовы не должны гнать очередь параллельно: иначе правки задвоятся.
+    if (loading.current) return;
+    loading.current = true;
     try {
-      // Правки личного слоя, не дошедшие до сервера, уходят первыми (T-0118).
-      const queued = pendingEdits().filter((e) => e.domain === domain);
-      if (queued.length > 0) {
-        for (const e of queued) {
-          const made = await createOwnNode(e.domain, e.title, e.summary);
-          if (e.linkTo) await createUserEdge(e.domain, e.linkTo, made.userConceptId);
-        }
-        clearEdits();
-      }
+      await replayQueue(domain);
       const fresh = await getGraph(domain);
       saveCache(`graph:${domain}`, fresh);
       setGraph(fresh);
@@ -83,6 +110,8 @@ export function GraphMap({
       const cached = loadCache<Graph>(`graph:${domain}`);
       if (cached) setGraph(cached);
       else setFailed(true);
+    } finally {
+      loading.current = false;
     }
   }, [domain]);
 

@@ -21,6 +21,7 @@ export function CourseTree({ domain, onStart }: { domain: string; onStart?: () =
         graph={{ nodes: view.nodes, edges: view.edges } as never}
         mastery={view.mastery}
         onStudy={onStart}
+        studyLabel="Начать"
       />
     </Screen>
   );

@@ -31,15 +31,20 @@ export function loadCache<T>(key: string): T | null {
   }
 }
 
-export interface PendingEdit {
-  kind: 'add-node';
-  domain: string;
-  title: string;
-  summary: string;
-  linkTo?: string;
-}
+export type PendingEdit =
+  | { kind: 'add-node'; domain: string; title: string; summary: string; linkTo?: string }
+  // Связь, которую не удалось создать после того, как личный узел уже появился на сервере.
+  | { kind: 'add-edge'; domain: string; from: string; to: string };
 
 const QUEUE = 'graph-pending';
 export const pendingEdits = (): PendingEdit[] => loadCache<PendingEdit[]>(QUEUE) ?? [];
 export const queueEdit = (e: PendingEdit): void => saveCache(QUEUE, [...pendingEdits(), e]);
+/** Убрать одну выполненную правку: остальные остаются в очереди, повтор не создаёт дублей. */
+export const dropEdit = (e: PendingEdit): void => {
+  const key = JSON.stringify(e);
+  const left = pendingEdits();
+  const i = left.findIndex((x) => JSON.stringify(x) === key);
+  if (i >= 0) left.splice(i, 1);
+  saveCache(QUEUE, left);
+};
 export const clearEdits = (): void => saveCache(QUEUE, []);

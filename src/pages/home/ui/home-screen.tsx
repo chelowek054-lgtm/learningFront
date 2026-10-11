@@ -7,6 +7,7 @@
 // Сырой список переехал в служебный экран (профиль → «Разработчику»).
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, RefreshControl, View } from 'react-native';
+import { rememberedText, rememberText } from '@/shared/lib';
 
 import { useSession } from '@/entities/session';
 import { GoalReachedCard } from '@/features/goal-reached';
@@ -18,6 +19,8 @@ import {
   getLocalStore,
   fillGraph,
   getProfile,
+  listSubjects,
+  weakNodes,
   startGraphBuild,
   syncNow,
   type Course,
@@ -65,6 +68,9 @@ export function HomeScreen({
   const [graphSize, setGraphSize] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [restarting, setRestarting] = useState(false);
+  const [weak, setWeak] = useState<number | null>(null);
+  const [paused, setPaused] = useState(false);
+  const [stale, setStale] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
@@ -76,12 +82,34 @@ export function HomeScreen({
         /* офлайн — работаем с локальными данными */
       }
       try {
-        setCourse(await getCourse(subject.id));
+        const fresh = await getCourse(subject.id);
+        setCourse(fresh);
+        setStale(false);
+        rememberText(
+          `course-last:${subject.id}`,
+          JSON.stringify({ completed: fresh.completed, total: fresh.total }),
+        );
       } catch (e) {
-        // 404 — курса просто нет, это не ошибка.
-        if (!(e instanceof ApiError && e.status === 404)) setCourse(null);
-        else setCourse(null);
+        // 404 — курса просто нет, это не ошибка; иное — нет связи: показываем последнее известное с пометкой.
+        if (e instanceof ApiError && e.status === 404) {
+          setCourse(null);
+          setStale(false);
+        } else {
+          setStale(rememberedText(`course-last:${subject.id}`) !== null);
+        }
       }
+      setWeak(
+        await weakNodes(subject.id).then(
+          (w) => w.length,
+          () => null,
+        ),
+      );
+      setPaused(
+        await listSubjects().then(
+          (list) => list.some((s) => s.domain === subject.id && s.status === 'paused'),
+          () => false,
+        ),
+      );
       // Состояние сборки карты: без него «Сегодня» путало «карта собирается» с «уровень неизвестен».
       setBuild(await getProfile(subject.id).catch(() => null));
       setGraphSize(
@@ -132,7 +160,18 @@ export function HomeScreen({
     build,
     graphSize,
     now,
+    paused,
   });
+
+  // Нет связи: «освоено» берём из последнего известного состояния и говорим об этом.
+  const lastKnown = (() => {
+    try {
+      const raw = subject ? rememberedText(`course-last:${subject.id}`) : null;
+      return raw ? (JSON.parse(raw) as { completed: number; total: number }) : null;
+    } catch {
+      return null;
+    }
+  })();
 
   return (
     <Screen refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
@@ -211,6 +250,27 @@ export function HomeScreen({
 
       {action.kind === 'done' && <GoalReachedCard onAddArea={onOpenSkillProfile} />}
 
+      {action.kind === 'goal' && (
+        <Card>
+          <Label>Следующий шаг</Label>
+          <Body>Закончить постановку цели</Body>
+          <Muted>{action.reason}</Muted>
+        </Card>
+      )}
+
+      {action.kind === 'paused' && (
+        <Card onPress={onOpenLibrary}>
+          <Label>Предмет на паузе</Label>
+          <Muted>{action.reason}</Muted>
+        </Card>
+      )}
+
+      {action.kind === 'loading' && (
+        <Card>
+          <Muted>{action.reason}</Muted>
+        </Card>
+      )}
+
       {action.kind === 'subject' && (
         <Card>
           <Label>Следующий шаг</Label>
@@ -234,7 +294,20 @@ export function HomeScreen({
               title: 'Освоено',
               text: course
                 ? `Пройдено ${course.completed} из ${course.total}`
-                : 'Курс ещё не начат',
+                : stale && lastKnown
+                  ? `Пройдено ${lastKnown.completed} из ${lastKnown.total} (последнее известное, нет связи)`
+                  : 'Курс ещё не начат',
+              onPress: onOpenCourse,
+            },
+            {
+              id: 'weak',
+              title: 'Слабые места',
+              text:
+                weak === null
+                  ? 'Появятся после первых ответов'
+                  : weak === 0
+                    ? 'Слабых мест пока нет'
+                    : `Понятий, к которым стоит вернуться: ${weak}`,
               onPress: onOpenCourse,
             },
             {

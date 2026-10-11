@@ -30,3 +30,24 @@ export function rememberFlag(key: string, value: boolean): void {
     /* не запомнилось — не страшно */
   }
 }
+
+const texts = new Map<string, string>();
+
+/** Короткая строка настроек (порядок плашек, последнее известное состояние). */
+export function rememberedText(key: string): string | null {
+  if (texts.has(key)) return texts.get(key) as string;
+  try {
+    return store()?.getItem(`praxis:${key}`) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function rememberText(key: string, value: string): void {
+  texts.set(key, value);
+  try {
+    store()?.setItem(`praxis:${key}`, value);
+  } catch {
+    /* не запомнилось — живёт до закрытия приложения */
+  }
+}
