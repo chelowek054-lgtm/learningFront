@@ -3,7 +3,15 @@
 // Без новых зависимостей: узлы и рёбра — обычные View, прокрутка и масштаб — ScrollView и transform.
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import type { Graph, GraphNode, MasteryMap } from '@/shared/api';
+import {
+  createOwnNode,
+  createUserEdge,
+  deleteOwnNode,
+  type Graph,
+  type GraphNode,
+  type MasteryMap,
+} from '@/shared/api';
+import { queueEdit } from '../model/offline';
 import { Body, Button, Card, Label, Muted, Pill, radius, space, useTheme } from '@/shared/ui';
 import {
   highlightPath,
@@ -36,8 +44,12 @@ export function SchemeView({
   graph,
   mastery,
   onStudy,
+  domain,
+  onChanged,
 }: {
   graph: Graph;
+  domain?: string;
+  onChanged?: () => void;
   mastery: MasteryMap | null;
   /** Открыть курс; шаг по понятию выбирает сам курс. */
   onStudy?: () => void;
@@ -56,7 +68,36 @@ export function SchemeView({
     () => (selected ? highlightPath(selected, graph.edges) : null),
     [selected, graph.edges],
   );
+  const [ownTitle, setOwnTitle] = useState('');
+  const [note, setNote] = useState<string | null>(null);
   const zoom = ZOOMS[zoomIndex];
+
+  // Своё понятие (T-0115): добавляется в личный слой, канон не меняется; связь — от выбранного понятия.
+  async function addOwn() {
+    const title = ownTitle.trim();
+    if (!title || !domain) return;
+    try {
+      const made = await createOwnNode(domain, title, title);
+      if (selected) await createUserEdge(domain, selected, made.userConceptId);
+      setNote('Добавлено.');
+    } catch {
+      queueEdit({ kind: 'add-node', domain, title, summary: title, linkTo: selected ?? undefined });
+      setNote('Нет связи: понятие добавится, когда она появится.');
+    }
+    setOwnTitle('');
+    onChanged?.();
+  }
+
+  async function removeOwn(node: GraphNode) {
+    if (!node.userConceptId) return;
+    try {
+      await deleteOwnNode(node.userConceptId);
+      setSelected(null);
+      onChanged?.();
+    } catch {
+      setNote('Не удалось убрать: нет связи.');
+    }
+  }
   const filtering = isFiltering(filters);
   const selectedNode = selected ? (byId.get(selected) ?? null) : null;
 
@@ -89,6 +130,28 @@ export function SchemeView({
           setLegendOpen(!legendOpen);
         }}
       />
+
+      {domain && (
+        <View style={{ flexDirection: 'row', gap: space.sm }}>
+          <TextInput
+            value={ownTitle}
+            onChangeText={setOwnTitle}
+            placeholder={selected ? 'своё понятие, связанное с выбранным' : 'своё понятие'}
+            placeholderTextColor={colors.muted}
+            style={{
+              flex: 1,
+              borderWidth: 1,
+              borderColor: colors.line,
+              borderRadius: radius.sm,
+              padding: space.sm,
+              color: colors.ink,
+              backgroundColor: colors.surface,
+            }}
+          />
+          <Button label="Добавить" variant="quiet" onPress={() => void addOwn()} />
+        </View>
+      )}
+      {note && <Muted>{note}</Muted>}
 
       <TextInput
         value={filters.query}
@@ -281,6 +344,9 @@ export function SchemeView({
           onClose={() => setSelected(null)}
           onPick={setSelected}
           onStudy={onStudy}
+          onRemove={
+            selectedNode.kind === 'personal' ? () => void removeOwn(selectedNode) : undefined
+          }
         />
       )}
     </View>
@@ -295,8 +361,10 @@ function NodeCard({
   onClose,
   onPick,
   onStudy,
+  onRemove,
 }: {
   node: GraphNode;
+  onRemove?: () => void;
   state: MasteryState | undefined;
   graph: Graph;
   byId: Map<string, GraphNode>;
@@ -339,6 +407,7 @@ function NodeCard({
       {onStudy && state !== 'locked' && state !== 'known' && (
         <Button label="Изучать" onPress={onStudy} />
       )}
+      {onRemove && <Button label="Убрать своё понятие" variant="danger" onPress={onRemove} />}
       <Button label="Закрыть" variant="quiet" onPress={onClose} />
     </Card>
   );

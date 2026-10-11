@@ -20,6 +20,8 @@ import { hasStages, groupByStage, LEVEL_TEXT } from '../model/stage-groups';
 import { GoalGate } from './goal-gate';
 import { GraphBuildPanel } from './graph-build-panel';
 import { SchemeView } from './scheme-view';
+import { clearEdits, loadCache, pendingEdits, saveCache } from '../model/offline';
+import { createOwnNode, createUserEdge } from '@/shared/api';
 import {
   Body,
   Button,
@@ -60,13 +62,27 @@ export function GraphMap({
 
   const load = useCallback(async () => {
     try {
-      setGraph(await getGraph(domain));
+      // Правки личного слоя, не дошедшие до сервера, уходят первыми (T-0118).
+      const queued = pendingEdits().filter((e) => e.domain === domain);
+      if (queued.length > 0) {
+        for (const e of queued) {
+          const made = await createOwnNode(e.domain, e.title, e.summary);
+          if (e.linkTo) await createUserEdge(e.domain, e.linkTo, made.userConceptId);
+        }
+        clearEdits();
+      }
+      const fresh = await getGraph(domain);
+      saveCache(`graph:${domain}`, fresh);
+      setGraph(fresh);
       // Освоенность нужна схеме для состояний; без неё схема остаётся читаемой.
       setMastery(await masteryMap(domain).catch(() => null));
       // Готовые области видны сразу; пока остальные дособираются, это сказано словами, а не молчанием.
       setBuilding(isPending(await getProfile(domain).catch(() => null)));
     } catch {
-      setFailed(true);
+      // Без сети схема читается из последнего сохранённого графа.
+      const cached = loadCache<Graph>(`graph:${domain}`);
+      if (cached) setGraph(cached);
+      else setFailed(true);
     }
   }, [domain]);
 
@@ -118,7 +134,13 @@ export function GraphMap({
           <Note tone="warn">Карта ещё дособирается: готовые области уже можно открыть.</Note>
         )}
         <ModeSwitch mode={mode} onChange={setMode} />
-        <SchemeView graph={graph} mastery={mastery} onStudy={onStudy} />
+        <SchemeView
+          graph={graph}
+          mastery={mastery}
+          domain={domain}
+          onStudy={onStudy}
+          onChanged={() => void load()}
+        />
       </Screen>
     );
   }
