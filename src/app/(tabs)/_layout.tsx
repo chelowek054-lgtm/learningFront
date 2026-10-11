@@ -13,8 +13,8 @@ type Glyph = 'today' | 'course' | 'graph' | 'profile';
 
 const TABS = [
   { name: 'index', path: '/', label: 'Сегодня', glyph: 'today' },
-  { name: 'course', path: '/course', label: 'Курс', glyph: 'course' },
-  { name: 'graph', path: '/graph', label: 'Граф', glyph: 'graph' },
+  { name: 'path', path: '/path', label: 'Путь', glyph: 'course' },
+  { name: 'progress', path: '/progress', label: 'Прогресс', glyph: 'graph' },
   { name: 'profile', path: '/profile', label: 'Профиль', glyph: 'profile' },
 ] as const satisfies readonly { name: string; path: string; label: string; glyph: Glyph }[];
 

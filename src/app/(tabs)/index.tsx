@@ -9,8 +9,8 @@ export default function TodayTab() {
     <HomeScreen
       onOpenReview={() => router.push('/review')}
       onOpenPlacement={() => router.push('/placement')}
-      onOpenCourse={() => router.navigate('/course')}
-      onOpenGraph={() => router.navigate('/graph')}
+      onOpenCourse={() => router.navigate('/path')}
+      onOpenGraph={() => router.navigate('/path')}
       onOpenSkillProfile={() => router.push('/skill-profile')}
     />
   );
