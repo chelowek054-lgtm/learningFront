@@ -66,19 +66,7 @@ function ThemePicker() {
   );
 }
 
-export function ProfileScreen({
-  onOpenActivities,
-  onOpenProgress,
-  onOpenMaterials,
-  onOpenSources,
-  onOpenSkillProfile,
-}: {
-  onOpenActivities?: () => void;
-  onOpenProgress?: () => void;
-  onOpenMaterials?: () => void;
-  onOpenSources?: () => void;
-  onOpenSkillProfile?: () => void;
-}) {
+export function ProfileScreen({ onOpenCurator }: { onOpenCurator?: () => void }) {
   const { user, logout, refresh, subject } = useSession();
   const online = useIsOnline();
   const [due, setDue] = useState<number | null>(null);
@@ -155,31 +143,10 @@ export function ProfileScreen({
         />
       </Card>
 
-      {onOpenProgress && (
-        <Card onPress={onOpenProgress}>
-          <Label>Прогресс</Label>
-          <Muted>Удержание, рост по рубрикам, закрытие ошибок и граница знаний</Muted>
-        </Card>
-      )}
-
-      {onOpenMaterials && (
-        <Card onPress={onOpenMaterials}>
-          <Label>Мои материалы</Label>
-          <Muted>Загрузить PDF или Markdown и читать по фрагментам, в том числе офлайн</Muted>
-        </Card>
-      )}
-
-      {subject && onOpenSkillProfile && (
-        <Card onPress={onOpenSkillProfile}>
-          <Label>Профиль навыка</Label>
-          <Muted>Что нужно знать для вашей цели: области, этапы, уровень сложности</Muted>
-        </Card>
-      )}
-
-      {user?.is_superuser && onOpenSources && (
-        <Card onPress={onOpenSources}>
-          <Label>Источники знаний</Label>
-          <Muted>Загрузить учебник в общий граф и следить за разбором</Muted>
+      {user?.is_superuser && onOpenCurator && (
+        <Card onPress={onOpenCurator}>
+          <Label>Куратор</Label>
+          <Muted>Источники знаний и служебные экраны</Muted>
         </Card>
       )}
 
@@ -208,15 +175,6 @@ export function ProfileScreen({
           busy={syncing}
         />
       </Card>
-
-      {/* Сырой список заданий — отладочный вид. На «Сегодня» он мешал:
-          человек видел слуги типов вместо одного понятного шага. */}
-      {onOpenActivities && (
-        <Card onPress={onOpenActivities}>
-          <Label>Разработчику</Label>
-          <Muted>Все задания списком — служебный экран</Muted>
-        </Card>
-      )}
 
       {!user && <Empty text="Нет данных пользователя" />}
 
