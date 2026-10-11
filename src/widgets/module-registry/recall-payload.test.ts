@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isCourseStepPayload } from './recall-renderer';
+import { isCourseStepPayload } from './recall-payload';
 
 describe('какое задание на вспоминание показывать', () => {
   it('шаг курса: есть вопрос в item и идентификаторы понятия', () => {

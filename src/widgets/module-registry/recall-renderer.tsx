@@ -5,12 +5,7 @@
 import type { ActivityRendererProps } from '@/shared/engine';
 import { ConceptRecallActivity } from '@/features/concept-recall';
 import { ConceptQuestionActivity } from '@/features/concept-study';
-
-/** Задание из шага курса несёт `item` и идентификаторы понятия и области. */
-export function isCourseStepPayload(payload: unknown): boolean {
-  const p = (payload ?? {}) as { item?: unknown; domain?: unknown; conceptId?: unknown };
-  return Boolean(p.item) && typeof p.domain === 'string' && typeof p.conceptId === 'string';
-}
+import { isCourseStepPayload } from './recall-payload';
 
 export function RecallRenderer(props: ActivityRendererProps) {
   return isCourseStepPayload(props.activity.payload) ? (
