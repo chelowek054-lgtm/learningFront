@@ -2,3 +2,4 @@
 export { ModuleRegistryProvider, useModuleRegistry } from './module-registry-context';
 export { getIsOnline, useIsOnline } from './connectivity';
 export { newId } from './id';
+export { remembered, rememberFlag } from './remember';

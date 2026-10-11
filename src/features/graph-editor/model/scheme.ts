@@ -216,3 +216,56 @@ export function segmentBetween(a: Position, b: Position): Segment {
     angle: (Math.atan2(dy, dx) * 180) / Math.PI,
   };
 }
+
+// ---- слой «шаги курса» (T-0123, R-0066) ----
+
+import type { Course } from '@/shared/api';
+
+/** Шаги курса как узлы схемы: те же холст и легенда; рёбра — порядок шагов внутри области. */
+export function courseAsGraph(course: Course): {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  mastery: MasteryMap;
+} {
+  const order = new Map<string, number>();
+  const nodes = course.steps.map((s) => {
+    const stageKey = `${s.domain ?? ''}|${s.stage ?? ''}`;
+    if (!order.has(stageKey)) order.set(stageKey, order.size + 1);
+    return {
+      id: s.conceptId,
+      kind: 'canonical',
+      title: s.title,
+      stage: s.stage ? `${s.stage}` : null,
+      stageOrder: order.get(stageKey) ?? null,
+      level: s.level ?? null,
+      optional: s.optional === true,
+      centrality: 0,
+      reviewStatus: s.status === 'draft' ? 'draft' : 'approved',
+      content: {},
+    } as unknown as GraphNode;
+  });
+  const edges: GraphEdge[] = [];
+  const lastByArea = new Map<string, string>();
+  course.steps.forEach((s, i) => {
+    const area = s.domain ?? '';
+    const prev = lastByArea.get(area);
+    if (prev)
+      edges.push({ id: `c${i}`, from: prev, to: s.conceptId, type: 'prereq', kind: 'canonical' });
+    lastByArea.set(area, s.conceptId);
+  });
+  const currentId = course.current?.conceptId;
+  let seenCurrent = false;
+  const states = course.steps.map((s) => {
+    if (s.done) return { conceptId: s.conceptId, status: 'known' };
+    if (s.conceptId === currentId) {
+      seenCurrent = true;
+      return { conceptId: s.conceptId, status: 'learning' };
+    }
+    return { conceptId: s.conceptId, status: seenCurrent ? 'locked' : 'frontier' };
+  });
+  return {
+    nodes,
+    edges,
+    mastery: { domain: course.domain, nodes: states, summary: {} } as unknown as MasteryMap,
+  };
+}
