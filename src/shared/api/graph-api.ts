@@ -245,6 +245,11 @@ export type StepReason = 'rooting' | 'differentiation' | 'branch' | 'spiral';
 
 export interface CourseStep {
   conceptId: string;
+  /** Область и этап понятия: по ним путь группируется (T-0122). */
+  domain?: string;
+  stage?: string;
+  level?: 'basic' | 'middle' | 'advanced';
+  optional?: boolean;
   title: string;
   tier: NodeTier;
   bloom: string;

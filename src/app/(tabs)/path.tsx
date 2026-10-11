@@ -3,6 +3,8 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { CourseTree } from '@/features/graph-editor';
+import { useSession } from '@/entities/session';
 import { CourseScreen } from '@/pages/course';
 import { GraphScreen } from '@/pages/graph';
 import { Button, space, useTheme } from '@/shared/ui';
@@ -10,7 +12,8 @@ import { Button, space, useTheme } from '@/shared/ui';
 export default function PathTab() {
   const router = useRouter();
   const { colors } = useTheme();
-  const [mode, setMode] = useState<'steps' | 'map'>('steps');
+  const [mode, setMode] = useState<'steps' | 'tree' | 'map'>('steps');
+  const { subject } = useSession();
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, padding: space.md }}>
@@ -18,6 +21,11 @@ export default function PathTab() {
           label="Шаги"
           variant={mode === 'steps' ? 'primary' : 'quiet'}
           onPress={() => setMode('steps')}
+        />
+        <Button
+          label="Дерево"
+          variant={mode === 'tree' ? 'primary' : 'quiet'}
+          onPress={() => setMode('tree')}
         />
         <Button
           label="Карта"
@@ -34,6 +42,8 @@ export default function PathTab() {
       <View style={{ flex: 1 }}>
         {mode === 'steps' ? (
           <CourseScreen />
+        ) : mode === 'tree' ? (
+          subject && <CourseTree domain={subject.id} onStart={() => setMode('steps')} />
         ) : (
           <GraphScreen
             onOpenOutline={() => router.push('/skill-profile')}

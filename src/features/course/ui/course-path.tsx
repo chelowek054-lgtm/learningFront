@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 import { MASTERY_TARGETS, targetLabel } from '@/entities/session';
 import { useModuleRegistry } from '@/shared/lib';
+import { PathAccordion } from './path-accordion';
 import {
   ApiError,
   buildCourse,
@@ -171,15 +172,19 @@ export function CoursePath({
       )}
 
       <Label>Весь путь</Label>
-      {course.steps.map((step, i) => (
-        <StepRow
-          key={step.conceptId}
-          index={i + 1}
-          step={step}
-          expanded={open === step.conceptId}
-          onToggle={() => setOpen(open === step.conceptId ? null : step.conceptId)}
-        />
-      ))}
+      <PathAccordion
+        steps={course.steps}
+        currentId={course.current?.conceptId ?? null}
+        renderStep={(step, index) => (
+          <StepRow
+            key={step.conceptId}
+            index={index}
+            step={step}
+            expanded={open === step.conceptId}
+            onToggle={() => setOpen(open === step.conceptId ? null : step.conceptId)}
+          />
+        )}
+      />
 
       {error && <Note tone="danger">{error}</Note>}
       <Button
@@ -235,9 +240,9 @@ function StepRow({
           <Body>{step.title}</Body>
           <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
             <Pill text={REASON[step.reason]} />
-            {isDraft(step) && <Pill text="Черновик" tone="muted" />}
+            {isDraft(step) && <Pill text="не проверено" tone="muted" />}
             <Pill
-              text={step.tier === 'core' ? 'Основа' : 'Ответвление'}
+              text={step.tier === 'core' ? 'обязательное' : 'по интересу'}
               tone={step.tier === 'core' ? 'core' : 'muted'}
             />
           </View>
