@@ -160,6 +160,14 @@ export {
   type CourseNotification,
 } from './notifications-api';
 export {
+  addSubject,
+  deleteSubject,
+  listSubjects,
+  patchSubject,
+  type SubjectStatus,
+  type UserSubject,
+} from './subjects-api';
+export {
   deleteSource,
   fillSourceGaps,
   getSourceProgress,

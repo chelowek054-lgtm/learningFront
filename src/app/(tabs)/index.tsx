@@ -12,6 +12,7 @@ export default function TodayTab() {
       onOpenCourse={() => router.navigate('/path')}
       onOpenGraph={() => router.navigate('/path')}
       onOpenSkillProfile={() => router.push('/skill-profile')}
+      onOpenLibrary={() => router.push('/library')}
     />
   );
 }
