@@ -6,7 +6,7 @@
 // состоянии система», а человек пришёл с вопросом «что мне делать».
 // Сырой список переехал в служебный экран (профиль → «Разработчику»).
 import { useCallback, useEffect, useState } from 'react';
-import { RefreshControl, View } from 'react-native';
+import { Pressable, RefreshControl, View } from 'react-native';
 
 import { useSession } from '@/entities/session';
 import { GoalReachedCard } from '@/features/goal-reached';
@@ -45,12 +45,14 @@ export function HomeScreen({
   onOpenCourse,
   onOpenGraph,
   onOpenSkillProfile,
+  onOpenLibrary,
 }: {
   onOpenReview: () => void;
   onOpenPlacement: () => void;
   onOpenCourse: () => void;
   onOpenGraph: () => void;
   onOpenSkillProfile: () => void;
+  onOpenLibrary?: () => void;
 }) {
   const { user, subject } = useSession();
   const online = useIsOnline();
@@ -136,6 +138,11 @@ export function HomeScreen({
         <Muted>
           {subject ? subject.title : (user?.email ?? '')} {online ? '· онлайн' : '· офлайн'}
         </Muted>
+        {onOpenLibrary && (
+          <Pressable onPress={onOpenLibrary}>
+            <Muted>Моя библиотека →</Muted>
+          </Pressable>
+        )}
       </View>
 
       {action.kind === 'course' && (

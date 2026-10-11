@@ -66,7 +66,13 @@ function ThemePicker() {
   );
 }
 
-export function ProfileScreen({ onOpenCurator }: { onOpenCurator?: () => void }) {
+export function ProfileScreen({
+  onOpenCurator,
+  onOpenLibrary,
+}: {
+  onOpenCurator?: () => void;
+  onOpenLibrary?: () => void;
+}) {
   const { user, logout, refresh, subject } = useSession();
   const online = useIsOnline();
   const [due, setDue] = useState<number | null>(null);
@@ -142,6 +148,13 @@ export function ProfileScreen({ onOpenCurator }: { onOpenCurator?: () => void })
           }
         />
       </Card>
+
+      {onOpenLibrary && (
+        <Card onPress={onOpenLibrary}>
+          <Label>Моя библиотека</Label>
+          <Muted>Все ваши предметы: открыть, поставить на паузу, добавить новый</Muted>
+        </Card>
+      )}
 
       {user?.is_superuser && onOpenCurator && (
         <Card onPress={onOpenCurator}>
