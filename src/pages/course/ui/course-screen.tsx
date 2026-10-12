@@ -12,6 +12,7 @@ import type { Activity } from '@/shared/engine';
 import { useModuleRegistry } from '@/shared/lib';
 import { Button, Empty, Label, Note, space, TopBar, useTheme } from '@/shared/ui';
 import { ActivityDispatcher } from '@/widgets/activity-dispatcher';
+import { useI18n } from '@/shared/i18n';
 
 /** Активность движка из ответа backend: payload несёт всё, что нужно рендереру. */
 function toActivity(a: StepActivity, userId: string, moduleId: string): Activity {
@@ -43,6 +44,7 @@ export function CourseScreen({
   startConceptId?: string | null;
   onStartHandled?: () => void;
 } = {}) {
+  const { t } = useI18n();
   const { user, subject } = useSession();
   const registry = useModuleRegistry();
   const domain = subject?.id ?? '';
@@ -113,7 +115,7 @@ export function CourseScreen({
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
         <View style={{ padding: space.lg }}>
-          <Empty text="Сначала выберите предмет — курс строится под него." />
+          <Empty text={t('courseCourseScreen.1')} />
         </View>
       </SafeAreaView>
     );
@@ -141,7 +143,13 @@ export function CourseScreen({
             )}
             onComplete={() => (last ? finish() : setIndex(index + 1))}
           />
-          {!last && <Button label="Дальше" variant="quiet" onPress={() => setIndex(index + 1)} />}
+          {!last && (
+            <Button
+              label={t('courseCourseScreen.2')}
+              variant="quiet"
+              onPress={() => setIndex(index + 1)}
+            />
+          )}
         </ScrollView>
       </SafeAreaView>
     );

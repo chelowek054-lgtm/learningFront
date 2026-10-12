@@ -6,10 +6,12 @@ import type { ActivityRendererProps, Grade } from '@/shared/engine';
 import { getLocalStore, submitForGrading, syncNow } from '@/shared/api';
 import { useIsOnline } from '@/shared/lib';
 import { GradeView, useTheme, type Palette } from '@/shared/ui';
+import { useI18n } from '@/shared/i18n';
 
 type Phase = 'edit' | 'submitting' | 'graded' | 'queued';
 
 export function ConceptRecallActivity({ activity }: ActivityRendererProps) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const { user } = useSession();
@@ -55,7 +57,7 @@ export function ConceptRecallActivity({ activity }: ActivityRendererProps) {
           <TextInput
             style={styles.input}
             multiline
-            placeholder="Ваш ответ…"
+            placeholder={t('conceptRecallConceptRecallActivity.1')}
             value={answer}
             onChangeText={setAnswer}
             editable={phase === 'edit'}
@@ -64,11 +66,11 @@ export function ConceptRecallActivity({ activity }: ActivityRendererProps) {
             {phase === 'submitting' ? (
               <ActivityIndicator color={colors.onAccent} />
             ) : (
-              <Text style={styles.btnText}>Проверить</Text>
+              <Text style={styles.btnText}>{t('conceptRecallConceptRecallActivity.2')}</Text>
             )}
           </Pressable>
           {phase === 'queued' && (
-            <Text style={styles.queued}>Сохранено офлайн — проверка придёт при синхронизации.</Text>
+            <Text style={styles.queued}>{t('conceptRecallConceptRecallActivity.3')}</Text>
           )}
         </>
       )}

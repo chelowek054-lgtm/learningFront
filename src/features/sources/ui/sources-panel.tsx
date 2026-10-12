@@ -19,10 +19,12 @@ import {
   summaryLine,
   uploadResult,
 } from '../model/sources-model';
+import { useI18n } from '@/shared/i18n';
 
 const POLL_MS = 5000;
 
 export function SourcesPanel() {
+  const { t } = useI18n();
   const [items, setItems] = useState<SourceItem[] | null>(null);
   const [domain, setDomain] = useState('');
   const [title, setTitle] = useState('');
@@ -93,8 +95,10 @@ export function SourcesPanel() {
     try {
       const r = await deleteSource(id);
       setInfo(
-        `Источник удалён вместе с выведенным только из него: понятий ${r.conceptsDeleted}` +
-          (r.conceptsRejected ? `, отклонено ${r.conceptsRejected} (по ним уже учатся)` : ''),
+        t('sourcesSourcesPanel.1', { conceptsDeleted: r.conceptsDeleted }) +
+          (r.conceptsRejected
+            ? t('sourcesSourcesPanel.2', { conceptsRejected: r.conceptsRejected })
+            : ''),
       );
       await refresh();
     } catch (e) {
@@ -105,47 +109,36 @@ export function SourcesPanel() {
   return (
     <View style={{ gap: space.md }}>
       <Card>
-        <Label>Загрузить учебник</Label>
-        <Muted>
-          PDF с текстовым слоем, Markdown или текст. Понятия, найденные в книге, попадают в граф
-          черновиками, пока специалист их не проверит.
-        </Muted>
+        <Label>{t('sourcesSourcesPanel.3')}</Label>
+        <Muted>{t('sourcesSourcesPanel.4')}</Muted>
+        <Field placeholder={t('sourcesSourcesPanel.5')} value={domain} onChangeText={setDomain} />
+        <Field placeholder={t('sourcesSourcesPanel.6')} value={title} onChangeText={setTitle} />
+        <Field placeholder={t('sourcesSourcesPanel.7')} value={level} onChangeText={setLevel} />
+        <Field placeholder={t('sourcesSourcesPanel.8')} value={license} onChangeText={setLicense} />
         <Field
-          placeholder="область, например: algebra (обязательно)"
-          value={domain}
-          onChangeText={setDomain}
+          placeholder={t('sourcesSourcesPanel.9')}
+          value={originUrl}
+          onChangeText={setOriginUrl}
         />
-        <Field
-          placeholder="название (если пусто — из файла)"
-          value={title}
-          onChangeText={setTitle}
-        />
-        <Field placeholder="уровень, например: B2" value={level} onChangeText={setLevel} />
-        <Field
-          placeholder="лицензия, например: CC BY-SA"
-          value={license}
-          onChangeText={setLicense}
-        />
-        <Field placeholder="адрес источника" value={originUrl} onChangeText={setOriginUrl} />
         {sent !== null && <Progress value={sent} />}
         {error && <Note tone="danger">{error}</Note>}
         {info && <Note tone="ok">{info}</Note>}
         <Button
-          label={sent !== null ? 'Загружаю…' : 'Выбрать файл и загрузить'}
+          label={sent !== null ? t('sourcesSourcesPanel.10') : t('sourcesSourcesPanel.11')}
           onPress={() => void pickAndUpload()}
           disabled={!canUpload(fields) || sent !== null}
         />
       </Card>
 
-      <Label>Источники</Label>
-      {items === null && <Muted>Загружаю список…</Muted>}
-      {items?.length === 0 && <Muted>Источников пока нет.</Muted>}
+      <Label>{t('sourcesSourcesPanel.12')}</Label>
+      {items === null && <Muted>{t('sourcesSourcesPanel.13')}</Muted>}
+      {items?.length === 0 && <Muted>{t('sourcesSourcesPanel.14')}</Muted>}
       {items?.map((item) => (
         <Card key={item.id}>
           <Body>{item.title}</Body>
           <Muted>
             {[item.domain, item.level, item.license].filter(Boolean).join(' · ') ||
-              'без метаданных'}
+              t('sourcesSourcesPanel.15')}
           </Muted>
           <Muted>{STATUS_LABEL[item.progress.status]}</Muted>
           {item.progress.status !== 'new' && <Progress value={fraction(item.progress)} />}
@@ -153,15 +146,20 @@ export function SourcesPanel() {
           {item.progress.error && <Note tone="danger">{item.progress.error}</Note>}
           {confirm === item.id ? (
             <>
-              <Note tone="warn">
-                Удалить источник вместе со всем, что выведено только из него? По понятиям, на
-                которые уже ссылаются люди, понятие не удаляется, а отклоняется.
-              </Note>
-              <Button label="Да, удалить" onPress={() => void remove(item.id)} />
-              <Button label="Отмена" variant="quiet" onPress={() => setConfirm(null)} />
+              <Note tone="warn">{t('sourcesSourcesPanel.16')}</Note>
+              <Button label={t('sourcesSourcesPanel.17')} onPress={() => void remove(item.id)} />
+              <Button
+                label={t('sourcesSourcesPanel.18')}
+                variant="quiet"
+                onPress={() => setConfirm(null)}
+              />
             </>
           ) : (
-            <Button label="Удалить источник" variant="quiet" onPress={() => setConfirm(item.id)} />
+            <Button
+              label={t('sourcesSourcesPanel.19')}
+              variant="quiet"
+              onPress={() => setConfirm(item.id)}
+            />
           )}
         </Card>
       ))}

@@ -2,6 +2,7 @@
 import { View } from 'react-native';
 import { Body, Lead, Muted, Note } from './kit';
 import { space } from './theme';
+import { useI18n } from '@/shared/i18n';
 
 /** Что показывает отображение. Форма совпадает с Grade движка, но UI-кит движка не знает (A-0023). */
 export interface GradeViewData {
@@ -14,9 +15,10 @@ export interface GradeViewData {
 }
 
 export function GradeView({ grade }: { grade: GradeViewData }) {
+  const { t } = useI18n();
   return (
     <View style={{ gap: space.sm, marginTop: space.sm }}>
-      {grade.gradedOfflineFallback && <Note tone="warn">черновая оценка (офлайн)</Note>}
+      {grade.gradedOfflineFallback && <Note tone="warn">{t('sharedGradeView.1')}</Note>}
       {!!grade.caveat && <Note tone="warn">{grade.caveat}</Note>}
       {grade.overall !== undefined && <Lead>Overall: {grade.overall}</Lead>}
 
@@ -31,7 +33,7 @@ export function GradeView({ grade }: { grade: GradeViewData }) {
 
       {grade.errors.length > 0 && (
         <View style={{ marginTop: space.xs, gap: space.xs }}>
-          <Note tone="danger">Ошибки ({grade.errors.length})</Note>
+          <Note tone="danger">{t('sharedGradeView.2', { length: grade.errors.length })}</Note>
           {grade.errors.map((e, i) => (
             <Muted key={`${e.excerpt}-${i}`}>
               • {e.excerpt} → {e.correction}
@@ -41,7 +43,7 @@ export function GradeView({ grade }: { grade: GradeViewData }) {
         </View>
       )}
 
-      {!!grade.exemplar && <Muted>Образец: {grade.exemplar}</Muted>}
+      {!!grade.exemplar && <Muted>{t('sharedGradeView.3', { exemplar: grade.exemplar })}</Muted>}
     </View>
   );
 }

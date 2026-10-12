@@ -5,10 +5,15 @@ import type { GraphNode } from '@/shared/api';
 import { Button, Card, Chip, font, Label, Muted, space, useTheme } from '@/shared/ui';
 import { stageSummary, type StageLink } from '../model/overview';
 import type { SchemeScene, SchemeViewMode } from './use-scheme-scene';
+import { useI18n, translate } from '@/shared/i18n';
 
 const VIEW_LABEL: Record<Exclude<SchemeViewMode, 'auto'>, string> = {
-  stages: 'Этапы',
-  all: 'Всё',
+  get stages() {
+    return translate('graphEditorStageControls.1');
+  },
+  get all() {
+    return translate('graphEditorStageControls.2');
+  },
 };
 
 export function StageControls({
@@ -21,6 +26,7 @@ export function StageControls({
   /** Название этапа по ключу: для пути «Все этапы › Х». */
   stageTitle: (key: string) => string;
 }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   if (!scene.switchable && scene.areas.length === 0) return null;
   const current = scene.grouped ? 'stages' : 'all';
@@ -30,7 +36,7 @@ export function StageControls({
   return (
     <View style={{ gap: space.sm }}>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.xs, alignItems: 'center' }}>
-        <Muted>Вид:</Muted>
+        <Muted>{t('graphEditorStageControls.3')}</Muted>
         {(['stages', 'all'] as const).map((v) => (
           <Chip
             key={v}
@@ -43,7 +49,7 @@ export function StageControls({
         {scene.grouped && selected && (
           <Chip
             size="sm"
-            text="Вся цепочка"
+            text={t('graphEditorStageControls.4')}
             selected={scene.fullChain}
             onPress={() => scene.setFullChain(!scene.fullChain)}
           />
@@ -53,7 +59,7 @@ export function StageControls({
         <View
           style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.xs, alignItems: 'center' }}
         >
-          <Muted>Области:</Muted>
+          <Muted>{t('graphEditorStageControls.5')}</Muted>
           {scene.areas.map((a) => (
             <Chip
               key={a.name}
@@ -69,10 +75,15 @@ export function StageControls({
         <View
           style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.xs, alignItems: 'center' }}
         >
-          <Button size="sm" variant="quiet" label="Все этапы" onPress={scene.collapseAll} />
+          <Button
+            size="sm"
+            variant="quiet"
+            label={t('graphEditorStageControls.6')}
+            onPress={scene.collapseAll}
+          />
           <Text style={{ color: colors.muted, fontSize: font.small }}>›</Text>
           <Text style={{ color: colors.ink, fontSize: font.small, fontWeight: '600' }}>
-            {one ? stageTitle(one) : `раскрыто этапов: ${keys.length}`}
+            {one ? stageTitle(one) : t('graphEditorStageControls.7', { length: keys.length })}
           </Text>
           {summary && (
             <Muted>
@@ -99,6 +110,7 @@ export function StageLinksCard({
   onPick: (id: string) => void;
   onClose: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <Card>
       <Label>
@@ -138,7 +150,7 @@ export function StageLinksCard({
           );
         })}
       </View>
-      <Button size="sm" variant="quiet" label="Закрыть список" onPress={onClose} />
+      <Button size="sm" variant="quiet" label={t('graphEditorStageControls.8')} onPress={onClose} />
     </Card>
   );
 }

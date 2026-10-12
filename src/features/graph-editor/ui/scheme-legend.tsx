@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { Card, font, Label, Muted, radius, space, useTheme } from '@/shared/ui';
 import { dashBars, type Bar } from '../model/scheme';
 import type { LegendItem, LegendSample } from '../model/legend';
+import { translate, useI18n } from '@/shared/i18n';
 
 const SAMPLE_W = 40;
 
@@ -11,13 +12,14 @@ export function SchemeLegend({
   items,
   open,
   onToggle,
-  title = 'Как читать схему',
+  title = translate('graphEditorSchemeLegend.1'),
 }: {
   items: LegendItem[];
   open: boolean;
   onToggle: () => void;
   title?: string;
 }) {
+  const { t } = useI18n();
   return (
     <Card>
       <Pressable
@@ -35,13 +37,16 @@ export function SchemeLegend({
 
 /** Список строк без рамки: во весь экран он лежит в панели, во встроенной схеме — в карточке. */
 export function LegendList({ items }: { items: LegendItem[] }) {
+  const { t } = useI18n();
   return (
     <View style={{ gap: space.sm }}>
       {items.map((i) => (
         <View
           key={i.id}
           accessible
-          accessibilityLabel={i.count ? `${i.text}, на схеме: ${i.count}` : i.text}
+          accessibilityLabel={
+            i.count ? t('graphEditorSchemeLegend.2', { text: i.text, count: i.count }) : i.text
+          }
           style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}
         >
           <View style={{ width: SAMPLE_W, alignItems: 'center' }}>
@@ -60,6 +65,7 @@ export function LegendList({ items }: { items: LegendItem[] }) {
 }
 
 function Sample({ sample }: { sample: LegendSample }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   switch (sample.kind) {
     case 'node': {
@@ -142,7 +148,9 @@ function Sample({ sample }: { sample: LegendSample }) {
       );
     }
     case 'label':
-      return <Text style={{ color: colors.muted, fontSize: 10 }}>база · …</Text>;
+      return (
+        <Text style={{ color: colors.muted, fontSize: 10 }}>{t('graphEditorSchemeLegend.3')}</Text>
+      );
     case 'stage':
       return (
         <View

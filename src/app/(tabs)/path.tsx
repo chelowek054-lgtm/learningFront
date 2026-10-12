@@ -9,15 +9,32 @@ import { CourseScreen } from '@/pages/course';
 import { GraphScreen } from '@/pages/graph';
 import { Button, SegmentedControl, space, useTheme } from '@/shared/ui';
 import { SubjectBar } from '@/widgets/subject-bar';
+import { useI18n, translate } from '@/shared/i18n';
 
 type PathMode = 'steps' | 'tree' | 'map';
 const MODES: readonly { value: PathMode; label: string }[] = [
-  { value: 'steps', label: 'Список' },
-  { value: 'tree', label: 'Дерево' },
-  { value: 'map', label: 'Карта' },
+  {
+    value: 'steps',
+    get label() {
+      return translate('appPath.1');
+    },
+  },
+  {
+    value: 'tree',
+    get label() {
+      return translate('appPath.2');
+    },
+  },
+  {
+    value: 'map',
+    get label() {
+      return translate('appPath.3');
+    },
+  },
 ];
 
 export default function PathTab() {
+  const { t } = useI18n();
   const router = useRouter();
   const { colors } = useTheme();
   const [mode, setMode] = useState<PathMode>('steps');
@@ -35,11 +52,15 @@ export default function PathTab() {
         <SegmentedControl options={MODES} value={mode} onChange={setMode} />
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
           <Button
-            label="Состав навыка"
+            label={t('appPath.4')}
             variant="quiet"
             onPress={() => router.push('/skill-profile')}
           />
-          <Button label="Откуда знания" variant="quiet" onPress={() => router.push('/materials')} />
+          <Button
+            label={t('appPath.5')}
+            variant="quiet"
+            onPress={() => router.push('/materials')}
+          />
         </View>
       </View>
       <View style={{ flex: 1 }}>

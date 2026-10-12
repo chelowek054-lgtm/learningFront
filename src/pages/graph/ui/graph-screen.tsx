@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSession } from '@/entities/session';
 import { GraphCuration, GraphMap } from '@/features/graph-editor';
 import { Empty, space, Title, useTheme } from '@/shared/ui';
+import { useI18n } from '@/shared/i18n';
 
 export function GraphScreen({
   onOpenOutline,
@@ -16,16 +17,19 @@ export function GraphScreen({
   /** Открыть шаг курса; понятие, которое человек выбрал на схеме, передаётся, чтобы шаг был по нему. */
   onStudy?: (conceptId?: string) => void;
 }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const { isAdmin, subject } = useSession();
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <View style={{ paddingHorizontal: space.lg, paddingTop: space.md }}>
-        <Title>{subject ? `Карта знаний · ${subject.title}` : 'Карта знаний'}</Title>
+        <Title>
+          {subject ? t('graphGraphScreen.1', { title: subject.title }) : t('graphGraphScreen.3')}
+        </Title>
       </View>
       {!subject ? (
-        <Empty text="Сначала выберите предмет — карта строится под него." />
+        <Empty text={t('graphGraphScreen.2')} />
       ) : isAdmin ? (
         <GraphCuration domain={subject.id} onOpenOutline={onOpenOutline} />
       ) : (

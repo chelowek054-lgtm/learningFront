@@ -25,10 +25,18 @@ export type NextAction =
 
 /** Почему узел попал в путь — объяснение курса, а не отладочная метка. */
 const STEP_REASON: Record<StepReason, string> = {
-  rooting: translate('home.1'),
-  differentiation: translate('home.2'),
-  branch: translate('home.3'),
-  spiral: translate('home.4'),
+  get rooting() {
+    return translate('home.1');
+  },
+  get differentiation() {
+    return translate('home.2');
+  },
+  get branch() {
+    return translate('home.3');
+  },
+  get spiral() {
+    return translate('home.4');
+  },
 };
 
 export function reasonForStep(reason: StepReason): string {

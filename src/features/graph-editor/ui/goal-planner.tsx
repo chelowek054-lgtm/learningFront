@@ -15,6 +15,7 @@ import {
   type BuildBudget,
   type Subdomain,
 } from '../model/split-edit';
+import { useI18n } from '@/shared/i18n';
 
 export function GoalPlanner({
   domain,
@@ -25,6 +26,7 @@ export function GoalPlanner({
   topic: string;
   onBuilt: (graph: Graph) => void;
 }) {
+  const { t } = useI18n();
   const [parts, setParts] = useState<Subdomain[] | null>(null);
   const [limit, setLimit] = useState(8);
   const [busy, setBusy] = useState<'split' | 'build' | null>(null);
@@ -63,12 +65,12 @@ export function GoalPlanner({
       <>
         {error && <Note tone="danger">{error}</Note>}
         <Button
-          label="Разбить цель на части"
+          label={t('graphEditorGoalPlanner.1')}
           onPress={() => void split()}
           busy={busy === 'split'}
           disabled={!topic.trim()}
         />
-        <Muted>Сначала вы увидите, на какие части делится цель, и сможете поправить.</Muted>
+        <Muted>{t('graphEditorGoalPlanner.2')}</Muted>
       </>
     );
   }
@@ -76,11 +78,8 @@ export function GoalPlanner({
   const budget = budgetFor(parts, limit);
   return (
     <View style={{ gap: space.md }}>
-      <Label>Из чего будет состоять цель</Label>
-      <Muted>
-        Части идут от основ к зависимым. Уберите лишнее или переименуйте — построится то, что
-        останется.
-      </Muted>
+      <Label>{t('graphEditorGoalPlanner.3')}</Label>
+      <Muted>{t('graphEditorGoalPlanner.4')}</Muted>
       {orderByPrereqs(parts).map((p) => (
         <Card key={p.key}>
           <Field
@@ -96,7 +95,7 @@ export function GoalPlanner({
             </Muted>
           )}
           <Button
-            label="Убрать"
+            label={t('graphEditorGoalPlanner.5')}
             variant="quiet"
             onPress={() => setParts((prev) => (prev ? removeSubdomain(prev, p.key) : prev))}
           />
@@ -104,16 +103,20 @@ export function GoalPlanner({
       ))}
       <Body>
         Построение: {budget.requests} запрос(ов) к модели, по одному на часть. Это занимает
-        несколько минут.
+        {t('graphEditorGoalPlanner.6')}
       </Body>
       {error && <Note tone="danger">{error}</Note>}
       <Button
-        label="Построить карту"
+        label={t('graphEditorGoalPlanner.7')}
         onPress={() => void build()}
         busy={busy === 'build'}
         disabled={!canBuild(parts)}
       />
-      <Button label="Заново разбить" variant="quiet" onPress={() => setParts(null)} />
+      <Button
+        label={t('graphEditorGoalPlanner.8')}
+        variant="quiet"
+        onPress={() => setParts(null)}
+      />
     </View>
   );
 }

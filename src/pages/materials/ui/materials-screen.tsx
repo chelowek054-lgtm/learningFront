@@ -35,8 +35,10 @@ import {
   Screen,
   TopBar,
 } from '@/shared/ui';
+import { useI18n } from '@/shared/i18n';
 
 export function MaterialsScreen({ onBack }: { onBack?: () => void }) {
+  const { t } = useI18n();
   const { subject } = useSession();
   const [proposal, setProposal] = useState<MaterialProposal | null>(null);
   const [chosen, setChosen] = useState<Set<string>>(new Set());
@@ -98,7 +100,7 @@ export function MaterialsScreen({ onBack }: { onBack?: () => void }) {
     try {
       setOpen(await loadMaterial(getLocalStore(), id));
     } catch {
-      setError('Материал не открылся: его ещё не читали, а сети нет.');
+      setError(t('materialsMaterialsScreen.1'));
     } finally {
       setBusy(false);
     }
@@ -112,8 +114,7 @@ export function MaterialsScreen({ onBack }: { onBack?: () => void }) {
       const p = await proposeFromMaterial(id);
       setProposal(p);
       setChosen(new Set(p.nodes.map((n) => n.key)));
-      if (p.nodes.length === 0)
-        setInfo('В материале не нашлось понятий, на которые можно опереться.');
+      if (p.nodes.length === 0) setInfo(t('materialsMaterialsScreen.2'));
     } catch (e) {
       setError(uploadErrorMessage(e));
     } finally {
@@ -129,7 +130,7 @@ export function MaterialsScreen({ onBack }: { onBack?: () => void }) {
       const nodes = proposal.nodes.filter((n) => keys.has(n.key));
       const edges = proposal.edges.filter((e) => keys.has(e.from) && keys.has(e.to));
       const r = await acceptFromMaterial(id, subject.id, { nodes, edges });
-      setInfo(`Добавлено в ваш граф: ${r.created}.`);
+      setInfo(t('materialsMaterialsScreen.3', { created: r.created }));
       setProposal(null);
     } catch (e) {
       setError(uploadErrorMessage(e));
@@ -147,8 +148,8 @@ export function MaterialsScreen({ onBack }: { onBack?: () => void }) {
       await syncNow(getLocalStore()).catch(() => undefined);
       setInfo(
         r.created > 0
-          ? `Вопросов для самопроверки: ${r.created}. Они появятся среди заданий.`
-          : 'Новых вопросов нет: по этому материалу они уже созданы.',
+          ? t('materialsMaterialsScreen.4', { created: r.created })
+          : t('materialsMaterialsScreen.5'),
       );
     } catch (e) {
       setError(uploadErrorMessage(e));
@@ -178,7 +179,7 @@ export function MaterialsScreen({ onBack }: { onBack?: () => void }) {
     return (
       <Screen>
         <TopBar
-          title="Материал"
+          title={t('materialsMaterialsScreen.6')}
           onBack={() => {
             setOpen(null);
             setConfirmDelete(false);
@@ -187,20 +188,20 @@ export function MaterialsScreen({ onBack }: { onBack?: () => void }) {
           }}
         />
         <Lead>{material.title}</Lead>
-        {open.offline && <Note tone="warn">Показана сохранённая копия: сети нет.</Note>}
+        {open.offline && <Note tone="warn">{t('materialsMaterialsScreen.7')}</Note>}
         {!open.offline && (
           <>
             {subject ? (
               <Button
-                label="Построить узлы в моём графе"
+                label={t('materialsMaterialsScreen.8')}
                 onPress={() => void propose(material.id)}
                 busy={busy}
               />
             ) : (
-              <Muted>Чтобы строить узлы, сначала выберите предмет.</Muted>
+              <Muted>{t('materialsMaterialsScreen.9')}</Muted>
             )}
             <Button
-              label="Вопросы для самопроверки"
+              label={t('materialsMaterialsScreen.10')}
               variant="quiet"
               onPress={() => void makeQuestions(material.id)}
               busy={busy}
@@ -210,8 +211,8 @@ export function MaterialsScreen({ onBack }: { onBack?: () => void }) {
         {info && <Note tone="ok">{info}</Note>}
         {proposal && proposal.nodes.length > 0 && (
           <Card tone="accent">
-            <Label>Предложенные узлы</Label>
-            {proposal.truncated && <Muted>Материал длинный: модель прочитала только начало.</Muted>}
+            <Label>{t('materialsMaterialsScreen.11')}</Label>
+            {proposal.truncated && <Muted>{t('materialsMaterialsScreen.12')}</Muted>}
             {proposal.nodes.map((n) => {
               const on = chosen.has(n.key);
               return (
@@ -235,19 +236,25 @@ export function MaterialsScreen({ onBack }: { onBack?: () => void }) {
               );
             })}
             <Button
-              label={`Добавить выбранные (${chosen.size})`}
+              label={t('materialsMaterialsScreen.13', { size: chosen.size })}
               onPress={() => void accept(material.id)}
               busy={busy}
               disabled={chosen.size === 0}
             />
-            <Button label="Отмена" variant="quiet" onPress={() => setProposal(null)} />
+            <Button
+              label={t('materialsMaterialsScreen.14')}
+              variant="quiet"
+              onPress={() => setProposal(null)}
+            />
           </Card>
         )}
         {fragments.map((f) => (
           <Card key={f.id}>
             {(f.heading || f.page) && (
               <Label>
-                {[f.heading, f.page ? `стр. ${f.page}` : ''].filter(Boolean).join(' · ')}
+                {[f.heading, f.page ? t('materialsMaterialsScreen.15', { page: f.page }) : '']
+                  .filter(Boolean)
+                  .join(' · ')}
               </Label>
             )}
             <Body>{f.text}</Body>
@@ -256,18 +263,22 @@ export function MaterialsScreen({ onBack }: { onBack?: () => void }) {
         {material.mine &&
           (confirmDelete ? (
             <>
-              <Note tone="danger">Материал будет удалён без возможности вернуть.</Note>
+              <Note tone="danger">{t('materialsMaterialsScreen.16')}</Note>
               <Button
-                label="Да, удалить"
+                label={t('materialsMaterialsScreen.17')}
                 variant="danger"
                 onPress={() => void remove(material.id)}
                 busy={busy}
               />
-              <Button label="Не удалять" variant="quiet" onPress={() => setConfirmDelete(false)} />
+              <Button
+                label={t('materialsMaterialsScreen.18')}
+                variant="quiet"
+                onPress={() => setConfirmDelete(false)}
+              />
             </>
           ) : (
             <Button
-              label="Удалить материал"
+              label={t('materialsMaterialsScreen.19')}
               variant="quiet"
               onPress={() => setConfirmDelete(true)}
             />
@@ -279,31 +290,34 @@ export function MaterialsScreen({ onBack }: { onBack?: () => void }) {
 
   return (
     <Screen>
-      <TopBar title="Мои материалы" onBack={onBack} />
-      <Muted>
-        Загрузите PDF или Markdown до 20 МБ: текст разрежется на фрагменты, и его можно читать без
-        сети. Из материала можно будет строить личные узлы графа.
-      </Muted>
+      <TopBar title={t('materialsMaterialsScreen.20')} onBack={onBack} />
+      <Muted>{t('materialsMaterialsScreen.21')}</Muted>
       <Button
-        label="Загрузить файл"
+        label={t('materialsMaterialsScreen.22')}
         onPress={() => void pickAndUpload()}
         busy={progress !== null}
         disabled={offline}
       />
       {progress !== null && <Progress value={progress} />}
-      {offline && <Note tone="warn">Сети нет: загрузка недоступна, сохранённое читается.</Note>}
+      {offline && <Note tone="warn">{t('materialsMaterialsScreen.23')}</Note>}
       {error && <Note tone="danger">{error}</Note>}
 
       {items === null && <ActivityIndicator />}
-      {items?.length === 0 && <Empty text="Материалов пока нет." />}
+      {items?.length === 0 && <Empty text={t('materialsMaterialsScreen.24')} />}
       {items?.map((m) => (
         <Card key={m.id} onPress={() => void read(m.id)}>
           <Lead>{m.title}</Lead>
           <Muted>
-            {m.source === 'pdf' ? 'PDF' : m.source === 'markdown' ? 'Текст' : 'Материал'}
-            {m.pages ? ` · ${m.pages} стр.` : ''}
-            {m.fragmentCount !== null ? ` · фрагментов: ${m.fragmentCount}` : ''}
-            {m.mine ? '' : ' · общий'}
+            {m.source === 'pdf'
+              ? 'PDF'
+              : m.source === 'markdown'
+                ? t('materialsMaterialsScreen.25')
+                : t('materialsMaterialsScreen.6')}
+            {m.pages ? t('materialsMaterialsScreen.26', { pages: m.pages }) : ''}
+            {m.fragmentCount !== null
+              ? t('materialsMaterialsScreen.27', { fragmentCount: m.fragmentCount })
+              : ''}
+            {m.mine ? '' : t('materialsMaterialsScreen.28')}
           </Muted>
         </Card>
       ))}

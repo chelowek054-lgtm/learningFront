@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { radius, useTheme } from '@/shared/ui';
 import type { Overview, StageArrow, StageBox, StageLink } from '../model/overview';
 import { NODE_W } from '../model/scheme';
+import { useI18n } from '@/shared/i18n';
 
 export function StageLayer({
   overview,
@@ -18,6 +19,7 @@ export function StageLayer({
   onOpenLink: (link: StageLink) => void;
   onExpandStage: (key: string) => void;
 }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const selecting = overview.highlight !== null;
   return (
@@ -38,7 +40,7 @@ export function StageLayer({
           key={m.key}
           onPress={() => onExpandStage(m.key)}
           accessibilityRole="button"
-          accessibilityLabel={`Показать ещё ${m.count} понятий этапа`}
+          accessibilityLabel={t('graphEditorStageLayer.1', { count: m.count })}
           style={{
             position: 'absolute',
             left: m.x,
@@ -54,7 +56,7 @@ export function StageLayer({
           }}
         >
           <Text style={{ color: colors.muted, fontSize: 12.5, fontWeight: '600' }}>
-            ещё {m.count} — раскрыть этап
+            {t('graphEditorStageLayer.2', { count: m.count })}
           </Text>
         </Pressable>
       ))}
@@ -64,6 +66,7 @@ export function StageLayer({
 
 /** Блок свёрнутого этапа или заголовок раскрытого: название, область, «освоено k из n», полоса; нажатие переключает. */
 function Block({ box, dim, onPress }: { box: StageBox; dim: boolean; onPress: () => void }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const share = box.count ? box.known / box.count : 0;
   const header = box.expanded;
@@ -73,7 +76,7 @@ function Block({ box, dim, onPress }: { box: StageBox; dim: boolean; onPress: ()
       accessibilityRole="button"
       accessibilityState={{ expanded: box.expanded }}
       accessibilityLabel={`Этап ${box.title}${box.area ? `, ${box.area}` : ''}: освоено ${box.known} из ${box.count}. ${
-        box.expanded ? 'Свернуть' : 'Раскрыть'
+        box.expanded ? t('graphEditorStageLayer.3') : t('graphEditorStageLayer.4')
       }`}
       style={{
         position: 'absolute',
@@ -104,7 +107,7 @@ function Block({ box, dim, onPress }: { box: StageBox; dim: boolean; onPress: ()
         </Text>
       ) : null}
       <Text style={{ color: colors.muted, fontSize: 11, marginTop: 2 }}>
-        освоено {box.known} из {box.count}
+        {t('graphEditorStageLayer.5', { known: box.known, count: box.count })}
       </Text>
       {!header && (
         <View

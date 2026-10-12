@@ -36,11 +36,18 @@ import {
   space,
   TopBar,
 } from '@/shared/ui';
+import { useI18n, translate } from '@/shared/i18n';
 
 const EDGE_LABEL: Record<string, string> = {
-  prereq: 'нужно раньше',
-  specializes: 'частный случай',
-  related: 'рядом',
+  get prereq() {
+    return translate('graphEditorGraphMap.1');
+  },
+  get specializes() {
+    return translate('graphEditorGraphMap.2');
+  },
+  get related() {
+    return translate('graphEditorGraphMap.3');
+  },
 };
 
 /** Применить одну отложенную правку. */
@@ -85,6 +92,7 @@ export function GraphMap({
   /** Открыть шаг курса; понятие, которое человек выбрал на схеме, передаётся, чтобы шаг был по нему. */
   onStudy?: (conceptId?: string) => void;
 }) {
+  const { t } = useI18n();
   const [graph, setGraph] = useState<Graph | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -142,7 +150,7 @@ export function GraphMap({
       });
   }, [graph, selected]);
 
-  if (failed) return <Empty text="Не удалось загрузить карту. Потяните вниз позже." />;
+  if (failed) return <Empty text={t('graphEditorGraphMap.4')} />;
   if (!graph) return <ActivityIndicator style={{ marginTop: space.xxl }} />;
 
   // Пустая область — не тупик: предмет выбрал человек, ему же и заводить.
@@ -161,9 +169,7 @@ export function GraphMap({
   if (mode === 'scheme' && !selected) {
     return (
       <Screen>
-        {building && (
-          <Note tone="warn">Карта ещё дособирается: готовые области уже можно открыть.</Note>
-        )}
+        {building && <Note tone="warn">{t('graphEditorGraphMap.5')}</Note>}
         <ModeSwitch mode={mode} onChange={setMode} />
         <SchemeView
           graph={graph}
@@ -180,20 +186,22 @@ export function GraphMap({
   if (selected) {
     return (
       <Screen>
-        <TopBar title="Карта знаний" onBack={() => setSelectedId(null)} />
+        <TopBar title={t('graphEditorGraphMap.6')} onBack={() => setSelectedId(null)} />
         <Lead>{selected.title}</Lead>
         <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
           <Pill
-            text={selected.tier === 'core' ? 'Основа' : 'Ответвление'}
+            text={
+              selected.tier === 'core' ? t('graphEditorGraphMap.7') : t('graphEditorGraphMap.8')
+            }
             tone={selected.tier === 'core' ? 'core' : 'muted'}
           />
-          {selected.reviewStatus === 'draft' && <Pill text="не проверено" />}
+          {selected.reviewStatus === 'draft' && <Pill text={t('graphEditorGraphMap.9')} />}
         </View>
-        <Body>{selected.content.summary ?? 'Пояснение пока не готово.'}</Body>
+        <Body>{selected.content.summary ?? t('graphEditorGraphMap.10')}</Body>
 
-        <Label>Связи</Label>
+        <Label>{t('graphEditorGraphMap.11')}</Label>
         {neighbors.length === 0 ? (
-          <Muted>Пока не связано с другими темами</Muted>
+          <Muted>{t('graphEditorGraphMap.12')}</Muted>
         ) : (
           neighbors.map((n, i) => (
             <Muted key={`${n.title}-${i}`}>
@@ -209,9 +217,7 @@ export function GraphMap({
     // Профиль навыка: карта идёт по этапам, у понятия видны уровень и «необязательное».
     return (
       <Screen>
-        {building && (
-          <Note tone="warn">Карта ещё дособирается: готовые области уже можно открыть.</Note>
-        )}
+        {building && <Note tone="warn">{t('graphEditorGraphMap.5')}</Note>}
         <ModeSwitch mode={mode} onChange={setMode} />
         {groupByStage(nodes).map((g, i) => (
           <Section
@@ -228,19 +234,17 @@ export function GraphMap({
 
   return (
     <Screen>
-      {building && (
-        <Note tone="warn">Карта ещё дособирается: готовые области уже можно открыть.</Note>
-      )}
+      {building && <Note tone="warn">{t('graphEditorGraphMap.5')}</Note>}
       <ModeSwitch mode={mode} onChange={setMode} />
       <Section
-        title="Основа"
-        hint="Без этого остальное не встанет"
+        title={t('graphEditorGraphMap.7')}
+        hint={t('graphEditorGraphMap.13')}
         nodes={nodes.filter((n) => n.tier === 'core')}
         onPick={setSelectedId}
       />
       <Section
-        title="Ответвления"
-        hint="Отдельные темы поверх основы"
+        title={t('graphEditorGraphMap.14')}
+        hint={t('graphEditorGraphMap.15')}
         nodes={nodes.filter((n) => n.tier !== 'core')}
         onPick={setSelectedId}
       />
@@ -255,15 +259,16 @@ function ModeSwitch({
   mode: 'scheme' | 'list';
   onChange: (m: 'scheme' | 'list') => void;
 }) {
+  const { t } = useI18n();
   return (
     <View style={{ flexDirection: 'row', gap: space.sm }}>
       <Button
-        label="Схема"
+        label={t('graphEditorGraphMap.16')}
         variant={mode === 'scheme' ? 'primary' : 'quiet'}
         onPress={() => onChange('scheme')}
       />
       <Button
-        label="Список"
+        label={t('graphEditorGraphMap.17')}
         variant={mode === 'list' ? 'primary' : 'quiet'}
         onPress={() => onChange('list')}
       />
@@ -282,6 +287,7 @@ function Section({
   nodes: GraphNode[];
   onPick: (id: string) => void;
 }) {
+  const { t } = useI18n();
   if (nodes.length === 0) return null;
   return (
     <View style={{ gap: space.sm }}>
@@ -295,7 +301,7 @@ function Section({
           {(n.level || n.optional) && (
             <View style={{ flexDirection: 'row', gap: space.sm }}>
               {n.level && <Pill text={LEVEL_TEXT[n.level]} />}
-              {n.optional && <Pill text="необязательное" tone="muted" />}
+              {n.optional && <Pill text={t('graphEditorGraphMap.18')} tone="muted" />}
             </View>
           )}
         </Card>

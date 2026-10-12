@@ -31,15 +31,21 @@ import {
   type ReadingQuestion,
   type ReadingResult,
 } from '../model/reading-model';
+import { useI18n, translate } from '@/shared/i18n';
 
 const TFNG = ['true', 'false', 'not given'];
 const TFNG_LABEL: Record<string, string> = {
-  true: 'Верно (True)',
-  false: 'Неверно (False)',
-  'not given': 'В тексте не сказано (Not Given)',
+  get true() {
+    return translate('readingDrillReadingDrillActivity.1');
+  },
+  get false() {
+    return translate('readingDrillReadingDrillActivity.2');
+  },
+  'not given': translate('readingDrillReadingDrillActivity.3'),
 };
 
 export function ReadingDrillActivity({ activity, onComplete }: ActivityRendererProps) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const { user } = useSession();
   const drill = parseReadingDrill(activity.payload);
@@ -94,7 +100,7 @@ export function ReadingDrillActivity({ activity, onComplete }: ActivityRendererP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [left, result]);
 
-  if (!drill) return <Note tone="danger">Задание повреждено: текст или вопросы не пришли.</Note>;
+  if (!drill) return <Note tone="danger">{t('readingDrillReadingDrillActivity.4')}</Note>;
 
   const detail = (id: string) => result?.details.find((d) => d.id === id);
 
@@ -144,7 +150,11 @@ export function ReadingDrillActivity({ activity, onComplete }: ActivityRendererP
           <Card key={q.id}>
             <Label>
               Вопрос {i + 1} из {drill.questions.length}
-              {d ? (d.correct ? ' · верно' : ' · неверно') : ''}
+              {d
+                ? d.correct
+                  ? t('readingDrillReadingDrillActivity.5')
+                  : t('readingDrillReadingDrillActivity.6')
+                : ''}
             </Label>
             <Body>{q.prompt}</Body>
             {q.type === 'mcq' && (q.options ?? []).map((o) => optionRow(q, o, o))}
@@ -156,12 +166,12 @@ export function ReadingDrillActivity({ activity, onComplete }: ActivityRendererP
                 editable={!result}
                 autoCapitalize="none"
                 autoCorrect={false}
-                placeholder="Ваш ответ"
+                placeholder={t('readingDrillReadingDrillActivity.7')}
               />
             )}
             {d && !d.correct && (
               <Muted>
-                Верный ответ: {d.expected}
+                {t('readingDrillReadingDrillActivity.8', { expected: d.expected })}
                 {d.explanation ? ` — ${d.explanation}` : ''}
               </Muted>
             )}
@@ -172,11 +182,14 @@ export function ReadingDrillActivity({ activity, onComplete }: ActivityRendererP
       {result ? (
         <>
           <Note tone={result.fraction >= 0.7 ? 'ok' : 'warn'}>
-            Верных ответов: {result.correct} из {result.total}
-            {timedOut ? '. Время вышло: засчитано отвеченное.' : ''}
+            {t('readingDrillReadingDrillActivity.9', {
+              correct: result.correct,
+              total: result.total,
+            })}
+            {timedOut ? t('readingDrillReadingDrillActivity.10') : ''}
           </Note>
           <Button
-            label="Готово"
+            label={t('readingDrillReadingDrillActivity.11')}
             onPress={() => onComplete({ activityId: activity.id, userAnswer: answers })}
           />
         </>
@@ -185,10 +198,13 @@ export function ReadingDrillActivity({ activity, onComplete }: ActivityRendererP
           {answeredCount(drill, answers) < drill.questions.length && (
             <Muted>
               Без ответа: {drill.questions.length - answeredCount(drill, answers)}. Можно сдать и
-              так, но вернуться после сдачи нельзя.
+              {t('readingDrillReadingDrillActivity.12')}
             </Muted>
           )}
-          <Button label="Сдать" onPress={() => void submit(false)} />
+          <Button
+            label={t('readingDrillReadingDrillActivity.13')}
+            onPress={() => void submit(false)}
+          />
         </>
       )}
     </View>

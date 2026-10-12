@@ -1,6 +1,7 @@
 // Что показать, пока граф собирается в фоне: по статусу профиля, без сети и без UI.
 // Сборка идёт в две фазы (R-0055): быстрый контур, затем наполнение по областям.
 import type { ProfileState } from '@/shared/api';
+import { translate } from '../../../shared/i18n/translate';
 
 export type BuildKind = 'idle' | 'drafting' | 'outline' | 'running' | 'stale' | 'failed' | 'done';
 
@@ -30,36 +31,34 @@ export function buildView(state: ProfileState | null, now: number): BuildView {
       return {
         kind: 'stale',
         minutes,
-        message: 'Сборка прервалась: сервер перезапускали. Запустите её заново.',
+        message: translate('graphEditorBuildProgress.1'),
       };
     }
     if (!state.progress) {
       return {
         kind: 'drafting',
         minutes,
-        message: 'Составляем контур навыка: из каких областей он состоит. Обычно около минуты.',
+        message: translate('graphEditorBuildProgress.2'),
       };
     }
     return {
       kind: 'running',
       minutes,
-      message:
-        'Наполняем области: по каждой собираем всё, что нужно знать. Обычно 5–10 минут; ' +
-        'экран можно закрыть — сборка продолжится.',
+      message: translate('graphEditorBuildProgress.3') + translate('graphEditorBuildProgress.4'),
     };
   }
   if (state.status === 'outline') {
     return {
       kind: 'outline',
       minutes: 0,
-      message: 'Контур готов. Проверьте состав навыка и соберите карту.',
+      message: translate('graphEditorBuildProgress.5'),
     };
   }
   if (state.status === 'failed') {
     return {
       kind: 'failed',
       minutes: 0,
-      message: state.error ?? 'Сборка не удалась. Попробуйте ещё раз.',
+      message: state.error ?? translate('graphEditorBuildProgress.6'),
     };
   }
   return { kind: 'done', minutes: 0, message: '' };
@@ -67,4 +66,6 @@ export function buildView(state: ProfileState | null, now: number): BuildView {
 
 /** «Идёт уже 3 мин» / «только началась». */
 export const elapsedLabel = (minutes: number): string =>
-  minutes < 1 ? 'только началась' : `идёт уже ${minutes} мин`;
+  minutes < 1
+    ? translate('graphEditorBuildProgress.7')
+    : translate('graphEditorBuildProgress.8', { minutes });

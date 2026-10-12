@@ -1,20 +1,41 @@
 // Как показать отчёт по предварительным знаниям (T-0075, R-0042).
 import type { AreaReport, PriorReport, Verdict } from '@/shared/api';
+import { translate } from '../../../shared/i18n/translate';
 
 export const VERDICT_LABEL: Record<Verdict, string> = {
-  enough: 'Хватает',
-  partial: 'Мало',
-  none: 'Нет',
-  unchecked: 'Не проверено',
-  no_graph: 'Нет в графе',
+  get enough() {
+    return translate('priorTestReport.1');
+  },
+  get partial() {
+    return translate('priorTestReport.2');
+  },
+  get none() {
+    return translate('priorTestReport.3');
+  },
+  get unchecked() {
+    return translate('priorTestReport.4');
+  },
+  get no_graph() {
+    return translate('priorTestReport.5');
+  },
 };
 
 export const VERDICT_HINT: Record<Verdict, string> = {
-  enough: 'Нужное для цели освоено — повторять не придётся.',
-  partial: 'Часть нужного освоена, остальное курс добавит.',
-  none: 'Из нужного пока ничего не освоено — курс начнётся отсюда.',
-  unchecked: 'Вас здесь не спрашивали — курс исходит из того, что вы этого не знаете.',
-  no_graph: 'Этой области в графе ещё нет: сверять не с чем, нужны источники.',
+  get enough() {
+    return translate('priorTestReport.6');
+  },
+  get partial() {
+    return translate('priorTestReport.7');
+  },
+  get none() {
+    return translate('priorTestReport.8');
+  },
+  get unchecked() {
+    return translate('priorTestReport.9');
+  },
+  get no_graph() {
+    return translate('priorTestReport.10');
+  },
 };
 
 export const verdictTone = (v: Verdict): 'muted' | 'accent' | 'core' =>
@@ -31,9 +52,12 @@ export function summaryLine(summary: PriorReport['summary']): string {
 
 /** Строка про область: сколько нужного понятий освоено. */
 export function areaLine(a: Pick<AreaReport, 'needed' | 'known' | 'drafts' | 'verdict'>): string {
-  if (a.verdict === 'no_graph') return 'в графе нет понятий';
-  const base = a.needed > 0 ? `освоено ${a.known} из ${a.needed} нужных` : 'ничего не требуется';
-  return a.drafts > 0 ? `${base} · черновых понятий: ${a.drafts}` : base;
+  if (a.verdict === 'no_graph') return translate('priorTestReport.11');
+  const base =
+    a.needed > 0
+      ? translate('priorTestReport.12', { known: a.known, needed: a.needed })
+      : translate('priorTestReport.13');
+  return a.drafts > 0 ? translate('priorTestReport.14', { base, drafts: a.drafts }) : base;
 }
 
 /** Отчёт стоит показывать, только если по цели вообще есть базовые области. */

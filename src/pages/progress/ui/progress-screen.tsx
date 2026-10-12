@@ -31,6 +31,7 @@ import {
   Title,
   TopBar,
 } from '@/shared/ui';
+import { useI18n } from '@/shared/i18n';
 
 interface Snapshot {
   retention: Retention;
@@ -43,6 +44,7 @@ const pct = (v: number) => `${Math.round(v * 100)}%`;
 const signed = (v: number) => `${v > 0 ? '+' : ''}${Math.round(v * 10) / 10}`;
 
 export function ProgressScreen({ onBack }: { onBack?: () => void }) {
+  const { t } = useI18n();
   const { subject } = useSession();
   const [snap, setSnap] = useState<Snapshot | null>(null);
   const [known, setKnown] = useState<KnownShare | null>(null);
@@ -94,77 +96,79 @@ export function ProgressScreen({ onBack }: { onBack?: () => void }) {
 
   return (
     <Screen>
-      <TopBar title="Прогресс" onBack={onBack} />
+      <TopBar title={t('progressProgressScreen.1')} onBack={onBack} />
 
       {isEmptyProgress(snap, known) && (
         <Card tone="accent">
-          <Label>Пока пусто</Label>
-          <Title>Здесь появятся ваши результаты</Title>
-          <Muted>
-            Освоенные понятия, рост по критериям и серия дней — после первого пройденного шага.
-          </Muted>
+          <Label>{t('progressProgressScreen.2')}</Label>
+          <Title>{t('progressProgressScreen.3')}</Title>
+          <Muted>{t('progressProgressScreen.4')}</Muted>
         </Card>
       )}
 
       <Card>
-        <Label>Граница знаний</Label>
+        <Label>{t('progressProgressScreen.5')}</Label>
         {mapState === 'loading' && <ActivityIndicator />}
-        {mapState === 'unavailable' && (
-          <Muted>Карта знаний недоступна: нужна сеть и выбранный предмет.</Muted>
-        )}
-        {mapState === 'ready' && !known && <Muted>В графе пока нет тем.</Muted>}
+        {mapState === 'unavailable' && <Muted>{t('progressProgressScreen.6')}</Muted>}
+        {mapState === 'ready' && !known && <Muted>{t('progressProgressScreen.7')}</Muted>}
         {mapState === 'ready' && known && (
           <>
             <Display>
-              {known.known} из {known.total}
+              {t('progressProgressScreen.8', { known: known.known, total: known.total })}
             </Display>
-            <Muted>тем освоено</Muted>
+            <Muted>{t('progressProgressScreen.9')}</Muted>
             <Progress value={known.rate} tone="core" />
           </>
         )}
       </Card>
 
       <Card>
-        <Label>Удержание</Label>
+        <Label>{t('progressProgressScreen.10')}</Label>
         {snap.retention.rate === null ? (
-          <Muted>Повторений ещё не было — карточки появятся после первых шагов курса.</Muted>
+          <Muted>{t('progressProgressScreen.11')}</Muted>
         ) : (
           <>
             <Lead>{pct(snap.retention.rate)} повторений без срыва</Lead>
             <Progress value={snap.retention.rate} />
             <Muted>
-              Повторений: {snap.retention.reviews}, срывов: {snap.retention.lapses}. Это итог за всё
-              время.
+              {t('progressProgressScreen.12', {
+                reviews: snap.retention.reviews,
+                lapses: snap.retention.lapses,
+              })}
+              {t('progressProgressScreen.13')}
             </Muted>
           </>
         )}
       </Card>
 
       <Card>
-        <Label>Закрытие ошибок</Label>
+        <Label>{t('progressProgressScreen.14')}</Label>
         {snap.closure.rate === null ? (
-          <Muted>Карточек из ошибок пока нет.</Muted>
+          <Muted>{t('progressProgressScreen.15')}</Muted>
         ) : (
           <>
             <Lead>
-              Закреплено {snap.closure.settled} из {snap.closure.total}
+              {t('progressProgressScreen.16', {
+                settled: snap.closure.settled,
+                total: snap.closure.total,
+              })}
             </Lead>
             <Progress value={snap.closure.rate} />
-            <Muted>Закреплённая — та, что вышла из обучения и повторена минимум дважды.</Muted>
+            <Muted>{t('progressProgressScreen.17')}</Muted>
           </>
         )}
       </Card>
 
       <Card>
-        <Label>Рост по рубрикам</Label>
-        {snap.growth.length === 0 && <Muted>Оценённых работ пока нет.</Muted>}
+        <Label>{t('progressProgressScreen.18')}</Label>
+        {snap.growth.length === 0 && <Muted>{t('progressProgressScreen.19')}</Muted>}
         {snap.growth.map((g) => (
           <GrowthRow key={g.rubricId} growth={g} />
         ))}
       </Card>
 
       <Card>
-        <Label>Регулярность</Label>
+        <Label>{t('progressProgressScreen.20')}</Label>
         {snap.streak > 0 && (
           <Pill
             text={`${snap.streak} ${plural(snap.streak, ['день', 'дня', 'дней'])} подряд`}
@@ -174,7 +178,7 @@ export function ProgressScreen({ onBack }: { onBack?: () => void }) {
         <Lead>
           {snap.streak > 0
             ? `Серия: ${snap.streak} ${plural(snap.streak, ['день', 'дня', 'дней'])} подряд`
-            : 'Серии нет — позаниматься можно сегодня'}
+            : t('progressProgressScreen.21')}
         </Lead>
       </Card>
     </Screen>
@@ -182,6 +186,7 @@ export function ProgressScreen({ onBack }: { onBack?: () => void }) {
 }
 
 function GrowthRow({ growth }: { growth: RubricGrowth }) {
+  const { t } = useI18n();
   return (
     <>
       <Body>
@@ -189,8 +194,9 @@ function GrowthRow({ growth }: { growth: RubricGrowth }) {
       </Body>
       {growth.delta === null ? (
         <Muted>
-          {growth.last !== null ? `Балл ${growth.last}. ` : ''}Динамика появится после второй
-          работы.
+          {growth.last !== null ? t('progressProgressScreen.22', { last: growth.last }) : ''}
+          Динамика появится после второй
+          {t('progressProgressScreen.23')}
         </Muted>
       ) : (
         <Muted>

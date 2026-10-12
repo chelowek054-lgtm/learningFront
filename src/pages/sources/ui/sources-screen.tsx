@@ -2,13 +2,15 @@
 import { useSession } from '@/entities/session';
 import { GapsCard, SourcesPanel } from '@/features/sources';
 import { Muted, Screen, TopBar } from '@/shared/ui';
+import { useI18n } from '@/shared/i18n';
 
 export function SourcesScreen({ onBack }: { onBack?: () => void }) {
+  const { t } = useI18n();
   const { subject } = useSession();
   return (
     <Screen>
-      <TopBar title="Источники знаний" onBack={onBack} />
-      <Muted>Учебники, из которых строится общий граф. Видно только администраторам.</Muted>
+      <TopBar title={t('sourcesSourcesScreen.1')} onBack={onBack} />
+      <Muted>{t('sourcesSourcesScreen.2')}</Muted>
       {subject && <GapsCard goal={subject.id} />}
       <SourcesPanel />
     </Screen>

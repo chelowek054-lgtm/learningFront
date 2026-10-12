@@ -9,6 +9,7 @@ import { getLocalStore, submitForGrading, syncNow } from '@/shared/api';
 import { useIsOnline } from '@/shared/lib';
 import { Body, Button, Field, GradeView, Lead, Muted, Note, useTheme } from '@/shared/ui';
 import { clearDraft, loadDraft, saveDraft } from '../model/code-draft';
+import { useI18n } from '@/shared/i18n';
 
 type Phase = 'edit' | 'submitting' | 'graded' | 'queued';
 
@@ -24,6 +25,7 @@ interface CodeTaskPayload {
 }
 
 export function CodeTaskActivity({ activity }: ActivityRendererProps) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const { user } = useSession();
   const online = useIsOnline();
@@ -102,8 +104,10 @@ export function CodeTaskActivity({ activity }: ActivityRendererProps) {
 
   return (
     <View style={{ gap: 10 }}>
-      <Lead>{payload.statement ?? 'Условие задачи не пришло.'}</Lead>
-      {!!payload.language && <Muted>Язык: {payload.language}</Muted>}
+      <Lead>{payload.statement ?? t('codeTaskCodeTaskActivity.1')}</Lead>
+      {!!payload.language && (
+        <Muted>{t('codeTaskCodeTaskActivity.2', { language: payload.language })}</Muted>
+      )}
 
       {phase !== 'graded' && (
         <>
@@ -113,26 +117,24 @@ export function CodeTaskActivity({ activity }: ActivityRendererProps) {
             autoCapitalize="none"
             autoCorrect={false}
             spellCheck={false}
-            placeholder="Ваше решение…"
+            placeholder={t('codeTaskCodeTaskActivity.3')}
             value={code}
             onChangeText={setCode}
             editable={phase === 'edit'}
           />
-          {restored && phase === 'edit' && <Muted>Восстановлен сохранённый черновик.</Muted>}
+          {restored && phase === 'edit' && <Muted>{t('codeTaskCodeTaskActivity.4')}</Muted>}
           <Button
-            label="Отправить на ревью"
+            label={t('codeTaskCodeTaskActivity.5')}
             onPress={() => void submit()}
             busy={phase === 'submitting'}
             disabled={!code.trim()}
           />
-          {phase === 'queued' && (
-            <Note tone="warn">Решение сохранено — ревью придёт при синхронизации.</Note>
-          )}
+          {phase === 'queued' && <Note tone="warn">{t('codeTaskCodeTaskActivity.6')}</Note>}
         </>
       )}
 
       {phase === 'graded' && grade && <GradeView grade={grade} />}
-      {phase === 'graded' && !grade && <Body>Ревью недоступно.</Body>}
+      {phase === 'graded' && !grade && <Body>{t('codeTaskCodeTaskActivity.7')}</Body>}
     </View>
   );
 }

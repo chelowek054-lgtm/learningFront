@@ -1,5 +1,6 @@
 // Карта по этапам (T-0093): узлы с этапом группируются в порядке этапов, остальные идут отдельно.
 import type { GraphNode } from '@/shared/api';
+import { translate } from '../../../shared/i18n/translate';
 
 export interface NodeGroup {
   title: string;
@@ -24,7 +25,19 @@ export function groupByStage(nodes: GraphNode[]): NodeGroup[] {
   const groups = [...staged.entries()]
     .sort((a, b) => a[1].order - b[1].order || a[0].localeCompare(b[0]))
     .map(([title, v]) => ({ title, nodes: v.nodes }));
-  return loose.length > 0 ? [...groups, { title: 'Прочее', nodes: loose }] : groups;
+  return loose.length > 0
+    ? [...groups, { title: translate('graphEditorStageGroups.1'), nodes: loose }]
+    : groups;
 }
 
-export const LEVEL_TEXT = { basic: 'база', middle: 'средний', advanced: 'продвинутый' } as const;
+export const LEVEL_TEXT = {
+  get basic() {
+    return translate('graphEditorStageGroups.2');
+  },
+  get middle() {
+    return translate('graphEditorStageGroups.3');
+  },
+  get advanced() {
+    return translate('graphEditorStageGroups.4');
+  },
+} as const;

@@ -6,8 +6,10 @@ import { Pressable, Text, View } from 'react-native';
 import { getStudyMethods, setStudyMethod, type StudyMethodChoice } from '@/shared/api';
 import { Muted, Note, radius, space, useTheme } from '@/shared/ui';
 import { activeMethod, canChoose, optionsFor, REMEMBER_PURPOSE } from '../model/options';
+import { useI18n } from '@/shared/i18n';
 
 export function StudyMethodPicker() {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const [choice, setChoice] = useState<StudyMethodChoice | null>(null);
   const [busy, setBusy] = useState(false);
@@ -20,7 +22,7 @@ export function StudyMethodPicker() {
   }, []);
 
   if (!choice || !canChoose(choice, REMEMBER_PURPOSE))
-    return <Muted>Выбор способа появится при подключении.</Muted>;
+    return <Muted>{t('studyMethodStudyMethodPicker.1')}</Muted>;
 
   const active = activeMethod(choice, REMEMBER_PURPOSE);
 
@@ -39,7 +41,7 @@ export function StudyMethodPicker() {
 
   return (
     <View style={{ gap: space.sm }}>
-      <Muted>Как закреплять понятия. Освоенность при смене не сбрасывается.</Muted>
+      <Muted>{t('studyMethodStudyMethodPicker.2')}</Muted>
       {optionsFor(choice, REMEMBER_PURPOSE).map((o) => {
         const selected = o.id === active;
         return (

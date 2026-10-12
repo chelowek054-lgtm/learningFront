@@ -11,6 +11,7 @@ import {
   type QuizQuestion,
   type QuizResult,
 } from '../../../shared/engine';
+import { translate } from '../../../shared/i18n/translate';
 
 export { isCorrect };
 export type { QuestionResult, QuestionType };
@@ -52,10 +53,10 @@ export function toGrade(result: ReadingResult, timedOut: boolean): Grade {
     rubricVersion: 1,
     criteria: [
       {
-        name: 'Верных ответов',
+        name: translate('readingDrillReadingModel.1'),
         score: result.correct,
         max: result.total,
-        comment: timedOut ? 'Время вышло: засчитано отвеченное.' : '',
+        comment: timedOut ? translate('readingDrillReadingModel.2') : '',
       },
     ],
     overall: result.correct,

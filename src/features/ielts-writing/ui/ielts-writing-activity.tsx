@@ -10,10 +10,12 @@ import { ieltsWritingLocalGrader } from '../lib/local-grader';
 import { hasLocalDraftSignal, writingRubricId } from '../lib/rubric';
 import { countWords, parseTaskData, wordsShort } from '../lib/task-data';
 import { TaskDataView } from './task-data-view';
+import { useI18n } from '@/shared/i18n';
 
 type Phase = 'edit' | 'submitting' | 'graded' | 'queued';
 
 export function IeltsWritingActivity({ activity }: ActivityRendererProps) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const { user } = useSession();
@@ -78,7 +80,7 @@ export function IeltsWritingActivity({ activity }: ActivityRendererProps) {
           <TextInput
             style={styles.input}
             multiline
-            placeholder="Ваше эссе…"
+            placeholder={t('ieltsWritingIeltsWritingActivity.1')}
             value={essay}
             onChangeText={setEssay}
             editable={phase === 'edit'}
@@ -86,7 +88,7 @@ export function IeltsWritingActivity({ activity }: ActivityRendererProps) {
           {typeof minWords === 'number' && (
             <Text style={short > 0 ? styles.queued : styles.done}>
               Слов: {countWords(essay)} из {minWords}
-              {short > 0 ? ` — не хватает ${short}` : ''}
+              {short > 0 ? t('ieltsWritingIeltsWritingActivity.2', { short }) : ''}
             </Text>
           )}
           {hasLocalDraftSignal(activity.type) && <GradeView grade={draft} />}
@@ -94,18 +96,18 @@ export function IeltsWritingActivity({ activity }: ActivityRendererProps) {
             {phase === 'submitting' ? (
               <ActivityIndicator color={colors.onAccent} />
             ) : (
-              <Text style={styles.btnText}>Отправить на оценку</Text>
+              <Text style={styles.btnText}>{t('ieltsWritingIeltsWritingActivity.3')}</Text>
             )}
           </Pressable>
           {phase === 'queued' && (
-            <Text style={styles.queued}>Сохранено офлайн — оценка придёт при синхронизации.</Text>
+            <Text style={styles.queued}>{t('ieltsWritingIeltsWritingActivity.4')}</Text>
           )}
         </>
       )}
 
       {phase === 'graded' && grade && (
         <View>
-          <Text style={styles.done}>Оценка по рубрике:</Text>
+          <Text style={styles.done}>{t('ieltsWritingIeltsWritingActivity.5')}</Text>
           <GradeView grade={grade} />
         </View>
       )}

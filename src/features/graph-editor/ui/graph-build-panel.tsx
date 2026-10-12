@@ -14,6 +14,7 @@ import {
 } from '@/shared/api';
 import { AreaProgress, Button, Card, Label, Muted, Note, space } from '@/shared/ui';
 import { buildView, canResume, elapsedLabel, isPending, POLL_MS } from '../model/build-progress';
+import { useI18n } from '@/shared/i18n';
 
 export function GraphBuildPanel({
   domain,
@@ -25,6 +26,7 @@ export function GraphBuildPanel({
   /** Открыть экран состава навыка (контур); без него контур не показывается отдельно. */
   onOpenOutline?: () => void;
 }) {
+  const { t } = useI18n();
   const [state, setState] = useState<ProfileState | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -46,7 +48,7 @@ export function GraphBuildPanel({
         else setEmpty(true);
       }
     } catch {
-      setError('Нет связи с сервером. Сборка продолжается, проверим ещё раз.');
+      setError(t('graphEditorGraphBuildPanel.1'));
     } finally {
       setLoaded(true);
     }
@@ -87,8 +89,10 @@ export function GraphBuildPanel({
     return (
       <Card>
         <Label>
-          {view.kind === 'drafting' ? 'Составляем контур' : 'Карта собирается'} ·{' '}
-          {elapsedLabel(view.minutes)}
+          {view.kind === 'drafting'
+            ? t('graphEditorGraphBuildPanel.2')
+            : t('graphEditorGraphBuildPanel.3')}{' '}
+          · {elapsedLabel(view.minutes)}
         </Label>
         <ActivityIndicator style={{ alignSelf: 'flex-start' }} />
         <Muted>{view.message}</Muted>
@@ -101,11 +105,13 @@ export function GraphBuildPanel({
   if (view.kind === 'outline') {
     return (
       <Card>
-        <Label>Состав навыка готов</Label>
+        <Label>{t('graphEditorGraphBuildPanel.4')}</Label>
         <Muted>{view.message}</Muted>
-        {onOpenOutline && <Button label="Проверить состав" onPress={onOpenOutline} />}
+        {onOpenOutline && (
+          <Button label={t('graphEditorGraphBuildPanel.5')} onPress={onOpenOutline} />
+        )}
         <Button
-          label="Собрать карту сразу"
+          label={t('graphEditorGraphBuildPanel.6')}
           variant="quiet"
           onPress={() => void start()}
           busy={busy}
@@ -118,22 +124,24 @@ export function GraphBuildPanel({
   const failedLike = view.kind === 'failed' || view.kind === 'stale';
   return (
     <Card>
-      <Label>{failedLike ? 'Сборка не завершилась' : 'Карты пока нет'}</Label>
+      <Label>
+        {failedLike ? t('graphEditorGraphBuildPanel.7') : t('graphEditorGraphBuildPanel.8')}
+      </Label>
       <Muted>
         {failedLike
           ? view.message
           : empty
-            ? 'Сборка закончилась, но карта получилась пустой. Запустите её ещё раз.'
-            : 'Соберём её по вашей цели: полный перечень того, что нужно знать, по областям и этапам.'}
+            ? t('graphEditorGraphBuildPanel.9')
+            : t('graphEditorGraphBuildPanel.10')}
       </Muted>
       {error && <Note tone="danger">{error}</Note>}
       <Button
         label={
           failedLike && canResume(state)
-            ? 'Продолжить сборку'
+            ? t('graphEditorGraphBuildPanel.11')
             : failedLike || empty
-              ? 'Запустить заново'
-              : 'Собрать карту'
+              ? t('graphEditorGraphBuildPanel.12')
+              : t('graphEditorGraphBuildPanel.13')
         }
         onPress={() => void start()}
         busy={busy}

@@ -17,6 +17,7 @@ import {
   Title,
   useTheme,
 } from '@/shared/ui';
+import { useI18n } from '@/shared/i18n';
 
 interface Item {
   prompt: string;
@@ -28,6 +29,7 @@ interface Item {
 const PASS = 0.6;
 
 export function ConceptQuestionActivity({ activity, onComplete }: ActivityRendererProps) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const payload = activity.payload as { domain?: string; conceptId?: string; item?: Item };
   const item = payload.item;
@@ -52,22 +54,28 @@ export function ConceptQuestionActivity({ activity, onComplete }: ActivityRender
     }
   }
 
-  if (!item) return <Muted>Задание не сгенерировано.</Muted>;
+  if (!item) return <Muted>{t('conceptStudyConceptQuestionActivity.1')}</Muted>;
 
   if (result) {
     const passed = result.score >= PASS;
     return (
       <View style={{ gap: space.md }}>
-        <Title>{passed ? 'Верно' : 'Неверно'}</Title>
+        <Title>
+          {passed
+            ? t('conceptStudyConceptQuestionActivity.2')
+            : t('conceptStudyConceptQuestionActivity.3')}
+        </Title>
         <Body>{result.explanation}</Body>
         <Muted>
           Освоенность узла: {Math.round(result.mastery.estimate * 100)}% · ответов{' '}
           {result.mastery.observations}
         </Muted>
         <Progress value={result.mastery.estimate} />
-        {result.stepCompleted && <Note tone="ok">Шаг курса закрыт.</Note>}
+        {result.stepCompleted && (
+          <Note tone="ok">{t('conceptStudyConceptQuestionActivity.4')}</Note>
+        )}
         {!result.stepCompleted && !passed && (
-          <Note tone="warn">Узел вернётся в повторение — к нему ещё придём.</Note>
+          <Note tone="warn">{t('conceptStudyConceptQuestionActivity.5')}</Note>
         )}
       </View>
     );
@@ -113,13 +121,13 @@ export function ConceptQuestionActivity({ activity, onComplete }: ActivityRender
               textAlignVertical: 'top',
             }}
             multiline
-            placeholder="ответьте своими словами"
+            placeholder={t('conceptStudyConceptQuestionActivity.6')}
             placeholderTextColor={colors.muted}
             value={answer}
             onChangeText={setAnswer}
           />
           <Button
-            label="Ответить"
+            label={t('conceptStudyConceptQuestionActivity.7')}
             onPress={() => send(answer)}
             disabled={!answer.trim()}
             busy={busy}

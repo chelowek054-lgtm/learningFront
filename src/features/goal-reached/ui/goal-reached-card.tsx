@@ -3,8 +3,10 @@ import { useState } from 'react';
 import { nextTarget, useSession } from '@/entities/session';
 import { buildCourse, updateProfile } from '@/shared/api';
 import { Body, Button, Card, Label, Muted, Note } from '@/shared/ui';
+import { useI18n } from '@/shared/i18n';
 
 export function GoalReachedCard({ onAddArea }: { onAddArea: () => void }) {
+  const { t } = useI18n();
   const { user, subject, refresh } = useSession();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +27,7 @@ export function GoalReachedCard({ onAddArea }: { onAddArea: () => void }) {
       });
       await refresh();
     } catch {
-      setError('Не удалось поднять уровень. Попробуйте ещё раз.');
+      setError(t('goalReachedGoalReachedCard.1'));
     } finally {
       setBusy(false);
     }
@@ -36,18 +38,16 @@ export function GoalReachedCard({ onAddArea }: { onAddArea: () => void }) {
       await updateProfile({ ...(user?.profile ?? {}), onboarded: false });
       await refresh();
     } catch {
-      setError('Не удалось начать новый предмет. Попробуйте ещё раз.');
+      setError(t('goalReachedGoalReachedCard.2'));
     }
   }
 
   return (
     <Card tone="accent">
-      <Label>Цель достигнута</Label>
-      <Body>{subject.title}: всё освоено до выбранного уровня</Body>
+      <Label>{t('goalReachedGoalReachedCard.3')}</Label>
+      <Body>{t('goalReachedGoalReachedCard.4', { title: subject.title })}</Body>
       <Muted>
-        {higher
-          ? 'Можно пойти выше, шире или взяться за другое — повторение продолжит удерживать знания.'
-          : 'Выше уровня «создать» идти некуда: можно шире или взяться за другое — повторение продолжит удерживать знания.'}
+        {higher ? t('goalReachedGoalReachedCard.5') : t('goalReachedGoalReachedCard.6')}
       </Muted>
       {error && <Note tone="danger">{error}</Note>}
       {higher && (
@@ -57,8 +57,12 @@ export function GoalReachedCard({ onAddArea }: { onAddArea: () => void }) {
           busy={busy}
         />
       )}
-      <Button label="Добавить область" variant="quiet" onPress={onAddArea} />
-      <Button label="Новый предмет" variant="quiet" onPress={() => void another()} />
+      <Button label={t('goalReachedGoalReachedCard.7')} variant="quiet" onPress={onAddArea} />
+      <Button
+        label={t('goalReachedGoalReachedCard.8')}
+        variant="quiet"
+        onPress={() => void another()}
+      />
     </Card>
   );
 }

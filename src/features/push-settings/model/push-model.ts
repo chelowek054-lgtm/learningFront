@@ -1,5 +1,6 @@
 // Настройка уведомлений вне приложения (T-0086): что показать и что делает кнопка. Без сети и без UI.
 import type { PushState } from '@/shared/api';
+import { translate } from '../../../shared/i18n/translate';
 
 export type FailureReason = 'unsupported' | 'denied' | 'no_project' | 'failed';
 export type PushAction = 'enable' | 'disable' | null;
@@ -12,12 +13,18 @@ export interface PushView {
 }
 
 const FAILURE_HINT: Record<FailureReason, string> = {
-  unsupported: 'Уведомления работают только на телефоне в установленной сборке приложения.',
-  denied:
-    'Доступ к уведомлениям не разрешён. Разрешите его в настройках телефона и включите снова.',
-  no_project:
-    'Эта сборка приложения не умеет получать уведомления: нужна сборка через EAS. Курс по-прежнему виден в приложении.',
-  failed: 'Не удалось включить уведомления. Попробуйте ещё раз позже.',
+  get unsupported() {
+    return translate('pushSettingsPushModel.1');
+  },
+  get denied() {
+    return translate('pushSettingsPushModel.2');
+  },
+  get no_project() {
+    return translate('pushSettingsPushModel.3');
+  },
+  get failed() {
+    return translate('pushSettingsPushModel.4');
+  },
 };
 
 /** Состояние карточки: по данным сервера, возможностям устройства и последней неудаче. */
@@ -27,30 +34,36 @@ export function describePush(
   failure: FailureReason | null,
 ): PushView {
   if (!supported) {
-    return { label: 'Недоступно', hint: FAILURE_HINT.unsupported, action: null, actionLabel: '' };
+    return {
+      label: translate('pushSettingsPushModel.5'),
+      hint: FAILURE_HINT.unsupported,
+      action: null,
+      actionLabel: '',
+    };
   }
   if (server && !server.available) {
     return {
-      label: 'Недоступно',
-      hint: 'Сервер пока не рассылает уведомления.',
+      label: translate('pushSettingsPushModel.5'),
+      hint: translate('pushSettingsPushModel.6'),
       action: null,
       actionLabel: '',
     };
   }
   if (server?.enabled && server.devices > 0) {
     return {
-      label: 'Включены',
-      hint: 'Сообщим, когда курс готов, дополнен или понятие проверено. В тексте только вид и область.',
+      label: translate('pushSettingsPushModel.7'),
+      hint: translate('pushSettingsPushModel.8'),
       action: 'disable',
-      actionLabel: 'Отключить',
+      actionLabel: translate('pushSettingsPushModel.9'),
     };
   }
   return {
-    label: server && server.devices > 0 ? 'Отключены' : 'Выключены',
-    hint: failure
-      ? FAILURE_HINT[failure]
-      : 'Присылать уведомление, когда курс готов или дополнен, даже если приложение закрыто.',
+    label:
+      server && server.devices > 0
+        ? translate('pushSettingsPushModel.10')
+        : translate('pushSettingsPushModel.11'),
+    hint: failure ? FAILURE_HINT[failure] : translate('pushSettingsPushModel.12'),
     action: 'enable',
-    actionLabel: 'Включить',
+    actionLabel: translate('pushSettingsPushModel.13'),
   };
 }

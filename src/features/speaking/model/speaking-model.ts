@@ -1,3 +1,4 @@
+import { translate } from '../../../shared/i18n/translate';
 // Устный ответ (T-0040, T-0042): разбор задания и правила записи. Чистая логика, без звука.
 
 export const DEFAULT_MAX_SEC = 120;
@@ -19,7 +20,7 @@ export function parseSpeakingTask(raw: unknown): SpeakingTask | null {
 
 /** Можно ли отправить запись длиной `sec` секунд; иначе — понятная причина. */
 export function sendBlocker(sec: number): string | null {
-  return sec < MIN_SEC ? 'Запись слишком короткая: ответьте подробнее и запишите ещё раз.' : null;
+  return sec < MIN_SEC ? translate('speakingSpeakingModel.1') : null;
 }
 
 export const formatSec = (sec: number): string =>

@@ -10,8 +10,10 @@ import {
 } from '@/shared/api';
 import { Button, Card, Label, Muted, Note } from '@/shared/ui';
 import { describePush, type FailureReason } from '../model/push-model';
+import { useI18n } from '@/shared/i18n';
 
 export function PushSettings() {
+  const { t } = useI18n();
   const [server, setServer] = useState<PushState | null>(null);
   const [failure, setFailure] = useState<FailureReason | null>(null);
   const [busy, setBusy] = useState(false);
@@ -55,7 +57,7 @@ export function PushSettings() {
 
   return (
     <Card>
-      <Label>Уведомления</Label>
+      <Label>{t('pushSettings.1')}</Label>
       <Muted>{view.label}</Muted>
       <Note tone={failure ? 'warn' : 'ok'}>{view.hint}</Note>
       {view.action && (

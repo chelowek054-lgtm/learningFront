@@ -5,6 +5,7 @@ import { getCourse, type Course } from '@/shared/api';
 import { Empty, Screen, space } from '@/shared/ui';
 import { courseAsGraph } from '../model/scheme';
 import { SchemeView } from './scheme-view';
+import { useI18n } from '@/shared/i18n';
 
 export function CourseTree({
   domain,
@@ -15,6 +16,7 @@ export function CourseTree({
   title?: string;
   onStart?: (conceptId?: string) => void;
 }) {
+  const { t } = useI18n();
   const [course, setCourse] = useState<Course | null | undefined>(undefined);
   useEffect(() => {
     getCourse(domain).then(setCourse, () => setCourse(null));
@@ -22,14 +24,14 @@ export function CourseTree({
   const view = useMemo(() => (course ? courseAsGraph(course) : null), [course]);
 
   if (course === undefined) return <ActivityIndicator style={{ marginTop: space.xl }} />;
-  if (!course || !view) return <Empty text="Курс ещё не построен — откройте «Шаги»." />;
+  if (!course || !view) return <Empty text={t('graphEditorCourseTree.1')} />;
   return (
     <Screen>
       <SchemeView
         graph={{ nodes: view.nodes, edges: view.edges } as never}
         mastery={view.mastery}
         onStudy={onStart}
-        studyLabel="Начать"
+        studyLabel={t('graphEditorCourseTree.2')}
         fullscreenTitle={`${title ?? domain} · Дерево`}
         mode="tree"
       />

@@ -7,6 +7,7 @@ import type { Graph, GraphNode } from '@/shared/api';
 import { Body, Button, Card, Field, font, Muted, Pill, space, useTheme } from '@/shared/ui';
 import { tagsOf, type MasteryState } from '../model/scheme';
 import { STATE_SHORT } from './scheme-canvas';
+import { useI18n } from '@/shared/i18n';
 
 export type PlateMode = 'side' | 'sheet';
 
@@ -42,6 +43,7 @@ export function NodePlate({
   /** Предел высоты нижней панели: остальное — прокрутка внутри плашки, холст не схлопывается. */
   maxHeight?: number;
 }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const [title, setTitle] = useState(node.title);
   const [confirmRemove, setConfirmRemove] = useState(false);
@@ -59,7 +61,7 @@ export function NodePlate({
         {label}
       </Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.xs }}>
-        {ids.length === 0 ? <Muted>пока ничего</Muted> : null}
+        {ids.length === 0 ? <Muted>{t('graphEditorNodePlate.1')}</Muted> : null}
         {ids.map((id) => {
           const n = byId.get(id);
           return n ? (
@@ -76,7 +78,7 @@ export function NodePlate({
         <Pressable
           onPress={onToggleExpanded}
           accessibilityRole="button"
-          accessibilityLabel={expanded ? 'Свернуть плашку' : 'Развернуть плашку'}
+          accessibilityLabel={expanded ? t('graphEditorNodePlate.2') : t('graphEditorNodePlate.3')}
           style={{ alignItems: 'center', minHeight: 20, justifyContent: 'center' }}
         >
           <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.line }} />
@@ -90,11 +92,13 @@ export function NodePlate({
           {node.title}
         </Text>
         {state && <Pill text={STATE_SHORT[state]} tone={state === 'known' ? 'core' : 'accent'} />}
-        {node.kind === 'personal' && !state && <Pill text="своё" tone="core" />}
+        {node.kind === 'personal' && !state && (
+          <Pill text={t('graphEditorNodePlate.4')} tone="core" />
+        )}
         <Pressable
           onPress={onClose}
           accessibilityRole="button"
-          accessibilityLabel="Снять выбор"
+          accessibilityLabel={t('graphEditorNodePlate.5')}
           style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
         >
           <Text style={{ color: colors.muted, fontSize: 20 }}>✕</Text>
@@ -115,7 +119,11 @@ export function NodePlate({
             </View>
           )}
           <View style={{ flex: 1 }}>
-            <Button label="Подробнее ▴" variant="quiet" onPress={onToggleExpanded} />
+            <Button
+              label={t('graphEditorNodePlate.6')}
+              variant="quiet"
+              onPress={onToggleExpanded}
+            />
           </View>
         </View>
       </PlateFrame>
@@ -126,29 +134,29 @@ export function NodePlate({
     <PlateFrame mode={mode} maxHeight={maxHeight}>
       <ScrollView contentContainerStyle={{ gap: space.md, paddingBottom: space.sm }}>
         {header}
-        <Body>{node.content.summary ?? 'Пояснение пока не готово.'}</Body>
+        <Body>{node.content.summary ?? t('graphEditorNodePlate.7')}</Body>
         {group(
-          '← НУЖНО РАНЬШЕ',
+          t('graphEditorNodePlate.8'),
           before.map((e) => e.from),
           'info',
         )}
         {group(
-          'ОТКРЫВАЕТ →',
+          t('graphEditorNodePlate.9'),
           after.map((e) => e.to),
           'ok',
         )}
-        <Muted>Нажмите на соседа — выбор перейдёт к нему.</Muted>
+        <Muted>{t('graphEditorNodePlate.10')}</Muted>
         {canStudy && <Button label={studyLabel} onPress={onStudy!} />}
         {onRename && (
           <View style={{ gap: space.sm }}>
             <Field
               value={title}
               onChangeText={setTitle}
-              placeholder="название"
-              accessibilityLabel="Название понятия"
+              placeholder={t('graphEditorNodePlate.11')}
+              accessibilityLabel={t('graphEditorNodePlate.12')}
             />
             <Button
-              label="Переименовать"
+              label={t('graphEditorNodePlate.13')}
               variant="quiet"
               disabled={!title.trim() || title.trim() === node.title}
               onPress={() => onRename(title)}
@@ -158,15 +166,17 @@ export function NodePlate({
         {onRemove &&
           (confirmRemove ? (
             <View style={{ gap: space.sm }}>
-              <Muted>
-                Убрать «{node.title}»? Его связи тоже пропадут, общий граф не изменится.
-              </Muted>
-              <Button label="Да, убрать" variant="danger" onPress={onRemove} />
-              <Button label="Отмена" variant="quiet" onPress={() => setConfirmRemove(false)} />
+              <Muted>{t('graphEditorNodePlate.14', { title: node.title })}</Muted>
+              <Button label={t('graphEditorNodePlate.15')} variant="danger" onPress={onRemove} />
+              <Button
+                label={t('graphEditorNodePlate.16')}
+                variant="quiet"
+                onPress={() => setConfirmRemove(false)}
+              />
             </View>
           ) : (
             <Button
-              label="Убрать своё понятие"
+              label={t('graphEditorNodePlate.17')}
               variant="quiet"
               onPress={() => setConfirmRemove(true)}
             />
@@ -208,13 +218,14 @@ export function NeighborButton({
   tone: 'info' | 'ok';
   onPress: () => void;
 }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   return (
     <Button
       size="sm"
       tone={tone}
       label={text}
-      accessibilityLabel={`Перейти к «${text}»`}
+      accessibilityLabel={t('graphEditorNodePlate.18', { text })}
       leading={
         <View
           style={{
