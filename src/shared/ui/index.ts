@@ -1,5 +1,13 @@
 // Публичный API shared/ui.
 export { NotImplementedActivity } from './not-implemented-activity';
+export {
+  isNavActive,
+  NAV_WIDTH,
+  navItemsFor,
+  navLayoutFor,
+  withAlpha,
+  type NavLayout,
+} from './nav-layout';
 export { THEME_MODES } from './theme-mode';
 export { GradeView } from './grade-view';
 export {
