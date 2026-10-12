@@ -6,6 +6,9 @@ import { rememberFlag, remembered } from '@/shared/lib';
 import { Card, Label, Muted, space } from '@/shared/ui';
 import { groupSteps } from '../model/group-steps';
 
+/** Зона нажатия заголовка: не меньше 44 px, чтобы попасть пальцем. */
+const hit = { minHeight: 44, justifyContent: 'center' } as const;
+
 export function PathAccordion({
   steps,
   currentId,
@@ -15,14 +18,18 @@ export function PathAccordion({
   currentId: string | null;
   renderStep: (step: CourseStep, index: number) => ReactNode;
 }) {
-  const [, force] = useState(0);
+  // Выбор человека в этой сессии держим в состоянии компонента: перерисовка не зависит от того,
+  // записалось ли значение в хранилище. Запоминание между запусками — в дополнение к нему.
+  const [chosen, setChosen] = useState<Record<string, boolean>>({});
   const areas = groupSteps(steps);
 
-  // По умолчанию раскрыто то, где текущий шаг; выбор человека запоминается.
-  const isOpen = (key: string, hasCurrent: boolean) => remembered(`path:${key}`, hasCurrent);
+  // По умолчанию раскрыто то, где текущий шаг.
+  const isOpen = (key: string, hasCurrent: boolean) =>
+    chosen[key] ?? remembered(`path:${key}`, hasCurrent);
   const toggle = (key: string, hasCurrent: boolean) => {
-    rememberFlag(`path:${key}`, !isOpen(key, hasCurrent));
-    force((n) => n + 1);
+    const next = !isOpen(key, hasCurrent);
+    rememberFlag(`path:${key}`, next);
+    setChosen((prev) => ({ ...prev, [key]: next }));
   };
 
   return (
@@ -35,7 +42,12 @@ export function PathAccordion({
         const open = isOpen(areaKey, areaHas);
         return (
           <Card key={area.key}>
-            <Pressable onPress={() => toggle(areaKey, areaHas)} accessibilityRole="button">
+            <Pressable
+              onPress={() => toggle(areaKey, areaHas)}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: open }}
+              style={hit}
+            >
               <Label>
                 {open ? '▾' : '▸'} {area.title} · пройдено {area.done} из {area.total}
               </Label>
@@ -51,6 +63,8 @@ export function PathAccordion({
                     <Pressable
                       onPress={() => toggle(stageKey, stageHas)}
                       accessibilityRole="button"
+                      accessibilityState={{ expanded: stageOpen }}
+                      style={hit}
                     >
                       <Muted>
                         {stageOpen ? '▾' : '▸'} {stage.title} · {done} из {stage.steps.length}
