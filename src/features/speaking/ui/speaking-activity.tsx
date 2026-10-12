@@ -84,7 +84,7 @@ export function SpeakingActivity({ activity, onComplete }: ActivityRendererProps
       <Lead>{t('speakingSpeakingActivity.3')}</Lead>
       <Card>
         <Body>{task.prompt}</Body>
-        <Muted>Можно говорить до {formatSec(task.maxSec)}. Запись сохранится без сети.</Muted>
+        <Muted>{t('m.speakLimit', { time: formatSec(task.maxSec) })}</Muted>
       </Card>
 
       {error && <Note tone="danger">{error}</Note>}
@@ -98,7 +98,7 @@ export function SpeakingActivity({ activity, onComplete }: ActivityRendererProps
         </>
       ) : state.isRecording ? (
         <>
-          <Note tone="warn">Идёт запись: {formatSec(seconds)}</Note>
+          <Note tone="warn">{t('m.recording', { time: formatSec(seconds) })}</Note>
           <Button label={t('speakingSpeakingActivity.6')} onPress={() => void stop()} />
         </>
       ) : (

@@ -23,6 +23,7 @@ import { Lead, Muted, Screen, ThemeProvider, Title, useTheme } from '@/shared/ui
 import { AppShell } from '@/widgets/app-nav';
 import { getModuleRegistry } from '@/widgets/module-registry';
 import { I18nProvider } from '@/shared/i18n';
+import { useI18n } from '@/shared/i18n';
 
 /**
  * Заголовок вкладки браузера. Через options.title экранов он не проставлялся —
@@ -98,16 +99,17 @@ function Gate() {
  * показываем одно понятное сообщение поверх всего (T-0033).
  */
 function OutdatedGate({ children }: { children: React.ReactNode }) {
+  const { t } = useI18n();
   const [minVersion, setMinVersion] = useState<string | null | undefined>(undefined);
   useEffect(() => onClientOutdated((e) => setMinVersion(e.minClientVersion)), []);
   if (minVersion === undefined) return <>{children}</>;
   return (
     <Screen>
-      <Title>Нужно обновить приложение</Title>
-      <Lead>Эта версия больше не поддерживается сервером.</Lead>
+      <Title>{t('m.updateTitle')}</Title>
+      <Lead>{t('m.updateBody')}</Lead>
       <Muted>
-        {minVersion ? `Установите версию ${minVersion} или новее из магазина приложений. ` : ''}
-        Ваши данные сохранены на устройстве и никуда не пропадут.
+        {minVersion ? `${t('m.updateInstall', { version: minVersion })} ` : ''}
+        {t('m.updateSafe')}
       </Muted>
     </Screen>
   );

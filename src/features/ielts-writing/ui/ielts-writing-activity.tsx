@@ -87,7 +87,7 @@ export function IeltsWritingActivity({ activity }: ActivityRendererProps) {
           />
           {typeof minWords === 'number' && (
             <Text style={short > 0 ? styles.queued : styles.done}>
-              Слов: {countWords(essay)} из {minWords}
+              {t('m.words', { count: countWords(essay), min: minWords })}
               {short > 0 ? t('ieltsWritingIeltsWritingActivity.2', { short }) : ''}
             </Text>
           )}

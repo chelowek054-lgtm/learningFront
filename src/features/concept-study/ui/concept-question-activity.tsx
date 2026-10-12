@@ -67,8 +67,10 @@ export function ConceptQuestionActivity({ activity, onComplete }: ActivityRender
         </Title>
         <Body>{result.explanation}</Body>
         <Muted>
-          Освоенность узла: {Math.round(result.mastery.estimate * 100)}% · ответов{' '}
-          {result.mastery.observations}
+          {t('m.nodeMastery', {
+            percent: Math.round(result.mastery.estimate * 100),
+            count: result.mastery.observations,
+          })}
         </Muted>
         <Progress value={result.mastery.estimate} />
         {result.stepCompleted && (
@@ -106,7 +108,7 @@ export function ConceptQuestionActivity({ activity, onComplete }: ActivityRender
       ) : (
         <>
           {item.criteria.length > 0 && (
-            <Muted>Что будет проверяться: {item.criteria.join('; ')}</Muted>
+            <Muted>{t('m.criteria', { criteria: item.criteria.join('; ') })}</Muted>
           )}
           <TextInput
             style={{

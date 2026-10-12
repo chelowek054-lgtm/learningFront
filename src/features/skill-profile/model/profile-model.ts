@@ -102,7 +102,7 @@ export const conceptCount = (profile: SkillProfile): number =>
 /** «Охвачено 87% · не хватает 4 · проверено 2» — итог отчёта полноты одной строкой. */
 export function coverageLine(report: CoverageReport): string {
   const s = report.summary;
-  const parts = [`охвачено ${Math.round(s.coverage * 100)}%`];
+  const parts = [translate('m.covered', { percent: Math.round(s.coverage * 100) })];
   if (s.missing > 0) parts.push(translate('skillProfileProfileModel.5', { missing: s.missing }));
   if (s.verified > 0) parts.push(translate('skillProfileProfileModel.6', { verified: s.verified }));
   return parts.join(' · ');

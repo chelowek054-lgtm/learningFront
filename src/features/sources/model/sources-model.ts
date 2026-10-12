@@ -68,6 +68,10 @@ export function uploadResult(r: { created: boolean; title: string; status: Inges
   if (!r.created && r.status === 'done') {
     return translate('sourcesSourcesModel.12', { title: r.title });
   }
-  if (!r.created) return `«${r.title}» уже загружен: ${STATUS_LABEL[r.status].toLowerCase()}.`;
+  if (!r.created)
+    return translate('m.alreadyUploaded', {
+      title: r.title,
+      status: STATUS_LABEL[r.status].toLowerCase(),
+    });
   return translate('sourcesSourcesModel.13', { title: r.title });
 }

@@ -50,7 +50,9 @@ export function ConceptStudyActivity({ activity, onComplete }: ActivityRendererP
       ))}
 
       {(content?.references ?? []).length > 0 && (
-        <Muted>Источники: {(content?.references ?? []).map((r) => r.title).join(', ')}</Muted>
+        <Muted>
+          {t('m.sourcesList', { list: (content?.references ?? []).map((r) => r.title).join(', ') })}
+        </Muted>
       )}
 
       <Button

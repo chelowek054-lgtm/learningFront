@@ -32,7 +32,7 @@ export function CourseTree({
         mastery={view.mastery}
         onStudy={onStart}
         studyLabel={t('graphEditorCourseTree.2')}
-        fullscreenTitle={`${title ?? domain} · Дерево`}
+        fullscreenTitle={t('m.treeTitle', { title: title ?? domain })}
         mode="tree"
       />
     </Screen>

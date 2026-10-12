@@ -40,7 +40,7 @@ export function GoalPlanner({
       setParts(r.subdomains);
       setLimit((r.budget as BuildBudget).limit);
     } catch (e) {
-      setError(`Не удалось разбить цель: ${String(e).slice(0, 200)}`);
+      setError(t('m.splitFailed', { error: String(e).slice(0, 200) }));
     } finally {
       setBusy(null);
     }
@@ -54,7 +54,7 @@ export function GoalPlanner({
       const r = await buildGoal(domain, topic.trim(), toPayload(parts));
       onBuilt(r.graph);
     } catch (e) {
-      setError(`Не удалось построить карту: ${String(e).slice(0, 200)}`);
+      setError(t('m.buildFailed', { error: String(e).slice(0, 200) }));
     } finally {
       setBusy(null);
     }
@@ -91,7 +91,9 @@ export function GoalPlanner({
           {!!p.summary && <Muted>{p.summary}</Muted>}
           {p.prereqs.length > 0 && (
             <Muted>
-              После: {p.prereqs.map((k) => parts.find((x) => x.key === k)?.title ?? k).join(', ')}
+              {t('m.after', {
+                list: p.prereqs.map((k) => parts.find((x) => x.key === k)?.title ?? k).join(', '),
+              })}
             </Muted>
           )}
           <Button
@@ -101,10 +103,7 @@ export function GoalPlanner({
           />
         </Card>
       ))}
-      <Body>
-        Построение: {budget.requests} запрос(ов) к модели, по одному на часть. Это занимает
-        {t('graphEditorGoalPlanner.6')}
-      </Body>
+      <Body>{t('m.buildBudget', { count: budget.requests })}</Body>
       {error && <Note tone="danger">{error}</Note>}
       <Button
         label={t('graphEditorGoalPlanner.7')}

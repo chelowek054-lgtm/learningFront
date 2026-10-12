@@ -133,7 +133,13 @@ export function CourseScreen({
             title={conceptTitle(activity) ?? registry.getActivityTitle(activity.type)}
             onBack={back}
           />
-          <Label>{`${registry.getActivityTitle(activity.type)} · задание ${index + 1} из ${running.length}`}</Label>
+          <Label>
+            {t('m.taskOf', {
+              title: registry.getActivityTitle(activity.type),
+              n: index + 1,
+              total: running.length,
+            })}
+          </Label>
           <ActivityDispatcher
             key={activity.id}
             activity={toActivity(

@@ -179,9 +179,9 @@ export function SkillProfileEditor({ domain }: { domain: string }) {
         {t('skillProfileSkillProfileEditor.15', { skill: draft.skill, length: draft.areas.length })}
         {outline
           ? ` · ${knownLine(draft)}`
-          : ` · ${conceptCount(draft)} понятий · ${state.status === 'confirmed' ? 'граф построен' : 'черновик'}`}
+          : ` · ${t('m.conceptsAndStatus', { count: conceptCount(draft), status: state.status === 'confirmed' ? t('m.graphBuilt') : t('m.draft') })}`}
       </Muted>
-      {coverage && <Note tone="ok">В графе: {coverageLine(coverage)}</Note>}
+      {coverage && <Note tone="ok">{t('m.inGraph', { line: coverageLine(coverage) })}</Note>}
       {state.status === 'failed' && (
         <Note tone="danger">{state.error ?? t('skillProfileSkillProfileEditor.16')}</Note>
       )}
@@ -197,7 +197,7 @@ export function SkillProfileEditor({ domain }: { domain: string }) {
           {area.summary !== '' && <Muted>{area.summary}</Muted>}
           {outline && area.stages.length > 0 && (
             <Muted>
-              Этапы:{' '}
+              {t('m.stagesLabel')}{' '}
               {[...area.stages]
                 .sort((a, b) => a.order - b.order)
                 .map((s) => s.title)

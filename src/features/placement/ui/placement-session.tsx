@@ -135,10 +135,7 @@ export function PlacementSession({ domain }: { domain: string }) {
     return (
       <ScrollView contentContainerStyle={styles.pad}>
         <Text style={styles.h1}>{t('placementPlacementSession.7')}</Text>
-        <Text style={styles.dim}>
-          Это потолок для вопросов. Начнём с самых фундаментальных узлов и будем спускаться туда,
-          {t('placementPlacementSession.8')}
-        </Text>
+        <Text style={styles.dim}>{t('m.placementCeiling')}</Text>
         {TARGETS.map((t) => (
           <Pressable
             key={t.bloom}
@@ -166,7 +163,7 @@ export function PlacementSession({ domain }: { domain: string }) {
     return (
       <ScrollView contentContainerStyle={styles.pad}>
         <Text style={styles.eyebrow}>
-          вопрос {asked + 1} · {probe.conceptTitle} · {probe.bloom}
+          {t('m.probeLine', { n: asked + 1, concept: probe.conceptTitle, bloom: probe.bloom })}
         </Text>
         <Text style={styles.question}>{probe.item.prompt}</Text>
 
@@ -218,8 +215,12 @@ export function PlacementSession({ domain }: { domain: string }) {
       ) : (
         <>
           <Text style={styles.dim}>
-            Освоено {map.summary.known ?? 0} · в работе {map.summary.learning ?? 0} · на границе{' '}
-            {map.summary.frontier ?? 0} · закрыто {map.summary.locked ?? 0}
+            {t('m.mapSummary', {
+              known: map.summary.known ?? 0,
+              learning: map.summary.learning ?? 0,
+              frontier: map.summary.frontier ?? 0,
+              locked: map.summary.locked ?? 0,
+            })}
           </Text>
           {!map.coreCovered && <Text style={styles.warn}>{t('placementPlacementSession.15')}</Text>}
           {map.nodes.map((n) => (

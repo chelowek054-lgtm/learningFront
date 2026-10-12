@@ -135,7 +135,7 @@ export function ListeningDrillActivity({ activity, onComplete }: ActivityRendere
       {!!drill.title && <Lead>{drill.title}</Lead>}
       <Card>
         <Label>
-          Прослушиваний осталось: {playsLeft(drill.maxPlays, used)} из {drill.maxPlays}
+          {t('m.playsLeft', { left: playsLeft(drill.maxPlays, used), max: drill.maxPlays })}
         </Label>
         {blocker ? <Muted>{blocker}</Muted> : null}
         <Button
@@ -150,7 +150,7 @@ export function ListeningDrillActivity({ activity, onComplete }: ActivityRendere
         return (
           <Card key={q.id}>
             <Label>
-              Вопрос {i + 1} из {drill.questions.length}
+              {t('m.questionOf', { n: i + 1, total: drill.questions.length })}
               {d
                 ? d.correct
                   ? t('listeningDrillListeningDrillActivity.4')

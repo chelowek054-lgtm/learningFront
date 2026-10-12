@@ -74,7 +74,7 @@ export function GraphBuildPanel({
       setState(await (canResume(state) ? fillGraph(domain) : startGraphBuild(domain)));
       setNow(Date.now());
     } catch (e) {
-      setError(`Не удалось запустить сборку: ${String(e).slice(0, 200)}`);
+      setError(t('m.startBuildFailed', { error: String(e).slice(0, 200) }));
     } finally {
       setBusy(false);
     }

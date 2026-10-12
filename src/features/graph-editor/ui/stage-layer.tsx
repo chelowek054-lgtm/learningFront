@@ -75,9 +75,13 @@ function Block({ box, dim, onPress }: { box: StageBox; dim: boolean; onPress: ()
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ expanded: box.expanded }}
-      accessibilityLabel={`Этап ${box.title}${box.area ? `, ${box.area}` : ''}: освоено ${box.known} из ${box.count}. ${
-        box.expanded ? t('graphEditorStageLayer.3') : t('graphEditorStageLayer.4')
-      }`}
+      accessibilityLabel={t('m.blockA11y', {
+        title: box.title,
+        area: box.area ? `, ${box.area}` : '',
+        known: box.known,
+        count: box.count,
+        action: box.expanded ? t('graphEditorStageLayer.3') : t('graphEditorStageLayer.4'),
+      })}
       style={{
         position: 'absolute',
         left: box.x,
@@ -127,6 +131,7 @@ function Block({ box, dim, onPress }: { box: StageBox; dim: boolean; onPress: ()
 
 /** Ломаная между блоками со стрелкой и счётчиком; счётчик нажимается и открывает список связей. */
 function Arrow({ arrow, zoom, onPress }: { arrow: StageArrow; zoom: number; onPress: () => void }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const a = arrow.arrow;
   const n = arrow.link.edges.length;
@@ -158,7 +163,7 @@ function Arrow({ arrow, zoom, onPress }: { arrow: StageArrow; zoom: number; onPr
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
-        accessibilityLabel={`${n} ${n === 1 ? 'связь' : n < 5 ? 'связи' : 'связей'} между этапами, показать список`}
+        accessibilityLabel={t('m.arrowA11y', { count: n })}
         style={{
           position: 'absolute',
           left: arrow.pill.x - size / 2,

@@ -37,7 +37,7 @@ export function GoalGate({ domain, children }: { domain: string; children: React
       });
       setState('confirmed');
     } catch (e) {
-      setError(`Не удалось подтвердить: ${String(e).slice(0, 160)}`);
+      setError(t('goal.confirmFailed', { error: String(e).slice(0, 160) }));
     } finally {
       setBusy(false);
     }
@@ -54,8 +54,10 @@ export function GoalGate({ domain, children }: { domain: string; children: React
     <Card>
       <Label>{t('graphEditorGoalGate.2')}</Label>
       <Muted>
-        Карта строится после подтверждения: область «{subject?.title ?? domain}», уровень —{' '}
-        {subject ? targetLabel(subject.target) : t('graphEditorGoalGate.3')}.
+        {t('m.gateText', {
+          area: subject?.title ?? domain,
+          level: subject ? targetLabel(subject.target) : t('graphEditorGoalGate.3'),
+        })}
       </Muted>
       {error && <Note tone="danger">{error}</Note>}
       <Button label={t('graphEditorGoalGate.4')} onPress={() => void confirm()} busy={busy} />

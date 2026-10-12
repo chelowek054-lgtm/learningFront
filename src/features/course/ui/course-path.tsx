@@ -143,7 +143,7 @@ export function CoursePath({
 
   return (
     <Screen>
-      <Title>Курс · чтобы {targetLabel(course.target.bloom)}</Title>
+      <Title>{t('m.courseTitle', { target: targetLabel(course.target.bloom) })}</Title>
       <Muted>{t('courseCoursePath.7', { completed: course.completed, total: course.total })}</Muted>
       <Progress value={course.completed / Math.max(1, course.total)} />
       {notices.map((n) => (

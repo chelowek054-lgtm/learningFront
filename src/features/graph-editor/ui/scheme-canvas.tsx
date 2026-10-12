@@ -120,6 +120,7 @@ export function SchemeCanvas({
   /** Куда прокручен холст, в пикселях окна: нужно мини-карте (T-0147). */
   onScroll?: (offset: { x: number; y: number }) => void;
 }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const lanes = laneYs(layout);
   const offset = useRef({ x: 0, y: 0 });
@@ -224,7 +225,10 @@ export function SchemeCanvas({
                     onPress={() => onToggleStage(c.key)}
                     accessibilityRole="button"
                     accessibilityState={{ expanded: !collapsed.has(c.key) }}
-                    accessibilityLabel={`Этап ${c.title}${c.area ? `, ${c.area}` : ''}`}
+                    accessibilityLabel={t('m.stageA11y', {
+                      title: c.title,
+                      area: c.area ? `, ${c.area}` : '',
+                    })}
                     style={{
                       position: 'absolute',
                       left: c.x,

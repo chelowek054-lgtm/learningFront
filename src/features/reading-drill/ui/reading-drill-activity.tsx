@@ -137,7 +137,9 @@ export function ReadingDrillActivity({ activity, onComplete }: ActivityRendererP
     <View style={{ gap: space.md }}>
       {!!drill.title && <Lead>{drill.title}</Lead>}
       {left !== null && !result && (
-        <Note tone={left <= 60 ? 'danger' : 'warn'}>Осталось {formatClock(left)}</Note>
+        <Note tone={left <= 60 ? 'danger' : 'warn'}>
+          {t('m.timeLeft', { time: formatClock(left) })}
+        </Note>
       )}
 
       <Card>
@@ -149,7 +151,7 @@ export function ReadingDrillActivity({ activity, onComplete }: ActivityRendererP
         return (
           <Card key={q.id}>
             <Label>
-              Вопрос {i + 1} из {drill.questions.length}
+              {t('m.questionOf', { n: i + 1, total: drill.questions.length })}
               {d
                 ? d.correct
                   ? t('readingDrillReadingDrillActivity.5')
@@ -197,8 +199,7 @@ export function ReadingDrillActivity({ activity, onComplete }: ActivityRendererP
         <>
           {answeredCount(drill, answers) < drill.questions.length && (
             <Muted>
-              Без ответа: {drill.questions.length - answeredCount(drill, answers)}. Можно сдать и
-              {t('readingDrillReadingDrillActivity.12')}
+              {t('m.unanswered', { count: drill.questions.length - answeredCount(drill, answers) })}
             </Muted>
           )}
           <Button

@@ -128,7 +128,7 @@ export function ProgressScreen({ onBack }: { onBack?: () => void }) {
           <Muted>{t('progressProgressScreen.11')}</Muted>
         ) : (
           <>
-            <Lead>{pct(snap.retention.rate)} повторений без срыва</Lead>
+            <Lead>{t('m.retentionLine', { pct: pct(snap.retention.rate) })}</Lead>
             <Progress value={snap.retention.rate} />
             <Muted>
               {t('progressProgressScreen.12', {
@@ -169,15 +169,10 @@ export function ProgressScreen({ onBack }: { onBack?: () => void }) {
 
       <Card>
         <Label>{t('progressProgressScreen.20')}</Label>
-        {snap.streak > 0 && (
-          <Pill
-            text={`${snap.streak} ${plural(snap.streak, ['день', 'дня', 'дней'])} подряд`}
-            tone="accent"
-          />
-        )}
+        {snap.streak > 0 && <Pill text={t('m.streakDays', { count: snap.streak })} tone="accent" />}
         <Lead>
           {snap.streak > 0
-            ? `Серия: ${snap.streak} ${plural(snap.streak, ['день', 'дня', 'дней'])} подряд`
+            ? t('m.streakSeries', { days: t('m.streakDays', { count: snap.streak }) })
             : t('progressProgressScreen.21')}
         </Lead>
       </Card>
@@ -190,13 +185,12 @@ function GrowthRow({ growth }: { growth: RubricGrowth }) {
   return (
     <>
       <Body>
-        {rubricTitle(growth.rubricId)} · работ: {growth.count}
+        {rubricTitle(growth.rubricId)} · {t('m.worksCount', { count: growth.count })}
       </Body>
       {growth.delta === null ? (
         <Muted>
           {growth.last !== null ? t('progressProgressScreen.22', { last: growth.last }) : ''}
-          Динамика появится после второй
-          {t('progressProgressScreen.23')}
+          {t('m.growthSoon')}
         </Muted>
       ) : (
         <Muted>

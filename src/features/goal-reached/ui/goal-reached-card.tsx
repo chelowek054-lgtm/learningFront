@@ -52,7 +52,7 @@ export function GoalReachedCard({ onAddArea }: { onAddArea: () => void }) {
       {error && <Note tone="danger">{error}</Note>}
       {higher && (
         <Button
-          label={`Поднять уровень: ${higher.short.toLowerCase()}`}
+          label={t('m.raiseLevel', { level: higher.short.toLowerCase() })}
           onPress={() => void raise()}
           busy={busy}
         />

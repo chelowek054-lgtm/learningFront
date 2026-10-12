@@ -72,10 +72,7 @@ export function GapsCard({ goal }: { goal: string }) {
   return (
     <View style={{ gap: space.md }}>
       <Label>{t('sourcesGapsCard.2')}</Label>
-      <Muted>
-        {t('sourcesGapsCard.4', { goal })}
-        по белому списку доменов; найденное попадает в граф черновиками.
-      </Muted>
+      <Muted>{t('m.gapsHint', { goal })}</Muted>
       {error && <Note tone="danger">{error}</Note>}
       {gaps.map((gap) => {
         const result = results[gap.key];

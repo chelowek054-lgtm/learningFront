@@ -87,7 +87,8 @@ export function StageControls({
           </Text>
           {summary && (
             <Muted>
-              {' · '}опирается на: {summary.before} · открывает: {summary.after}
+              {' · '}
+              {t('m.stageSummary', { before: summary.before, after: summary.after })}
             </Muted>
           )}
         </View>
@@ -114,7 +115,8 @@ export function StageLinksCard({
   return (
     <Card>
       <Label>
-        {stageTitle(link.from)} → {stageTitle(link.to)} · связей: {link.edges.length}
+        {stageTitle(link.from)} → {stageTitle(link.to)} ·{' '}
+        {t('m.linksCount', { count: link.edges.length })}
       </Label>
       <View style={{ gap: space.sm }}>
         {link.edges.map((e) => {

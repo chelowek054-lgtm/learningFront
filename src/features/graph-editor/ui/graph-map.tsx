@@ -177,7 +177,7 @@ export function GraphMap({
           domain={domain}
           onStudy={onStudy}
           onChanged={() => void load()}
-          fullscreenTitle={`${subjectTitle ?? domain} · Карта`}
+          fullscreenTitle={t('m.mapTitle', { title: subjectTitle ?? domain })}
         />
       </Screen>
     );
@@ -222,7 +222,7 @@ export function GraphMap({
         {groupByStage(nodes).map((g, i) => (
           <Section
             key={g.title}
-            title={`${i + 1 <= 99 && g.title !== 'Прочее' ? `${i + 1}. ` : ''}${g.title}`}
+            title={`${i + 1 <= 99 && g.title !== t('graphEditorStageGroups.1') ? `${i + 1}. ` : ''}${g.title}`}
             hint=""
             nodes={g.nodes}
             onPick={setSelectedId}
