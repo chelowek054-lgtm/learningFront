@@ -14,7 +14,19 @@ import {
   type MasteryMap,
 } from '@/shared/api';
 import { queueEdit } from '../model/offline';
-import { Body, Button, Card, Label, Muted, Pill, radius, space, useTheme } from '@/shared/ui';
+import {
+  Body,
+  Button,
+  Card,
+  Chip,
+  Field,
+  Label,
+  Muted,
+  Pill,
+  radius,
+  space,
+  useTheme,
+} from '@/shared/ui';
 import {
   highlightPath,
   isFiltering,
@@ -140,14 +152,12 @@ export function SchemeView({
   }
 
   const flag = (key: keyof Omit<Filters, 'query'>, text: string) => (
-    <Pressable
+    <Chip
       key={key}
+      text={text}
+      selected={filters[key]}
       onPress={() => setFilters((f) => ({ ...f, [key]: !f[key] }))}
-      accessibilityRole="button"
-      accessibilityState={{ selected: filters[key] }}
-    >
-      <Pill text={`${filters[key] ? '✓ ' : ''}${text}`} tone={filters[key] ? 'accent' : 'muted'} />
-    </Pressable>
+    />
   );
 
   return (
@@ -162,39 +172,22 @@ export function SchemeView({
 
       {domain && (
         <View style={{ flexDirection: 'row', gap: space.sm }}>
-          <TextInput
+          <Field
             value={ownTitle}
             onChangeText={setOwnTitle}
             placeholder={selected ? 'своё понятие, связанное с выбранным' : 'своё понятие'}
-            placeholderTextColor={colors.muted}
-            style={{
-              flex: 1,
-              borderWidth: 1,
-              borderColor: colors.line,
-              borderRadius: radius.sm,
-              padding: space.sm,
-              color: colors.ink,
-              backgroundColor: colors.surface,
-            }}
+            style={{ flex: 1 }}
           />
           <Button label="Добавить" variant="quiet" onPress={() => void addOwn()} />
         </View>
       )}
       {note && <Muted>{note}</Muted>}
 
-      <TextInput
+      <Field
         value={filters.query}
         onChangeText={(query) => setFilters((f) => ({ ...f, query }))}
         placeholder="найти понятие"
-        placeholderTextColor={colors.muted}
-        style={{
-          borderWidth: 1,
-          borderColor: colors.line,
-          borderRadius: radius.sm,
-          padding: space.sm,
-          color: colors.ink,
-          backgroundColor: colors.surface,
-        }}
+        accessibilityLabel="Найти понятие"
       />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, alignItems: 'center' }}>
         {flag('studyNow', 'можно изучать сейчас')}
@@ -202,7 +195,10 @@ export function SchemeView({
         {flag('optionalOnly', 'только необязательное')}
         {flag('mineOnly', 'только своё')}
         {filtering && (
-          <Pressable onPress={() => setFilters(NO_FILTERS)}>
+          <Pressable
+            onPress={() => setFilters(NO_FILTERS)}
+            style={{ minHeight: 44, justifyContent: 'center' }}
+          >
             <Muted>сбросить</Muted>
           </Pressable>
         )}
@@ -447,7 +443,11 @@ function NodeCard({
   const link = (id: string) => {
     const n = byId.get(id);
     return n ? (
-      <Pressable key={id} onPress={() => onPick(id)}>
+      <Pressable
+        key={id}
+        onPress={() => onPick(id)}
+        style={{ minHeight: 44, justifyContent: 'center' }}
+      >
         <Muted>→ {n.title}</Muted>
       </Pressable>
     ) : null;
