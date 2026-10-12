@@ -22,7 +22,6 @@ import {
   font,
   navLayoutFor,
   radius,
-  SegmentedControl,
   space,
   useTheme,
 } from '@/shared/ui';
@@ -49,11 +48,6 @@ import type { SchemeScene } from './use-scheme-scene';
 
 /** Нижняя граница масштаба при открытии: текст узлов остаётся читаемым. */
 const OPEN_ZOOM_MIN = 0.75;
-
-const MODES: readonly { value: CanvasMode; label: string }[] = [
-  { value: 'all', label: 'Весь граф' },
-  { value: 'focus', label: 'Только связи' },
-];
 
 const FILTER_FLAGS: readonly { key: keyof Omit<Filters, 'query'>; text: string }[] = [
   { key: 'studyNow', text: 'можно изучать сейчас' },
@@ -313,15 +307,9 @@ export function SchemeFullscreen({
               {filtering ? ` · найдено ${matched}` : ''}
             </Text>
           </View>
-          {wide && (
-            <View style={{ width: 240 }}>
-              <SegmentedControl options={MODES} value={mode} onChange={setMode} />
-            </View>
-          )}
           {ctl('⌕', 'Найти понятие', () => setSearching((v) => !v))}
         </View>
 
-        {!wide && <SegmentedControl options={MODES} value={mode} onChange={setMode} />}
         {searching && (
           <Field
             autoFocus
@@ -345,6 +333,12 @@ export function SchemeFullscreen({
             text={filtering ? 'Фильтры ●' : 'Фильтры'}
             selected={panel === 'filters'}
             onPress={() => togglePanel('filters')}
+          />
+          <Chip
+            size="sm"
+            text="Только связи"
+            selected={mode === 'focus'}
+            onPress={() => setMode((m) => (m === 'focus' ? 'all' : 'focus'))}
           />
           <Chip
             size="sm"
@@ -385,7 +379,7 @@ export function SchemeFullscreen({
             {showMap && viewport && (
               <View
                 pointerEvents="box-none"
-                style={{ position: 'absolute', left: space.sm, top: space.sm }}
+                style={{ position: 'absolute', right: space.sm, top: space.sm }}
               >
                 <MiniMap
                   layout={layout}
