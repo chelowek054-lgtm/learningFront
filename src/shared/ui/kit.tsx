@@ -17,6 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { elevationCard } from './elevation';
 import { mixColors } from './color';
 import { font, radius, space, useTheme } from './theme';
+import { backdropStyle } from './backdrop';
+import { SMALL, SMALL_HIT_SLOP, type ControlSize, type ControlTone } from './control-size';
 import { typography } from '@/shared/config';
 
 /** Экран: фон темы + безопасные зоны. `scroll` — для длинного содержимого. */
@@ -29,7 +31,7 @@ export function Screen({
   scroll?: boolean;
   refreshControl?: React.ReactElement<RefreshControlProps>;
 }) {
-  const { colors } = useTheme();
+  const { colors, name } = useTheme();
   const body = scroll ? (
     <ScrollView contentContainerStyle={styles.content} refreshControl={refreshControl}>
       {children}
@@ -37,7 +39,13 @@ export function Screen({
   ) : (
     <View style={[styles.content, styles.flex]}>{children}</View>
   );
-  return <SafeAreaView style={[styles.flex, { backgroundColor: colors.bg }]}>{body}</SafeAreaView>;
+  return (
+    <SafeAreaView
+      style={[styles.flex, { backgroundColor: colors.bg }, backdropStyle(name, colors)]}
+    >
+      {body}
+    </SafeAreaView>
+  );
 }
 
 export function Card({
@@ -89,15 +97,68 @@ export function Button({
   variant = 'primary',
   disabled,
   busy,
+  size = 'md',
+  tone,
+  leading,
+  trailing,
+  accessibilityLabel,
 }: {
   label: string;
   onPress: () => void;
   variant?: 'primary' | 'quiet' | 'danger';
   disabled?: boolean;
   busy?: boolean;
+  /** «sm» — малая кнопка для плотных блоков (D-0003); не для основных действий экрана. */
+  size?: ControlSize;
+  /** Роль цвета малой кнопки; без неё нейтральная. */
+  tone?: ControlTone;
+  /** Знак перед подписью малой кнопки (точка роли). */
+  leading?: ReactNode;
+  /** Знак после подписи малой кнопки («›»). */
+  trailing?: string;
+  accessibilityLabel?: string;
 }) {
   const { colors } = useTheme();
   const [focused, setFocused] = useState(false);
+  if (size === 'sm') {
+    const role = tone === 'info' ? colors.info : tone === 'ok' ? colors.ok : colors.muted;
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel ?? label}
+        disabled={disabled || busy}
+        onPress={onPress}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        hitSlop={SMALL_HIT_SLOP}
+        style={({ pressed }) => [
+          {
+            minHeight: SMALL.height,
+            maxWidth: '100%',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+            paddingLeft: SMALL.paddingLeft,
+            paddingRight: SMALL.paddingRight,
+            borderRadius: radius.pill,
+            borderWidth: focused ? 2 : 1,
+            borderColor: focused ? colors.focus : mixColors(role, colors.line, 0.45),
+            backgroundColor: mixColors(role, colors.surface, 0.09),
+          },
+          (disabled || busy) && styles.dim,
+          pressed && styles.pressed,
+        ]}
+      >
+        {leading}
+        <Text
+          style={{ flexShrink: 1, color: colors.ink, fontSize: SMALL.fontSize, fontWeight: '600' }}
+        >
+          {label}
+        </Text>
+        {trailing ? <Text style={{ color: colors.muted, fontSize: 14 }}>{trailing}</Text> : null}
+      </Pressable>
+    );
+  }
   const bg =
     variant === 'primary' ? colors.accent : variant === 'danger' ? colors.danger : 'transparent';
   const fg =
@@ -274,13 +335,17 @@ export function Chip({
   text,
   selected,
   onPress,
+  size = 'md',
 }: {
   text: string;
   selected: boolean;
   onPress: () => void;
+  /** «sm» — малый чип для плотных блоков (D-0003): 32 px видимых, зона нажатия 44 px. */
+  size?: ControlSize;
 }) {
   const { colors } = useTheme();
   const [focused, setFocused] = useState(false);
+  const small = size === 'sm';
   return (
     <Pressable
       accessibilityRole="button"
@@ -288,10 +353,11 @@ export function Chip({
       onPress={onPress}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
+      hitSlop={small ? SMALL_HIT_SLOP : undefined}
       style={{
-        minHeight: 44,
+        minHeight: small ? SMALL.height : 44,
         justifyContent: 'center',
-        paddingHorizontal: space.md + 2,
+        paddingHorizontal: small ? SMALL.paddingLeft : space.md + 2,
         borderRadius: radius.pill,
         borderWidth: focused ? 2 : 1,
         borderColor: focused ? colors.focus : selected ? colors.accent : colors.line,
@@ -300,7 +366,7 @@ export function Chip({
     >
       <Text
         style={{
-          fontSize: font.small,
+          fontSize: small ? SMALL.fontSize : font.small,
           fontWeight: selected ? '600' : '400',
           color: selected ? colors.accentText : colors.ink,
         }}

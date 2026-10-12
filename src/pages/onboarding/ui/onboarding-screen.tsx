@@ -17,6 +17,8 @@ import {
   subjectOf,
   type FailureKind,
 } from '@/features/goal-intake';
+import { PriorTestSession } from '@/features/prior-test';
+import { SkillProfileEditor } from '@/features/skill-profile';
 import { startGraphBuild, updateProfile, type GoalSummary } from '@/shared/api';
 import { useIsOnline } from '@/shared/lib';
 import { Button, Card, Display, Field, Label, Muted, Note, Screen, space } from '@/shared/ui';
@@ -39,6 +41,9 @@ export function OnboardingScreen() {
   const [direct, setDirect] = useState(false);
   // Почему показана прямая форма: нет сети или помощник не ответил; null — человек выбрал её сам.
   const [why, setWhy] = useState<FailureKind | null>(null);
+  // После подтверждённой цели идут шаги 4 («Состав навыка», S-05) и 5 («Проверка уровня», S-06):
+  // область запоминаем здесь, пока человек их не пройдёт или не пропустит.
+  const [after, setAfter] = useState<{ domain: string; step: 4 | 5 } | null>(null);
 
   const subjectTitle = title.trim();
   const ready = subjectTitle.length > 1;
@@ -77,7 +82,41 @@ export function OnboardingScreen() {
     // Сборку графа запускаем сразу: она идёт на сервере в фоне, ход виден на экране карты.
     // Не вышло запустить — на карте останется кнопка «Собрать карту», онбординг не ломаем.
     await startGraphBuild(subject.id).catch(() => undefined);
-    await refresh();
+    // Онбординг не закрываем: дальше состав навыка и проверка уровня (оба шага можно пропустить).
+    setAfter({ domain: subject.id, step: 4 });
+  }
+
+  if (after) {
+    return (
+      <Screen>
+        <StepHeader step={after.step} />
+        {after.step === 4 ? (
+          <>
+            <View style={{ gap: space.xs }}>
+              <Display>Из чего состоит навык</Display>
+              <Muted>
+                Типовой состав под вашу цель. Уберите лишнее или добавьте своё — карта соберётся по
+                нему.
+              </Muted>
+            </View>
+            <SkillProfileEditor domain={after.domain} />
+            <Button label="Дальше" onPress={() => setAfter({ ...after, step: 5 })} />
+          </>
+        ) : (
+          <>
+            <View style={{ gap: space.xs }}>
+              <Display>Проверим, что вы уже знаете</Display>
+              <Muted>
+                Короткий тест по основам: курс не будет повторять то, что вы знаете. Можно
+                пропустить — тогда курс начнёт с самого начала.
+              </Muted>
+            </View>
+            <PriorTestSession domain={after.domain} />
+            <Button label="Готово" onPress={() => void refresh()} />
+          </>
+        )}
+      </Screen>
+    );
   }
 
   if (online && !direct) {

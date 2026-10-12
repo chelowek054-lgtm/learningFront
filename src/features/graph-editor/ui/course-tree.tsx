@@ -31,6 +31,7 @@ export function CourseTree({
         onStudy={onStart}
         studyLabel="Начать"
         fullscreenTitle={`${title ?? domain} · Дерево`}
+        mode="tree"
       />
     </Screen>
   );

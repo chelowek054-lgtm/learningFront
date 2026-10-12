@@ -1,6 +1,7 @@
 // Схема пути во весь экран (T-0132, R-0068): слой поверх экрана с крупным холстом, масштабом и «Вписать»,
 // плашкой выбранного понятия (снизу на телефоне, сбоку на планшете и десктопе) и подсветкой только его связей.
 // Закрывается кнопкой и Esc; выбранный узел остаётся выбранным и после выхода.
+// Дальше (T-0136, T-0144…T-0147): легенда, фильтры нижней панелью, мини-карта, щипок, стрелки клавиатуры.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Modal,
@@ -13,22 +14,38 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Graph, GraphNode } from '@/shared/api';
-import { Field, font, navLayoutFor, radius, SegmentedControl, space, useTheme } from '@/shared/ui';
+import {
+  Button,
+  Card,
+  Chip,
+  Field,
+  font,
+  navLayoutFor,
+  radius,
+  SegmentedControl,
+  space,
+  useTheme,
+} from '@/shared/ui';
+import { neighborByKey, type KeyDirection } from '../model/keys';
 import {
   isFiltering,
   matches,
   NODE_H,
   NODE_W,
   fitZoom,
+  NO_FILTERS,
   ZOOM_MAX,
   ZOOM_MIN,
   type Filters,
-  type Highlight,
   type MasteryState,
-  type SchemeLayout,
 } from '../model/scheme';
+import { stageTitleOf } from '../model/overview';
+import { MiniMap } from './mini-map';
 import { NodePlate } from './node-plate';
+import { LegendList } from './scheme-legend';
 import { SchemeCanvas, type CanvasMode } from './scheme-canvas';
+import { StageControls, StageLinksCard } from './stage-controls';
+import type { SchemeScene } from './use-scheme-scene';
 
 /** Нижняя граница масштаба при открытии: текст узлов остаётся читаемым. */
 const OPEN_ZOOM_MIN = 0.75;
@@ -38,21 +55,33 @@ const MODES: readonly { value: CanvasMode; label: string }[] = [
   { value: 'focus', label: 'Только связи' },
 ];
 
+const FILTER_FLAGS: readonly { key: keyof Omit<Filters, 'query'>; text: string }[] = [
+  { key: 'studyNow', text: 'можно изучать сейчас' },
+  { key: 'hideKnown', text: 'скрыть пройденное' },
+  { key: 'optionalOnly', text: 'только необязательное' },
+  { key: 'mineOnly', text: 'только своё' },
+];
+
+const ARROW_KEYS: Record<string, KeyDirection> = {
+  ArrowLeft: 'left',
+  ArrowRight: 'right',
+  ArrowUp: 'up',
+  ArrowDown: 'down',
+};
+
+type Panel = 'none' | 'legend' | 'filters';
+
 export function SchemeFullscreen({
   visible,
   onClose,
   title,
   graph,
-  layout,
+  scene,
   states,
   estimates,
-  highlight,
   selected,
-  onSelect,
   filters,
   onFilters,
-  collapsed,
-  onToggleStage,
   byId,
   onStudy,
   studyLabel,
@@ -62,17 +91,15 @@ export function SchemeFullscreen({
   visible: boolean;
   onClose: () => void;
   title: string;
+  /** Исходный граф: плашка понятия берёт из него всех соседей, даже скрытых обзором. */
   graph: Graph;
-  layout: SchemeLayout;
+  /** Что рисует холст: обычная раскладка или обзор по этапам, подсветка, слой блоков, легенда. */
+  scene: SchemeScene;
   states: Record<string, MasteryState>;
   estimates: Record<string, number>;
-  highlight: Highlight | null;
   selected: string | null;
-  onSelect: (id: string | null) => void;
   filters: Filters;
   onFilters: (f: Filters) => void;
-  collapsed: ReadonlySet<string>;
-  onToggleStage: (key: string) => void;
   byId: Map<string, GraphNode>;
   onStudy?: () => void;
   studyLabel: string;
@@ -84,10 +111,15 @@ export function SchemeFullscreen({
   const { width, height: windowHeight } = useWindowDimensions();
   // Боковая плашка — от планшета (md), на телефоне — нижняя панель.
   const wide = navLayoutFor(width) !== 'bottom';
+  const layout = scene.layout;
+  const onSelect = scene.select;
   const [zoom, setZoom] = useState(1);
   const [mode, setMode] = useState<CanvasMode>('all');
   const [expanded, setExpanded] = useState(false);
   const [searching, setSearching] = useState(false);
+  const [panel, setPanel] = useState<Panel>('none');
+  const [showMap, setShowMap] = useState(wide);
+  const [scroll, setScroll] = useState({ x: 0, y: 0 });
   const [viewport, setViewport] = useState<{ width: number; height: number } | null>(null);
   const outerRef = useRef<ScrollView>(null);
   const innerRef = useRef<ScrollView>(null);
@@ -125,7 +157,12 @@ export function SchemeFullscreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected, visible]);
 
-  // Клавиатура (веб): Esc — закрыть, F — вписать, «+» и «−» — масштаб.
+  const zoomBy = useCallback(
+    (factor: number) => setZoom((z) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z * factor))),
+    [],
+  );
+
+  // Клавиатура (веб): Esc — закрыть, F — вписать, «+» и «−» — масштаб, стрелки — по соседям (T-0144).
   useEffect(() => {
     if (!visible || Platform.OS !== 'web' || typeof document === 'undefined') return;
     const onKey = (e: KeyboardEvent) => {
@@ -136,12 +173,17 @@ export function SchemeFullscreen({
       }
       if (e.key === 'Escape') onClose();
       else if (e.key === 'f' || e.key === 'F') fit();
-      else if (e.key === '+' || e.key === '=') setZoom((z) => Math.min(ZOOM_MAX, z * 1.25));
-      else if (e.key === '-') setZoom((z) => Math.max(ZOOM_MIN, z / 1.25));
+      else if (e.key === '+' || e.key === '=') zoomBy(1.25);
+      else if (e.key === '-') zoomBy(1 / 1.25);
+      else if (ARROW_KEYS[e.key]) {
+        e.preventDefault();
+        const next = neighborByKey(ARROW_KEYS[e.key]!, selected, scene.graph.edges, layout);
+        if (next) onSelect(next);
+      }
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [visible, onClose, fit]);
+  }, [visible, onClose, fit, zoomBy, selected, scene.graph.edges, layout, onSelect]);
 
   const filtering = isFiltering(filters);
   const node = selected ? (byId.get(selected) ?? null) : null;
@@ -152,8 +194,22 @@ export function SchemeFullscreen({
         : graph.nodes.length,
     [filtering, graph.nodes, filters, states],
   );
+  const stageTitle = useCallback((key: string) => stageTitleOf(graph.nodes, key), [graph.nodes]);
 
-  const plate = node ? (
+  const plate = scene.link ? (
+    <View style={wide ? { width: 360, maxWidth: '40%', minWidth: 300 } : undefined}>
+      <StageLinksCard
+        link={scene.link}
+        byId={byId}
+        stageTitle={stageTitle}
+        onPick={(id) => {
+          scene.closeLink();
+          onSelect(id);
+        }}
+        onClose={scene.closeLink}
+      />
+    </View>
+  ) : node ? (
     <NodePlate
       key={node.id}
       node={node}
@@ -195,6 +251,9 @@ export function SchemeFullscreen({
       <Text style={{ color: colors.ink, fontSize: font.body, fontWeight: '600' }}>{label}</Text>
     </Pressable>
   );
+
+  const togglePanel = (next: Exclude<Panel, 'none'>) =>
+    setPanel((p) => (p === next ? 'none' : next));
 
   return (
     <Modal
@@ -272,29 +331,76 @@ export function SchemeFullscreen({
             accessibilityLabel="Найти понятие"
           />
         )}
+        <View
+          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.xs, alignItems: 'center' }}
+        >
+          <Chip
+            size="sm"
+            text="Легенда"
+            selected={panel === 'legend'}
+            onPress={() => togglePanel('legend')}
+          />
+          <Chip
+            size="sm"
+            text={filtering ? 'Фильтры ●' : 'Фильтры'}
+            selected={panel === 'filters'}
+            onPress={() => togglePanel('filters')}
+          />
+          <Chip
+            size="sm"
+            text="Мини-карта"
+            selected={showMap}
+            onPress={() => setShowMap((v) => !v)}
+          />
+        </View>
+        <StageControls scene={scene} selected={selected} stageTitle={stageTitle} />
 
         <View
           style={{ flex: 1, flexDirection: wide ? 'row' : 'column', gap: space.sm, minHeight: 0 }}
         >
           <View style={{ flex: 1, minHeight: 160, minWidth: 0 }}>
             <SchemeCanvas
-              graph={graph}
+              graph={scene.graph}
               layout={layout}
-              states={states}
+              states={scene.states}
               estimates={estimates}
-              highlight={highlight}
+              highlight={scene.highlight}
               selected={selected}
               filters={filters}
               filtering={filtering}
               zoom={zoom}
               mode={mode}
-              collapsed={collapsed}
+              collapsed={new Set()}
               onSelect={onSelect}
-              onToggleStage={onToggleStage}
+              onToggleStage={scene.toggleStage}
               onViewport={setViewport}
               outerRef={outerRef}
               innerRef={innerRef}
-            />
+              ports={scene.ports}
+              onPinch={zoomBy}
+              onScroll={setScroll}
+            >
+              {scene.layer(zoom)}
+            </SchemeCanvas>
+            {showMap && viewport && (
+              <View
+                pointerEvents="box-none"
+                style={{ position: 'absolute', left: space.sm, top: space.sm }}
+              >
+                <MiniMap
+                  layout={layout}
+                  boxes={scene.overview?.boxes}
+                  selected={selected}
+                  zoom={zoom}
+                  viewport={viewport}
+                  scroll={scroll}
+                  onJump={(x, y) => {
+                    outerRef.current?.scrollTo({ x, animated: true });
+                    innerRef.current?.scrollTo({ y, animated: true });
+                  }}
+                />
+              </View>
+            )}
             <View
               style={{
                 position: 'absolute',
@@ -304,21 +410,59 @@ export function SchemeFullscreen({
                 alignItems: 'flex-end',
               }}
             >
-              {ctl(
-                '+',
-                'Приблизить',
-                () => setZoom((z) => Math.min(ZOOM_MAX, z * 1.25)),
-                zoom >= ZOOM_MAX,
-              )}
-              {ctl(
-                '−',
-                'Отдалить',
-                () => setZoom((z) => Math.max(ZOOM_MIN, z / 1.25)),
-                zoom <= ZOOM_MIN,
-              )}
+              {ctl('+', 'Приблизить', () => zoomBy(1.25), zoom >= ZOOM_MAX)}
+              {ctl('−', 'Отдалить', () => zoomBy(1 / 1.25), zoom <= ZOOM_MIN)}
               {ctl('Вписать', 'Вписать схему в экран', fit)}
             </View>
-            {!node && (
+            {panel !== 'none' && (
+              <View
+                style={{
+                  position: 'absolute',
+                  left: space.sm,
+                  right: wide ? undefined : space.sm,
+                  bottom: space.sm,
+                  width: wide ? 340 : undefined,
+                  maxHeight: '70%',
+                }}
+              >
+                <Card>
+                  <ScrollView contentContainerStyle={{ gap: space.sm }}>
+                    {panel === 'legend' ? (
+                      <LegendList items={scene.legend} />
+                    ) : (
+                      <View style={{ gap: space.sm }}>
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.xs }}>
+                          {FILTER_FLAGS.map((f) => (
+                            <Chip
+                              key={f.key}
+                              size="sm"
+                              text={f.text}
+                              selected={filters[f.key]}
+                              onPress={() => onFilters({ ...filters, [f.key]: !filters[f.key] })}
+                            />
+                          ))}
+                        </View>
+                        {filtering && (
+                          <Button
+                            size="sm"
+                            variant="quiet"
+                            label="Сбросить"
+                            onPress={() => onFilters(NO_FILTERS)}
+                          />
+                        )}
+                      </View>
+                    )}
+                  </ScrollView>
+                  <Button
+                    size="sm"
+                    variant="quiet"
+                    label="Закрыть"
+                    onPress={() => setPanel('none')}
+                  />
+                </Card>
+              </View>
+            )}
+            {!node && panel === 'none' && (
               <View
                 pointerEvents="none"
                 style={{ position: 'absolute', left: space.md, bottom: space.sm }}
@@ -338,7 +482,7 @@ export function SchemeFullscreen({
               </Text>
               {Platform.OS === 'web' && (
                 <Text style={{ color: colors.muted, fontSize: font.caption, marginTop: space.sm }}>
-                  Esc — закрыть · F — вписать · «+» и «−» — масштаб
+                  Esc — закрыть · F — вписать · «+» и «−» — масштаб · стрелки — по соседям
                 </Text>
               )}
             </View>

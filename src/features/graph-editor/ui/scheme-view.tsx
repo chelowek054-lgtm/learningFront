@@ -15,6 +15,10 @@ import {
 } from '@/shared/api';
 import { SchemeCanvas, STATE_TEXT } from './scheme-canvas';
 import { SchemeFullscreen } from './scheme-fullscreen';
+import { StageControls, StageLinksCard } from './stage-controls';
+import { useSchemeScene } from './use-scheme-scene';
+import { stageTitleOf } from '../model/overview';
+import type { LegendMode } from '../model/legend';
 import { queueEdit } from '../model/offline';
 import {
   Body,
@@ -53,6 +57,7 @@ export function SchemeView({
   domain,
   onChanged,
   fullscreenTitle = 'Схема пути',
+  mode = 'map',
 }: {
   graph: Graph;
   domain?: string;
@@ -63,8 +68,9 @@ export function SchemeView({
   studyLabel?: string;
   /** Подпись в шапке полноэкранного режима: какой предмет и какой режим. */
   fullscreenTitle?: string;
+  /** «map» — понятия канона; «tree» — шаги курса: у них своя легенда (T-0137). */
+  mode?: LegendMode;
 }) {
-  const { colors } = useTheme();
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [selected, setSelected] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -80,7 +86,27 @@ export function SchemeView({
     () => (selected ? highlightPath(selected, graph.edges) : null),
     [selected, graph.edges],
   );
+  function toggleStage(key: string) {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
   const [ownTitle, setOwnTitle] = useState('');
+  const scene = useSchemeScene({
+    graph,
+    states,
+    layout,
+    highlight,
+    selected,
+    setSelected,
+    mode,
+    plainToggleStage: toggleStage,
+  });
+  const stageTitle = (key: string) => stageTitleOf(graph.nodes, key);
   const [note, setNote] = useState<string | null>(null);
   const zoom = ZOOMS[zoomIndex];
 
@@ -136,15 +162,6 @@ export function SchemeView({
   const filtering = isFiltering(filters);
   const selectedNode = selected ? (byId.get(selected) ?? null) : null;
 
-  function toggleStage(key: string) {
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }
-
   const flag = (key: keyof Omit<Filters, 'query'>, text: string) => (
     <Chip
       key={key}
@@ -157,11 +174,13 @@ export function SchemeView({
   return (
     <View style={{ gap: space.md }}>
       <SchemeLegend
+        items={scene.legend}
         open={legendOpen}
         onToggle={() => {
           rememberFlag('graph-legend-open', !legendOpen);
           setLegendOpen(!legendOpen);
         }}
+        title={mode === 'tree' ? 'Как читать дерево' : 'Как читать схему'}
       />
 
       {domain && (
@@ -213,40 +232,54 @@ export function SchemeView({
           onPress={() => setZoomIndex((i) => Math.min(ZOOMS.length - 1, i + 1))}
         />
         <Button label="Во весь экран" variant="quiet" onPress={() => setFullscreen(true)} />
-        <Muted>Этап можно свернуть нажатием на его название</Muted>
+        <Muted>Этап можно раскрыть или свернуть нажатием на его название</Muted>
       </View>
 
+      <StageControls scene={scene} selected={selected} stageTitle={stageTitle} />
+
       <SchemeCanvas
-        graph={graph}
-        layout={layout}
-        states={states}
+        graph={scene.graph}
+        layout={scene.layout}
+        states={scene.states}
         estimates={estimates}
-        highlight={highlight}
+        highlight={scene.highlight}
         selected={selected}
         filters={filters}
         filtering={filtering}
         zoom={zoom}
         collapsed={collapsed}
-        onSelect={setSelected}
-        onToggleStage={toggleStage}
+        onSelect={scene.select}
+        onToggleStage={scene.toggleStage}
+        ports={scene.ports}
         height={420}
-      />
+      >
+        {scene.layer(zoom)}
+      </SchemeCanvas>
+
+      {scene.link && (
+        <StageLinksCard
+          link={scene.link}
+          byId={byId}
+          stageTitle={stageTitle}
+          onPick={(id) => {
+            scene.closeLink();
+            scene.select(id);
+          }}
+          onClose={scene.closeLink}
+        />
+      )}
 
       <SchemeFullscreen
         visible={fullscreen}
         onClose={() => setFullscreen(false)}
         title={fullscreenTitle}
         graph={graph}
-        layout={layout}
+        scene={scene}
         states={states}
         estimates={estimates}
-        highlight={highlight}
         selected={selected}
-        onSelect={setSelected}
         filters={filters}
         onFilters={setFilters}
-        collapsed={collapsed}
-        onToggleStage={toggleStage}
         byId={byId}
         onStudy={onStudy}
         studyLabel={studyLabel}
@@ -261,7 +294,7 @@ export function SchemeView({
           graph={graph}
           byId={byId}
           onClose={() => setSelected(null)}
-          onPick={setSelected}
+          onPick={scene.select}
           onStudy={onStudy}
           studyLabel={states[selectedNode.id] === 'learning' ? 'Продолжить' : studyLabel}
           onRemove={
