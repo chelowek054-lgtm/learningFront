@@ -3,6 +3,7 @@
 // Раньше область была зашита строкой 'ml' в четырёх экранах, из-за чего
 // приложение, обещающее «любую базу знаний», работало ровно в одной. Здесь
 // единственный источник: экраны спрашивают предмет, а не объявляют его.
+import { translate } from '../../shared/i18n/translate';
 
 /**
  * Уровень владения. `label` — формулировка от лица человека («решу задачу»),
@@ -12,10 +13,42 @@
  * несовпадающих видах, а кое-где наружу выходил английский слуг Блума.
  */
 export const MASTERY_TARGETS = [
-  { bloom: 'remember', short: 'Вспомнить', label: 'узнаю термины' },
-  { bloom: 'understand', short: 'Понять', label: 'объясню своими словами' },
-  { bloom: 'apply', short: 'Применить', label: 'решу задачу' },
-  { bloom: 'create', short: 'Создать', label: 'построю своё' },
+  {
+    bloom: 'remember',
+    get short() {
+      return translate('target.remember.short');
+    },
+    get label() {
+      return translate('target.remember.label');
+    },
+  },
+  {
+    bloom: 'understand',
+    get short() {
+      return translate('target.understand.short');
+    },
+    get label() {
+      return translate('target.understand.label');
+    },
+  },
+  {
+    bloom: 'apply',
+    get short() {
+      return translate('target.apply.short');
+    },
+    get label() {
+      return translate('target.apply.label');
+    },
+  },
+  {
+    bloom: 'create',
+    get short() {
+      return translate('target.create.short');
+    },
+    get label() {
+      return translate('target.create.label');
+    },
+  },
 ] as const;
 
 export type TargetBloom = (typeof MASTERY_TARGETS)[number]['bloom'];

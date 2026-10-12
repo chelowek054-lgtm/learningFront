@@ -1,6 +1,7 @@
 // Раскладка навигации по ширине окна: чистая логика без react-native, чтобы проверяться тестами.
 // Макет: телефон — вкладки внизу, планшет — рейка слева, десктоп — боковая панель.
 import { grid } from '../config';
+import type { Key } from '@/shared/i18n';
 
 export { withAlpha } from './color';
 
@@ -20,16 +21,18 @@ export interface NavItem {
   key: string;
   path: string;
   label: string;
+  /** Ключ перевода подписи (shared/i18n). */
+  labelKey: Key;
   /** Служебный пункт: виден только администратору и стоит отдельно от основных. */
   adminOnly?: boolean;
 }
 
 export const NAV_ITEMS: readonly NavItem[] = [
-  { key: 'index', path: '/', label: 'Сегодня' },
-  { key: 'path', path: '/path', label: 'Путь' },
-  { key: 'progress', path: '/progress', label: 'Прогресс' },
-  { key: 'profile', path: '/profile', label: 'Профиль' },
-  { key: 'curator', path: '/curator', label: 'Куратор', adminOnly: true },
+  { key: 'index', path: '/', label: 'Сегодня', labelKey: 'nav.today' },
+  { key: 'path', path: '/path', label: 'Путь', labelKey: 'nav.path' },
+  { key: 'progress', path: '/progress', label: 'Прогресс', labelKey: 'nav.progress' },
+  { key: 'profile', path: '/profile', label: 'Профиль', labelKey: 'nav.profile' },
+  { key: 'curator', path: '/curator', label: 'Куратор', labelKey: 'nav.curator', adminOnly: true },
 ];
 
 /**

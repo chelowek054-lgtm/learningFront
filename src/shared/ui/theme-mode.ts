@@ -1,16 +1,27 @@
 // Выбор темы: чистая логика без react-native, чтобы проверяться тестами.
 import type { ThemeName } from '@/shared/config';
+import { translate } from '../i18n/translate';
 
 /** `system` следует за устройством; остальное — явный выбор человека. */
 export type ThemeMode = 'system' | ThemeName;
 
-export const THEME_MODES: readonly { mode: ThemeMode; label: string }[] = [
-  { mode: 'system', label: 'Как в системе' },
-  { mode: 'light', label: 'Светлая' },
-  { mode: 'dark', label: 'Тёмная' },
-  { mode: 'oled', label: 'OLED' },
-  { mode: 'contrast', label: 'Контрастная' },
-];
+const THEME_LABEL_KEYS = {
+  system: 'theme.system',
+  light: 'theme.light',
+  dark: 'theme.dark',
+  oled: 'theme.oled',
+  contrast: 'theme.contrast',
+} as const;
+
+export const THEME_MODES: readonly { mode: ThemeMode; label: string }[] = (
+  ['system', 'light', 'dark', 'oled', 'contrast'] as const
+).map((mode) => ({
+  mode,
+  // Подпись берётся при показе: язык интерфейса может смениться, пока экран открыт.
+  get label() {
+    return translate(THEME_LABEL_KEYS[mode]);
+  },
+}));
 
 /** Значение из хранилища → режим; неизвестное (в том числе от прежней версии) — `system`. */
 export function parseThemeMode(value: string | null | undefined): ThemeMode {

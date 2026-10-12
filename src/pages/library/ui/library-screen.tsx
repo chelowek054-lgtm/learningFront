@@ -12,19 +12,13 @@ import {
 } from '@/shared/api';
 import { View } from 'react-native';
 import { Button, Card, Empty, Label, Muted, Note, Pill, Screen, space, TopBar } from '@/shared/ui';
+import { useI18n, type Key } from '@/shared/i18n';
 
 const STATUS_TONE: Record<SubjectStatus, 'accent' | 'info' | 'muted'> = {
   building: 'info',
   active: 'accent',
   paused: 'muted',
   reached: 'accent',
-};
-
-const STATUS_TEXT: Record<SubjectStatus, string> = {
-  building: 'собирается',
-  active: 'идёт',
-  paused: 'на паузе',
-  reached: 'цель достигнута',
 };
 
 export function LibraryScreen({
@@ -34,6 +28,7 @@ export function LibraryScreen({
   onBack?: () => void;
   onOpened?: () => void;
 }) {
+  const { t } = useI18n();
   const { user, subject, refresh } = useSession();
   const [items, setItems] = useState<UserSubject[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +45,7 @@ export function LibraryScreen({
       }
       setItems(list);
     } catch {
-      setError('Не удалось загрузить библиотеку.');
+      setError(t('library.loadFailed'));
     }
   }, [subject]);
 
@@ -75,7 +70,7 @@ export function LibraryScreen({
       await fn();
       await load();
     } catch {
-      setError('Не получилось. Попробуйте ещё раз.');
+      setError(t('library.failed'));
     }
   }
 
@@ -86,12 +81,12 @@ export function LibraryScreen({
 
   return (
     <Screen>
-      <TopBar title="Моя библиотека" onBack={onBack} />
+      <TopBar title={t('library.title')} onBack={onBack} />
       {error && <Note tone="danger">{error}</Note>}
       {items === null ? (
-        <Muted>Загружаю…</Muted>
+        <Muted>{t('common.loading')}</Muted>
       ) : items.length === 0 ? (
-        <Empty text="Пока пусто. Добавьте первый предмет." />
+        <Empty text={t('library.empty')} />
       ) : (
         items.map((s) => {
           const current = subject?.id === s.domain;
@@ -99,12 +94,12 @@ export function LibraryScreen({
             <Card key={s.id} tone={current ? 'accent' : 'plain'}>
               <Label>{s.title}</Label>
               <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
-                <Pill text={STATUS_TEXT[s.status]} tone={STATUS_TONE[s.status]} />
-                {current && <Pill text="сейчас открыт" tone="accent" />}
+                <Pill text={t(`library.status.${s.status}` as Key)} tone={STATUS_TONE[s.status]} />
+                {current && <Pill text={t('library.current')} tone="accent" />}
               </View>
-              {!current && <Button label="Открыть" onPress={() => void open(s)} />}
+              {!current && <Button label={t('common.open')} onPress={() => void open(s)} />}
               <Button
-                label={s.status === 'paused' ? 'Вернуть в работу' : 'Поставить на паузу'}
+                label={s.status === 'paused' ? t('library.resume') : t('library.pause')}
                 variant="quiet"
                 onPress={() =>
                   void act(() =>
@@ -114,11 +109,9 @@ export function LibraryScreen({
               />
               {confirmId === s.id ? (
                 <>
-                  <Note tone="danger">
-                    Удалить «{s.title}»? Карта и прогресс по предмету пропадут.
-                  </Note>
+                  <Note tone="danger">{t('library.confirmDelete', { title: s.title })}</Note>
                   <Button
-                    label="Да, удалить"
+                    label={t('library.yesDelete')}
                     variant="danger"
                     onPress={() =>
                       void act(async () => {
@@ -127,16 +120,24 @@ export function LibraryScreen({
                       })
                     }
                   />
-                  <Button label="Отмена" variant="quiet" onPress={() => setConfirmId(null)} />
+                  <Button
+                    label={t('common.cancel')}
+                    variant="quiet"
+                    onPress={() => setConfirmId(null)}
+                  />
                 </>
               ) : (
-                <Button label="Удалить" variant="quiet" onPress={() => setConfirmId(s.id)} />
+                <Button
+                  label={t('common.delete')}
+                  variant="quiet"
+                  onPress={() => setConfirmId(s.id)}
+                />
               )}
             </Card>
           );
         })
       )}
-      <Button label="Новый предмет" onPress={() => void addNew()} />
+      <Button label={t('library.new')} onPress={() => void addNew()} />
     </Screen>
   );
 }

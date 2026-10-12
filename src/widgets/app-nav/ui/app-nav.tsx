@@ -21,6 +21,7 @@ import {
   withAlpha,
   type NavLayout,
 } from '@/shared/ui';
+import { useI18n, type Key } from '@/shared/i18n';
 
 type Glyph = 'today' | 'course' | 'graph' | 'profile' | 'curator';
 
@@ -109,6 +110,7 @@ function TabGlyph({ glyph, color }: { glyph: Glyph; color: string }) {
 interface NavEntry {
   key: string;
   label: string;
+  labelKey: Key;
   path: string;
 }
 
@@ -123,6 +125,7 @@ function NavButton({
   active: boolean;
   onPress: () => void;
 }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const [focused, setFocused] = useState(false);
   const tint = active ? colors.accentText : colors.muted;
@@ -130,7 +133,7 @@ function NavButton({
   return (
     <Pressable
       accessibilityRole={layout === 'bottom' ? 'tab' : 'link'}
-      accessibilityLabel={item.label}
+      accessibilityLabel={t(item.labelKey)}
       accessibilityState={{ selected: active }}
       onPress={onPress}
       onFocus={() => setFocused(true)}
@@ -152,7 +155,7 @@ function NavButton({
           color: active ? colors.accentText : colors.muted,
         }}
       >
-        {item.label}
+        {t(item.labelKey)}
       </Text>
     </Pressable>
   );

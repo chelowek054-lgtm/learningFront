@@ -22,6 +22,7 @@ import { ModuleRegistryProvider } from '@/shared/lib';
 import { Lead, Muted, Screen, ThemeProvider, Title, useTheme } from '@/shared/ui';
 import { AppShell } from '@/widgets/app-nav';
 import { getModuleRegistry } from '@/widgets/module-registry';
+import { I18nProvider } from '@/shared/i18n';
 
 /**
  * Заголовок вкладки браузера. Через options.title экранов он не проставлялся —
@@ -115,15 +116,17 @@ function OutdatedGate({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   const registry = useMemo(() => getModuleRegistry(), []);
   return (
-    <ThemeProvider>
-      <SessionProvider>
-        <ModuleRegistryProvider registry={registry}>
-          <DocumentHead />
-          <OutdatedGate>
-            <Gate />
-          </OutdatedGate>
-        </ModuleRegistryProvider>
-      </SessionProvider>
-    </ThemeProvider>
+    <I18nProvider>
+      <ThemeProvider>
+        <SessionProvider>
+          <ModuleRegistryProvider registry={registry}>
+            <DocumentHead />
+            <OutdatedGate>
+              <Gate />
+            </OutdatedGate>
+          </ModuleRegistryProvider>
+        </SessionProvider>
+      </ThemeProvider>
+    </I18nProvider>
   );
 }

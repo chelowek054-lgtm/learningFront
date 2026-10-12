@@ -6,21 +6,23 @@ import { useSession } from '@/entities/session';
 import { ApiError, NetworkError } from '@/shared/api';
 
 import { PasswordResetScreen } from './password-reset-screen';
+import { translate, useI18n } from '@/shared/i18n';
 
 /** Показать настоящую причину: сетевой сбой ≠ неверный пароль (иначе диагноз невозможен). */
 function describe(e: unknown, mode: 'login' | 'register'): string {
-  if (e instanceof NetworkError)
-    return `${e.message}. Проверьте, что backend запущен и адрес верный.`;
+  const t = translate;
+  if (e instanceof NetworkError) return t('auth.networkHint', { message: e.message });
   if (e instanceof ApiError) {
-    if (e.status === 401) return 'Неверный email или пароль';
-    if (e.status === 409) return 'Этот email уже зарегистрирован';
-    if (e.status === 422) return 'Проверьте формат email и длину пароля (мин. 6)';
-    return `Ошибка сервера ${e.status}: ${e.message.slice(0, 200)}`;
+    if (e.status === 401) return t('auth.err401');
+    if (e.status === 409) return t('auth.err409');
+    if (e.status === 422) return t('auth.err422');
+    return t('auth.errServer', { status: e.status, message: e.message.slice(0, 200) });
   }
-  return `Не удалось ${mode === 'login' ? 'войти' : 'зарегистрироваться'}: ${String(e)}`;
+  return t(mode === 'login' ? 'auth.failLogin' : 'auth.failRegister', { error: String(e) });
 }
 
 export function AuthScreen() {
+  const { t } = useI18n();
   const { login, register } = useSession();
   const [mode, setMode] = useState<'login' | 'register' | 'reset'>('login');
   const [email, setEmail] = useState('');
@@ -40,7 +42,7 @@ export function AuthScreen() {
           setEmail(usedEmail);
           setPassword('');
           setError(null);
-          setNotice('Пароль изменён. Войдите с новым паролем.');
+          setNotice(t('auth.passwordChanged'));
           setMode('login');
         }}
       />
@@ -66,8 +68,8 @@ export function AuthScreen() {
   return (
     <Screen>
       <View style={{ gap: space.xs, marginTop: space.xxl }}>
-        <Display>{mode === 'login' ? 'Войти в Praxis' : 'Создать аккаунт'}</Display>
-        <Muted>Платформа собирает ваши знания в карту под вашу цель.</Muted>
+        <Display>{mode === 'login' ? t('auth.titleLogin') : t('auth.titleRegister')}</Display>
+        <Muted>{t('auth.tagline')}</Muted>
       </View>
 
       <Field
@@ -79,7 +81,7 @@ export function AuthScreen() {
         onChangeText={setEmail}
       />
       <Field
-        placeholder="пароль (мин. 6)"
+        placeholder={t('auth.passwordPlaceholder')}
         secureTextEntry
         autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
         value={password}
@@ -96,18 +98,20 @@ export function AuthScreen() {
           accessibilityState={{ checked: accepted }}
           style={{ flexDirection: 'row', gap: space.sm, alignItems: 'center', minHeight: 44 }}
         >
-          <Muted>{accepted ? '☑' : '☐'} Согласен с политикой хранения и обработки данных</Muted>
+          <Muted>
+            {accepted ? '☑' : '☐'} {t('auth.consent')}
+          </Muted>
         </Pressable>
       )}
 
       <Button
-        label={mode === 'login' ? 'Войти' : 'Зарегистрироваться'}
+        label={mode === 'login' ? t('auth.login') : t('auth.register')}
         onPress={submit}
         busy={busy}
         disabled={mode === 'register' && !accepted}
       />
       <Button
-        label={mode === 'login' ? 'Нет аккаунта? Регистрация' : 'Уже есть аккаунт? Вход'}
+        label={mode === 'login' ? t('auth.toRegister') : t('auth.toLogin')}
         variant="quiet"
         onPress={() => {
           setNotice(null);
@@ -117,7 +121,7 @@ export function AuthScreen() {
       />
       {mode === 'login' && (
         <Button
-          label="Забыли пароль?"
+          label={t('auth.forgot')}
           variant="quiet"
           onPress={() => {
             setNotice(null);
