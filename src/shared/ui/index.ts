@@ -10,6 +10,13 @@ export {
   type NavLayout,
 } from './nav-layout';
 export { mixColors, withAlpha } from './color';
+export {
+  MIN_TARGET,
+  SMALL,
+  SMALL_HIT_SLOP,
+  type ControlSize,
+  type ControlTone,
+} from './control-size';
 export { THEME_MODES } from './theme-mode';
 export { GradeView } from './grade-view';
 export {

@@ -1,11 +1,19 @@
 // Холст схемы пути: заголовки этапов, рёбра ломаными, узлы. Один компонент на встроенную схему и на полноэкранный режим
 // (T-0132, T-0134): оба рисуют одинаково, различаются размером окна и тем, что подсвечено.
 // Без новых зависимостей: узлы и рёбра — View, прокрутка — ScrollView, масштаб — transform.
-import type { RefObject } from 'react';
-import { Pressable, ScrollView, Text, View, type LayoutChangeEvent } from 'react-native';
+import { useRef, type ReactNode, type RefObject } from 'react';
+import {
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+  type GestureResponderEvent,
+  type LayoutChangeEvent,
+} from 'react-native';
 import type { Graph, GraphEdge, GraphNode } from '@/shared/api';
 import { radius, space, useTheme } from '@/shared/ui';
 import {
+  dashBars,
   jitterOf,
   laneYs,
   lookOf,
@@ -20,6 +28,7 @@ import {
   type MasteryState,
   type SchemeLayout,
 } from '../model/scheme';
+import { isGhost } from '../model/overview';
 
 /** Короткие подписи для плашки и чипов: подробное объяснение остаётся в подписи узла для читалок экрана. */
 export const STATE_SHORT: Record<MasteryState, string> = {
@@ -59,6 +68,10 @@ export function SchemeCanvas({
   onViewport,
   outerRef,
   innerRef,
+  ports,
+  children,
+  onPinch,
+  onScroll,
 }: {
   graph: Graph;
   layout: SchemeLayout;
@@ -78,9 +91,47 @@ export function SchemeCanvas({
   onViewport?: (size: { width: number; height: number }) => void;
   outerRef?: RefObject<ScrollView | null>;
   innerRef?: RefObject<ScrollView | null>;
+  /** Метки портов у понятий раскрытого этапа: «← 2 · 3 →» (T-0143). */
+  ports?: Record<string, string>;
+  /** Слой поверх узлов и рёбер в координатах схемы: блоки этапов, стрелки-счётчики (T-0142). */
+  children?: ReactNode;
+  /** Щипок двумя пальцами: во сколько раз изменить масштаб (T-0145). */
+  onPinch?: (factor: number) => void;
+  /** Куда прокручен холст, в пикселях окна: нужно мини-карте (T-0147). */
+  onScroll?: (offset: { x: number; y: number }) => void;
 }) {
   const { colors } = useTheme();
   const lanes = laneYs(layout);
+  const offset = useRef({ x: 0, y: 0 });
+  const pinch = useRef<number | null>(null);
+  const touchDistance = (e: GestureResponderEvent): number | null => {
+    const t = e.nativeEvent.touches;
+    if (!t || t.length < 2) return null;
+    return Math.hypot(t[0]!.pageX - t[1]!.pageX, t[0]!.pageY - t[1]!.pageY);
+  };
+  const pinchHandlers = onPinch
+    ? {
+        onTouchStart: (e: GestureResponderEvent) => {
+          pinch.current = touchDistance(e);
+        },
+        onTouchMove: (e: GestureResponderEvent) => {
+          const d = touchDistance(e);
+          if (d === null) {
+            pinch.current = null;
+            return;
+          }
+          if (pinch.current !== null && pinch.current > 0) onPinch(d / pinch.current);
+          pinch.current = d;
+        },
+        onTouchEnd: () => {
+          pinch.current = null;
+        },
+      }
+    : {};
+  const report = (axis: 'x' | 'y', value: number) => {
+    offset.current[axis] = value;
+    onScroll?.({ ...offset.current });
+  };
   const focus = mode === 'focus' && highlight !== null;
   const visibleNode = (id: string) => !focus || highlight!.nodes.has(id);
 
@@ -108,6 +159,7 @@ export function SchemeCanvas({
   return (
     <View
       onLayout={(e: LayoutChangeEvent) => onViewport?.(e.nativeEvent.layout)}
+      {...pinchHandlers}
       style={{
         borderWidth: 1,
         borderColor: colors.line,
@@ -119,8 +171,19 @@ export function SchemeCanvas({
         ...(height ? { height } : { flex: 1 }),
       }}
     >
-      <ScrollView horizontal nestedScrollEnabled ref={outerRef}>
-        <ScrollView nestedScrollEnabled ref={innerRef}>
+      <ScrollView
+        horizontal
+        nestedScrollEnabled
+        ref={outerRef}
+        scrollEventThrottle={32}
+        onScroll={(e) => report('x', e.nativeEvent.contentOffset.x)}
+      >
+        <ScrollView
+          nestedScrollEnabled
+          ref={innerRef}
+          scrollEventThrottle={32}
+          onScroll={(e) => report('y', e.nativeEvent.contentOffset.y)}
+        >
           <View style={{ width, height: heightPx }}>
             <View
               style={{
@@ -190,7 +253,7 @@ export function SchemeCanvas({
                       pointerEvents="none"
                       style={{ position: 'absolute', left: 0, top: 0, opacity }}
                     >
-                      {route.bars.map((bar, i) => (
+                      {(mine ? dashBars(route.bars) : route.bars).map((bar, i) => (
                         <View
                           key={i}
                           style={{ position: 'absolute', ...bar, backgroundColor: color }}
@@ -230,10 +293,13 @@ export function SchemeCanvas({
                       isSelected={n.id === selected}
                       inPath={highlight?.nodes.has(n.id) ?? true}
                       hit={!filtering || matches(n, filters, states)}
+                      port={ports?.[n.id]}
+                      ghost={isGhost(n.id)}
                       onPress={() => onSelect(n.id === selected ? null : n.id)}
                     />
                   );
                 })}
+                {children}
               </View>
             </View>
           </View>
@@ -252,6 +318,8 @@ function NodeBox({
   isSelected,
   inPath,
   hit,
+  port,
+  ghost,
   onPress,
 }: {
   node: GraphNode;
@@ -262,6 +330,10 @@ function NodeBox({
   isSelected: boolean;
   inPath: boolean;
   hit: boolean;
+  /** Метка порта: сколько связей уходит в другие этапы. */
+  port?: string;
+  /** Призрак: сосед выбранного из свёрнутого этапа. */
+  ghost?: boolean;
   onPress: () => void;
 }) {
   const { colors } = useTheme();
@@ -299,7 +371,7 @@ function NodeBox({
         borderStyle: look.dashed ? 'dashed' : 'solid',
         borderColor: border,
         backgroundColor: state === 'locked' ? colors.surfaceAlt : colors.surface,
-        opacity: Math.min(look.opacity, hit ? 1 : 0.15, inPath ? 1 : 0.22),
+        opacity: Math.min(look.opacity, hit ? 1 : 0.15, inPath ? 1 : 0.22, ghost ? 0.7 : 1),
       }}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
@@ -320,9 +392,11 @@ function NodeBox({
         </Text>
       </View>
       {/* Метки на самом узле: уровень, необязательное, не проверено, своё, «сейчас». */}
-      {tags.length > 0 || state === 'learning' ? (
+      {tags.length > 0 || state === 'learning' || port ? (
         <Text numberOfLines={1} style={{ color: colors.muted, fontSize: 10 }}>
-          {[...(state === 'learning' ? ['сейчас'] : []), ...tags].join(' · ')}
+          {[...(port ? [port] : []), ...(state === 'learning' ? ['сейчас'] : []), ...tags].join(
+            ' · ',
+          )}
         </Text>
       ) : null}
       {state === 'learning' && (

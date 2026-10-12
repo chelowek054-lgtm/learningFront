@@ -10,10 +10,8 @@ import {
   Card,
   Field,
   font,
-  mixColors,
   Muted,
   Pill,
-  radius,
   space,
   useTheme,
 } from '@/shared/ui';
@@ -210,10 +208,7 @@ function PlateFrame({
   );
 }
 
-/**
- * Малая кнопка-ссылка на соседа: видимая высота 32 px, зона нажатия 44 px за счёт hitSlop,
- * цвет по роли — синий «нужно раньше», зелёный «открывает».
- */
+/** Кнопка-ссылка на соседа: малая кнопка общего набора (D-0003), цвет по роли связи. */
 export function NeighborButton({
   text,
   tone,
@@ -224,35 +219,25 @@ export function NeighborButton({
   onPress: () => void;
 }) {
   const { colors } = useTheme();
-  const [focused, setFocused] = useState(false);
-  const role = tone === 'info' ? colors.info : colors.ok;
   return (
-    <Pressable
-      onPress={onPress}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      hitSlop={{ top: 6, bottom: 6, left: 2, right: 2 }}
-      accessibilityRole="button"
+    <Button
+      size="sm"
+      tone={tone}
+      label={text}
       accessibilityLabel={`Перейти к «${text}»`}
-      style={{
-        minHeight: 32,
-        maxWidth: '100%',
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        paddingLeft: 10,
-        paddingRight: 8,
-        borderRadius: radius.pill,
-        borderWidth: focused ? 2 : 1,
-        borderColor: focused ? colors.focus : mixColors(role, colors.line, 0.45),
-        backgroundColor: mixColors(role, colors.surface, 0.09),
-      }}
-    >
-      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: role }} />
-      <Text style={{ flexShrink: 1, color: colors.ink, fontSize: 12.5, fontWeight: '600' }}>
-        {text}
-      </Text>
-      <Text style={{ color: colors.muted, fontSize: 14 }}>›</Text>
-    </Pressable>
+      leading={
+        <View
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: 3,
+            backgroundColor: tone === 'info' ? colors.info : colors.ok,
+          }}
+        />
+      }
+      trailing="›"
+      variant="quiet"
+      onPress={onPress}
+    />
   );
 }
