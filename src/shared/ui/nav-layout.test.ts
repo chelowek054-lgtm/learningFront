@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { isNavActive, navItemsFor, navLayoutFor } from './nav-layout';
+import {
+  isNavActive,
+  navItemsFor,
+  navKeyForPath,
+  navLayoutFor,
+  showsBottomNav,
+} from './nav-layout';
 import { mixColors, withAlpha } from './color';
 
 vi.mock('react-native', () => ({ useColorScheme: () => 'light' }));
@@ -61,5 +67,32 @@ describe('mixColors', () => {
   });
   it('12 % акцента на белом — светлая заливка', () => {
     expect(mixColors('#22C55E', '#FFFFFF', 0.12)).toBe('#E4F8EC');
+  });
+});
+
+describe('navKeyForPath', () => {
+  it('вкладки подсвечивают себя', () => {
+    expect(navKeyForPath('/')).toBe('index');
+    expect(navKeyForPath('/path')).toBe('path');
+    expect(navKeyForPath('/progress')).toBe('progress');
+    expect(navKeyForPath('/profile')).toBe('profile');
+  });
+  it('вложенные экраны относятся к ближайшей вкладке', () => {
+    expect(navKeyForPath('/library')).toBe('profile');
+    expect(navKeyForPath('/skill-profile')).toBe('path');
+    expect(navKeyForPath('/review')).toBe('index');
+    expect(navKeyForPath('/sources')).toBe('curator');
+  });
+  it('неизвестный путь — ничего', () => {
+    expect(navKeyForPath('/nowhere')).toBeNull();
+  });
+});
+
+describe('showsBottomNav', () => {
+  it('нижняя панель только на вкладках', () => {
+    expect(showsBottomNav('/')).toBe(true);
+    expect(showsBottomNav('/profile')).toBe(true);
+    expect(showsBottomNav('/library')).toBe(false);
+    expect(showsBottomNav('/review')).toBe(false);
   });
 });

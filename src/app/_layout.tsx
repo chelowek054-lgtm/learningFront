@@ -20,6 +20,7 @@ import {
 } from '@/shared/api';
 import { ModuleRegistryProvider } from '@/shared/lib';
 import { Lead, Muted, Screen, ThemeProvider, Title, useTheme } from '@/shared/ui';
+import { AppShell } from '@/widgets/app-nav';
 import { getModuleRegistry } from '@/widgets/module-registry';
 
 /**
@@ -72,19 +73,21 @@ function Gate() {
     <>
       <StatusBar style={dark ? 'light' : 'dark'} />
       <AutoSync />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.bg },
-          animation: 'slide_from_right',
-        }}
-      >
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="review" options={{ presentation: 'card' }} />
-        <Stack.Screen name="materials" options={{ presentation: 'card' }} />
-        <Stack.Screen name="placement" options={{ presentation: 'card' }} />
-        <Stack.Screen name="activities" options={{ presentation: 'card' }} />
-      </Stack>
+      <AppShell>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.bg },
+            animation: 'slide_from_right',
+          }}
+        >
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="review" options={{ presentation: 'card' }} />
+          <Stack.Screen name="materials" options={{ presentation: 'card' }} />
+          <Stack.Screen name="placement" options={{ presentation: 'card' }} />
+          <Stack.Screen name="activities" options={{ presentation: 'card' }} />
+        </Stack>
+      </AppShell>
     </>
   );
 }
