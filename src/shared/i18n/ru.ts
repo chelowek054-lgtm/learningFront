@@ -810,7 +810,7 @@ export const ru = {
     'Как закреплять понятия. Освоенность при смене не сбрасывается.',
   'courseCourseScreen.1': 'Сначала выберите предмет — курс строится под него.',
   'courseCourseScreen.2': 'Дальше',
-  'graphGraphScreen.1': "{subject ? `Карта знаний · ${title}` : 'Карта знаний'}",
+  'graphGraphScreen.1': 'Карта знаний · {title}',
   'graphGraphScreen.2': 'Сначала выберите предмет — карта строится под него.',
   'homeTodayTiles.1': '↑ выше',
   'homeTodayTiles.2': '↓ ниже',
