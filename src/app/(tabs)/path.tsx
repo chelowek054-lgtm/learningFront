@@ -7,39 +7,34 @@ import { CourseTree } from '@/features/graph-editor';
 import { useSession } from '@/entities/session';
 import { CourseScreen } from '@/pages/course';
 import { GraphScreen } from '@/pages/graph';
-import { Button, space, useTheme } from '@/shared/ui';
+import { Button, SegmentedControl, space, useTheme } from '@/shared/ui';
 import { SubjectBar } from '@/widgets/subject-bar';
+
+type PathMode = 'steps' | 'tree' | 'map';
+const MODES: readonly { value: PathMode; label: string }[] = [
+  { value: 'steps', label: 'Список' },
+  { value: 'tree', label: 'Дерево' },
+  { value: 'map', label: 'Карта' },
+];
 
 export default function PathTab() {
   const router = useRouter();
   const { colors } = useTheme();
-  const [mode, setMode] = useState<'steps' | 'tree' | 'map'>('steps');
+  const [mode, setMode] = useState<PathMode>('steps');
   const { subject } = useSession();
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <SubjectBar onOpenLibrary={() => router.push('/library')} />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, padding: space.md }}>
-        <Button
-          label="Шаги"
-          variant={mode === 'steps' ? 'primary' : 'quiet'}
-          onPress={() => setMode('steps')}
-        />
-        <Button
-          label="Дерево"
-          variant={mode === 'tree' ? 'primary' : 'quiet'}
-          onPress={() => setMode('tree')}
-        />
-        <Button
-          label="Карта"
-          variant={mode === 'map' ? 'primary' : 'quiet'}
-          onPress={() => setMode('map')}
-        />
-        <Button
-          label="Состав навыка"
-          variant="quiet"
-          onPress={() => router.push('/skill-profile')}
-        />
-        <Button label="Откуда знания" variant="quiet" onPress={() => router.push('/materials')} />
+      <View style={{ gap: space.sm, padding: space.md }}>
+        <SegmentedControl options={MODES} value={mode} onChange={setMode} />
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+          <Button
+            label="Состав навыка"
+            variant="quiet"
+            onPress={() => router.push('/skill-profile')}
+          />
+          <Button label="Откуда знания" variant="quiet" onPress={() => router.push('/materials')} />
+        </View>
       </View>
       <View style={{ flex: 1 }}>
         {mode === 'steps' ? (

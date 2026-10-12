@@ -28,6 +28,8 @@ export {
   Note,
   Label,
   Pill,
+  Chip,
+  SegmentedControl,
   Progress,
   TopBar,
   Empty,

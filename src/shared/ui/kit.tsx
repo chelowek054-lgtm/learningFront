@@ -269,6 +269,108 @@ export function Pill({
   );
 }
 
+/** Чип-фильтр: включён/выключён, зона нажатия не меньше 44 px, состояние видно не только цветом (галочка). */
+export function Chip({
+  text,
+  selected,
+  onPress,
+}: {
+  text: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  const { colors } = useTheme();
+  const [focused, setFocused] = useState(false);
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      onPress={onPress}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      style={{
+        minHeight: 44,
+        justifyContent: 'center',
+        paddingHorizontal: space.md + 2,
+        borderRadius: radius.pill,
+        borderWidth: focused ? 2 : 1,
+        borderColor: focused ? colors.focus : selected ? colors.accent : colors.line,
+        backgroundColor: selected ? mixColors(colors.accent, colors.surface, 0.12) : colors.surface,
+      }}
+    >
+      <Text
+        style={{
+          fontSize: font.small,
+          fontWeight: selected ? '600' : '400',
+          color: selected ? colors.accentText : colors.ink,
+        }}
+      >
+        {selected ? '✓ ' : ''}
+        {text}
+      </Text>
+    </Pressable>
+  );
+}
+
+/** Переключатель режима («Список / Дерево / Карта»): один выбран, остальные ведут к нему. */
+export function SegmentedControl<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: readonly { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  const { colors } = useTheme();
+  return (
+    <View
+      accessibilityRole="radiogroup"
+      style={{
+        flexDirection: 'row',
+        gap: 3,
+        padding: 3,
+        borderRadius: radius.md,
+        borderWidth: 1,
+        borderColor: colors.line,
+        backgroundColor: colors.surface,
+      }}
+    >
+      {options.map((o) => {
+        const active = o.value === value;
+        return (
+          <Pressable
+            key={o.value}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: active }}
+            onPress={() => onChange(o.value)}
+            style={{
+              flex: 1,
+              minHeight: 38,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: radius.md - 3,
+              backgroundColor: active
+                ? mixColors(colors.accent, colors.surface, 0.16)
+                : 'transparent',
+            }}
+          >
+            <Text
+              style={{
+                fontSize: font.small + 1,
+                fontWeight: '600',
+                color: active ? colors.accentText : colors.muted,
+              }}
+            >
+              {o.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 export function Progress({ value, tone = 'accent' }: { value: number; tone?: 'accent' | 'core' }) {
   const { colors } = useTheme();
   const pct = Math.max(0, Math.min(1, value));
