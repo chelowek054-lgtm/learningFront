@@ -10,7 +10,15 @@ import {
   type SubjectStatus,
   type UserSubject,
 } from '@/shared/api';
-import { Button, Card, Empty, Label, Muted, Note, Pill, Screen, TopBar } from '@/shared/ui';
+import { View } from 'react-native';
+import { Button, Card, Empty, Label, Muted, Note, Pill, Screen, space, TopBar } from '@/shared/ui';
+
+const STATUS_TONE: Record<SubjectStatus, 'accent' | 'info' | 'muted'> = {
+  building: 'info',
+  active: 'accent',
+  paused: 'muted',
+  reached: 'accent',
+};
 
 const STATUS_TEXT: Record<SubjectStatus, string> = {
   building: 'собирается',
@@ -29,6 +37,8 @@ export function LibraryScreen({
   const { user, subject, refresh } = useSession();
   const [items, setItems] = useState<UserSubject[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Удаление в два шага: сперва вопрос, потом действие — предмет с картой не возвращается.
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -83,28 +93,48 @@ export function LibraryScreen({
       ) : items.length === 0 ? (
         <Empty text="Пока пусто. Добавьте первый предмет." />
       ) : (
-        items.map((s) => (
-          <Card key={s.id}>
-            <Label>{s.title}</Label>
-            <Pill text={STATUS_TEXT[s.status]} tone={s.status === 'active' ? 'accent' : 'muted'} />
-            {subject?.id === s.domain && <Muted>Сейчас открыт</Muted>}
-            <Button label="Открыть" onPress={() => void open(s)} />
-            <Button
-              label={s.status === 'paused' ? 'Вернуть в работу' : 'Поставить на паузу'}
-              variant="quiet"
-              onPress={() =>
-                void act(() =>
-                  patchSubject(s.id, { status: s.status === 'paused' ? 'active' : 'paused' }),
-                )
-              }
-            />
-            <Button
-              label="Удалить"
-              variant="danger"
-              onPress={() => void act(() => deleteSubject(s.id))}
-            />
-          </Card>
-        ))
+        items.map((s) => {
+          const current = subject?.id === s.domain;
+          return (
+            <Card key={s.id} tone={current ? 'accent' : 'plain'}>
+              <Label>{s.title}</Label>
+              <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
+                <Pill text={STATUS_TEXT[s.status]} tone={STATUS_TONE[s.status]} />
+                {current && <Pill text="сейчас открыт" tone="accent" />}
+              </View>
+              {!current && <Button label="Открыть" onPress={() => void open(s)} />}
+              <Button
+                label={s.status === 'paused' ? 'Вернуть в работу' : 'Поставить на паузу'}
+                variant="quiet"
+                onPress={() =>
+                  void act(() =>
+                    patchSubject(s.id, { status: s.status === 'paused' ? 'active' : 'paused' }),
+                  )
+                }
+              />
+              {confirmId === s.id ? (
+                <>
+                  <Note tone="danger">
+                    Удалить «{s.title}»? Карта и прогресс по предмету пропадут.
+                  </Note>
+                  <Button
+                    label="Да, удалить"
+                    variant="danger"
+                    onPress={() =>
+                      void act(async () => {
+                        await deleteSubject(s.id);
+                        setConfirmId(null);
+                      })
+                    }
+                  />
+                  <Button label="Отмена" variant="quiet" onPress={() => setConfirmId(null)} />
+                </>
+              ) : (
+                <Button label="Удалить" variant="quiet" onPress={() => setConfirmId(s.id)} />
+              )}
+            </Card>
+          );
+        })
       )}
       <Button label="Новый предмет" onPress={() => void addNew()} />
     </Screen>

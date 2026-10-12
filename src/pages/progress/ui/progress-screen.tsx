@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 import {
   errorLogClosure,
+  isEmptyProgress,
   knownShare,
   retention,
   rubricGrowth,
@@ -17,7 +18,19 @@ import {
 } from '@/entities/progress';
 import { useSession } from '@/entities/session';
 import { getLocalStore, masteryMap } from '@/shared/api';
-import { Body, Card, Label, Lead, Muted, Progress, Screen, TopBar } from '@/shared/ui';
+import {
+  Body,
+  Card,
+  Display,
+  Label,
+  Lead,
+  Muted,
+  Pill,
+  Progress,
+  Screen,
+  Title,
+  TopBar,
+} from '@/shared/ui';
 
 interface Snapshot {
   retention: Retention;
@@ -83,6 +96,16 @@ export function ProgressScreen({ onBack }: { onBack?: () => void }) {
     <Screen>
       <TopBar title="Прогресс" onBack={onBack} />
 
+      {isEmptyProgress(snap, known) && (
+        <Card tone="accent">
+          <Label>Пока пусто</Label>
+          <Title>Здесь появятся ваши результаты</Title>
+          <Muted>
+            Освоенные понятия, рост по критериям и серия дней — после первого пройденного шага.
+          </Muted>
+        </Card>
+      )}
+
       <Card>
         <Label>Граница знаний</Label>
         {mapState === 'loading' && <ActivityIndicator />}
@@ -92,9 +115,10 @@ export function ProgressScreen({ onBack }: { onBack?: () => void }) {
         {mapState === 'ready' && !known && <Muted>В графе пока нет тем.</Muted>}
         {mapState === 'ready' && known && (
           <>
-            <Lead>
-              Освоено {known.known} из {known.total} тем
-            </Lead>
+            <Display>
+              {known.known} из {known.total}
+            </Display>
+            <Muted>тем освоено</Muted>
             <Progress value={known.rate} tone="core" />
           </>
         )}
@@ -141,6 +165,12 @@ export function ProgressScreen({ onBack }: { onBack?: () => void }) {
 
       <Card>
         <Label>Регулярность</Label>
+        {snap.streak > 0 && (
+          <Pill
+            text={`${snap.streak} ${plural(snap.streak, ['день', 'дня', 'дней'])} подряд`}
+            tone="accent"
+          />
+        )}
         <Lead>
           {snap.streak > 0
             ? `Серия: ${snap.streak} ${plural(snap.streak, ['день', 'дня', 'дней'])} подряд`

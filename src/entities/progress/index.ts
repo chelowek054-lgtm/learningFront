@@ -1,5 +1,6 @@
 export {
   errorLogClosure,
+  isEmptyProgress,
   knownShare,
   retention,
   rubricGrowth,

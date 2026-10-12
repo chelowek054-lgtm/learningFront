@@ -13,8 +13,10 @@ import {
   Empty,
   Field,
   Label,
+  Lead,
   Muted,
   Note,
+  Pill,
   radius,
   Screen,
   space,
@@ -115,8 +117,11 @@ export function ProfileScreen({
 
       <Card>
         <Label>Аккаунт</Label>
-        <Muted>{user?.email ?? 'без email'}</Muted>
-        {user?.is_superuser && <Note tone="warn">Права администратора</Note>}
+        <Lead>{user?.email ?? 'без email'}</Lead>
+        <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
+          <Pill text={online ? 'онлайн' : 'офлайн'} tone={online ? 'accent' : 'muted'} />
+          {user?.is_superuser && <Pill text="администратор" tone="warn" />}
+        </View>
       </Card>
 
       <Card>
@@ -136,8 +141,9 @@ export function ProfileScreen({
       </Card>
 
       {onOpenLibrary && (
-        <Card onPress={onOpenLibrary}>
+        <Card tone="accent" onPress={onOpenLibrary}>
           <Label>Моя библиотека</Label>
+          {subject && <Lead>{subject.title}</Lead>}
           <Muted>Все ваши предметы: открыть, поставить на паузу, добавить новый</Muted>
         </Card>
       )}

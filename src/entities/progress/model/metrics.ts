@@ -169,3 +169,22 @@ export function streakDays(responses: Response[], now: Date = new Date()): numbe
   }
   return streak;
 }
+
+/** Ничего ещё не посчитано: нет повторений, ошибок, работ, серии и освоенных тем. */
+export function isEmptyProgress(
+  snap: {
+    retention: Retention;
+    closure: ErrorLogClosure;
+    growth: RubricGrowth[];
+    streak: number;
+  },
+  known: KnownShare | null,
+): boolean {
+  return (
+    snap.retention.rate === null &&
+    snap.closure.rate === null &&
+    snap.growth.length === 0 &&
+    snap.streak === 0 &&
+    !(known && known.known > 0)
+  );
+}
