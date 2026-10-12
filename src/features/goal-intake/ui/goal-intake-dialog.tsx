@@ -3,9 +3,10 @@
 // Уточнение требует сети и модели: если их нет, вызывающий получает `onFallback` и показывает
 // прямую форму ввода.
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { View } from 'react-native';
 import { MASTERY_TARGETS, toSubjectId } from '@/entities/session';
 import {
+  NetworkError,
   clarifyGoal,
   confirmGoal,
   getGoalVolume,
@@ -14,18 +15,7 @@ import {
   type GoalQuestion,
   type GoalSummary,
 } from '@/shared/api';
-import {
-  Body,
-  Button,
-  Field,
-  font,
-  Label,
-  Muted,
-  Note,
-  radius,
-  space,
-  useTheme,
-} from '@/shared/ui';
+import { Body, Button, Card, Display, Field, Label, Muted, Note, Title, space } from '@/shared/ui';
 import {
   answeredCount,
   assumedFields,
@@ -40,6 +30,10 @@ import {
   volumeLine,
 } from '../model/dialog';
 
+import { failureKind, stepOf, type FailureKind } from '../model/steps';
+import { ChoiceRow } from './choice-chip';
+import { StepHeader } from './step-header';
+
 type Stage = 'ask' | 'clarify' | 'recap' | 'volume';
 
 export function GoalIntakeDialog({
@@ -49,9 +43,9 @@ export function GoalIntakeDialog({
 }: {
   initialText?: string;
   onConfirmed: (summary: GoalSummary) => void | Promise<void>;
-  onFallback: () => void;
+  /** Уточнять нечем: форма заменяется прямым вводом. `kind` — нет сети или не ответил помощник. */
+  onFallback: (kind?: FailureKind) => void;
 }) {
-  const { colors } = useTheme();
   const [stage, setStage] = useState<Stage>('ask');
   const [text, setText] = useState(initialText);
   const [questions, setQuestions] = useState<GoalQuestion[]>([]);
@@ -63,6 +57,8 @@ export function GoalIntakeDialog({
   const [hoursText, setHoursText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Вопросы не получены, но сеть есть: цель сохранена, можно повторить или идти без уточнений.
+  const [askFailed, setAskFailed] = useState(false);
 
   async function ask() {
     setBusy(true);
@@ -71,10 +67,15 @@ export function GoalIntakeDialog({
       const r = await clarifyGoal(text.trim());
       setQuestions(r.questions);
       setValues({});
+      setAskFailed(false);
       setStage('clarify');
-    } catch {
-      // Нет сети или модели: уточнять нечем, остаётся прямая форма.
-      onFallback();
+    } catch (e) {
+      // Нет сети — остаётся прямая форма; сеть есть, а помощник не ответил — повтор или без уточнений.
+      if (failureKind(e instanceof NetworkError) === 'offline') onFallback('offline');
+      else {
+        setAskFailed(true);
+        setStage('clarify');
+      }
     } finally {
       setBusy(false);
     }
@@ -122,7 +123,12 @@ export function GoalIntakeDialog({
   if (stage === 'ask') {
     return (
       <View style={{ gap: space.md }}>
-        <Label>Что хотите изучить или повторить?</Label>
+        <StepHeader step={stepOf('ask')} />
+        <Display>Что хотите изучить?</Display>
+        <Muted>
+          Своими словами: навык, предмет, язык. Дальше два-три уточняющих вопроса — их можно
+          пропустить.
+        </Muted>
         <Field
           placeholder="например: машинное обучение"
           autoFocus
@@ -132,7 +138,11 @@ export function GoalIntakeDialog({
         />
         {error && <Note tone="danger">{error}</Note>}
         <Button label="Дальше" onPress={() => void ask()} busy={busy} disabled={!canAsk(text)} />
-        <Button label="Ввести напрямую" variant="quiet" onPress={onFallback} />
+        <Button
+          label="Ввести область и цель напрямую"
+          variant="quiet"
+          onPress={() => onFallback()}
+        />
       </View>
     );
   }
@@ -140,7 +150,21 @@ export function GoalIntakeDialog({
   if (stage === 'clarify') {
     return (
       <View style={{ gap: space.md }}>
-        <Muted>Пара уточнений, чтобы построить путь точнее. Отвечать на всё не обязательно.</Muted>
+        <StepHeader step={stepOf('clarify')} />
+        {askFailed ? (
+          <Card>
+            <Title>Не удалось задать уточнения</Title>
+            <Muted>
+              Помощник не ответил. Ваша цель сохранена: «{text.trim()}». Повторите или идите дальше
+              без уточнений.
+            </Muted>
+            <Button label="Повторить" onPress={() => void ask()} busy={busy} />
+          </Card>
+        ) : (
+          <Muted>
+            Пара уточнений, чтобы построить путь точнее. Отвечать на всё не обязательно.
+          </Muted>
+        )}
         {questions.map((q) => (
           <View key={q.id} style={{ gap: space.xs }}>
             <Label>{q.text}</Label>
@@ -156,7 +180,9 @@ export function GoalIntakeDialog({
         <Button
           label={
             answeredCount(collectAnswers(questions, values)) === 0
-              ? 'Пропустить уточнения'
+              ? askFailed
+                ? 'Пропустить уточнения и продолжить'
+                : 'Пропустить уточнения'
               : 'Подвести итог'
           }
           onPress={() => void recap()}
@@ -187,7 +213,8 @@ export function GoalIntakeDialog({
     };
     return (
       <View style={{ gap: space.md }}>
-        <Label>Что лежит под этой целью</Label>
+        <StepHeader step={stepOf('volume')} />
+        <Title>Что лежит под этой целью</Title>
         <Muted>Чтобы дойти до цели, нужны базовые области. Выберите, насколько глубоко идти.</Muted>
         <Body>Полный путь: {volumeLine(full)}</Body>
         <Body>Интуитивный: {volumeLine(intuitive)} — без глубоких деталей</Body>
@@ -206,7 +233,8 @@ export function GoalIntakeDialog({
 
   return (
     <View style={{ gap: space.md }}>
-      <Label>Правильно ли понята цель</Label>
+      <StepHeader step={stepOf('recap')} />
+      <Title>Правильно ли понята цель</Title>
       <Body>{recapLine(summary)}</Body>
       <Field
         placeholder="область"
@@ -258,36 +286,17 @@ export function GoalIntakeDialog({
 
       <Label>До какого уровня</Label>
       <View style={{ gap: space.sm }}>
-        {MASTERY_TARGETS.map((t) => {
-          const active = summary.level === t.bloom;
-          return (
-            <Pressable
-              key={t.bloom}
-              onPress={() => {
-                setLevelChosen(true);
-                setSummary({ ...summary, level: t.bloom });
-              }}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: active }}
-              style={{
-                paddingVertical: space.md,
-                paddingHorizontal: space.md,
-                borderRadius: radius.sm,
-                backgroundColor: active ? colors.accent : colors.surfaceAlt,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: font.body,
-                  fontWeight: active ? '600' : '400',
-                  color: active ? colors.onAccent : colors.muted,
-                }}
-              >
-                {t.label}
-              </Text>
-            </Pressable>
-          );
-        })}
+        {MASTERY_TARGETS.map((t) => (
+          <ChoiceRow
+            key={t.bloom}
+            label={t.label}
+            active={summary.level === t.bloom}
+            onPress={() => {
+              setLevelChosen(true);
+              setSummary({ ...summary, level: t.bloom });
+            }}
+          />
+        ))}
       </View>
 
       <Muted>Та ли это область? Пока вы не подтвердите, карта не строится.</Muted>

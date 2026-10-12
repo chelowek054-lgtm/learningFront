@@ -5,28 +5,23 @@
 // заполнить чужие поля; пришедший за третьим предметом сразу понимал, что
 // приложение не про него.
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { View } from 'react-native';
 
 import { MASTERY_TARGETS, toSubjectId, useSession, type TargetBloom } from '@/entities/session';
-import { directIntake, GoalIntakeDialog, subjectOf } from '@/features/goal-intake';
+import {
+  ChoiceRow,
+  directIntake,
+  FAILURE_TEXT,
+  GoalIntakeDialog,
+  StepHeader,
+  subjectOf,
+  type FailureKind,
+} from '@/features/goal-intake';
 import { startGraphBuild, updateProfile, type GoalSummary } from '@/shared/api';
 import { useIsOnline } from '@/shared/lib';
-import {
-  Button,
-  Display,
-  Field,
-  font,
-  Label,
-  Muted,
-  Note,
-  radius,
-  Screen,
-  space,
-  useTheme,
-} from '@/shared/ui';
+import { Button, Card, Display, Field, Label, Muted, Note, Screen, space } from '@/shared/ui';
 
 export function OnboardingScreen() {
-  const { colors } = useTheme();
   const { refresh, subject, user } = useSession();
   // При смене предмета подставляем прежние значения — не заставлять набирать заново.
   const [title, setTitle] = useState(subject?.title ?? '');
@@ -42,6 +37,8 @@ export function OnboardingScreen() {
   const online = useIsOnline();
   // Уточняющие вопросы требуют сети и модели; без них — прямая форма, как раньше.
   const [direct, setDirect] = useState(false);
+  // Почему показана прямая форма: нет сети или помощник не ответил; null — человек выбрал её сам.
+  const [why, setWhy] = useState<FailureKind | null>(null);
 
   const subjectTitle = title.trim();
   const ready = subjectTitle.length > 1;
@@ -93,7 +90,10 @@ export function OnboardingScreen() {
         <GoalIntakeDialog
           initialText={subject?.title ?? ''}
           onConfirmed={confirmed}
-          onFallback={() => setDirect(true)}
+          onFallback={(kind) => {
+            setWhy(kind ?? null);
+            setDirect(true);
+          }}
         />
       </Screen>
     );
@@ -101,10 +101,18 @@ export function OnboardingScreen() {
 
   return (
     <Screen>
-      <View style={{ gap: space.xs, marginTop: space.xxl }}>
+      <StepHeader step={1} />
+      <View style={{ gap: space.xs }}>
         <Display>С чего начнём</Display>
         <Muted>Путь строится под предмет — назовите его своими словами.</Muted>
       </View>
+      {(!online || why) && (
+        <Card>
+          <Label>{online ? 'Помощник недоступен' : 'Нет сети'}</Label>
+          <Muted>{FAILURE_TEXT[!online ? 'offline' : (why ?? 'model')]}</Muted>
+          <Muted>Черновик сохранится в профиле, а построение пойдёт, когда связь вернётся.</Muted>
+        </Card>
+      )}
 
       <Label>Что хотите изучать</Label>
       <Field
@@ -136,33 +144,14 @@ export function OnboardingScreen() {
       {/* Те же формулировки, что на экране проверки уровня: человек читает их
           как свои намерения, а не как ступени таксономии. */}
       <View style={{ gap: space.sm }}>
-        {MASTERY_TARGETS.map((t) => {
-          const active = target === t.bloom;
-          return (
-            <Pressable
-              key={t.bloom}
-              onPress={() => setTarget(t.bloom)}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: active }}
-              style={{
-                paddingVertical: space.md,
-                paddingHorizontal: space.md,
-                borderRadius: radius.sm,
-                backgroundColor: active ? colors.accent : colors.surfaceAlt,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: font.body,
-                  fontWeight: active ? '600' : '400',
-                  color: active ? colors.onAccent : colors.muted,
-                }}
-              >
-                {t.label}
-              </Text>
-            </Pressable>
-          );
-        })}
+        {MASTERY_TARGETS.map((t) => (
+          <ChoiceRow
+            key={t.bloom}
+            label={t.label}
+            active={target === t.bloom}
+            onPress={() => setTarget(t.bloom)}
+          />
+        ))}
       </View>
 
       {error && <Note tone="danger">{error}</Note>}

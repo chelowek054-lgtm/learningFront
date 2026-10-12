@@ -66,8 +66,8 @@ export function AuthScreen() {
   return (
     <Screen>
       <View style={{ gap: space.xs, marginTop: space.xxl }}>
-        <Display>Praxis</Display>
-        <Muted>{mode === 'login' ? 'Вход' : 'Регистрация'}</Muted>
+        <Display>{mode === 'login' ? 'Войти в Praxis' : 'Создать аккаунт'}</Display>
+        <Muted>Платформа собирает ваши знания в карту под вашу цель.</Muted>
       </View>
 
       <Field
@@ -94,7 +94,7 @@ export function AuthScreen() {
           onPress={() => setAccepted(!accepted)}
           accessibilityRole="checkbox"
           accessibilityState={{ checked: accepted }}
-          style={{ flexDirection: 'row', gap: space.sm, alignItems: 'center' }}
+          style={{ flexDirection: 'row', gap: space.sm, alignItems: 'center', minHeight: 44 }}
         >
           <Muted>{accepted ? '☑' : '☐'} Согласен с политикой хранения и обработки данных</Muted>
         </Pressable>
