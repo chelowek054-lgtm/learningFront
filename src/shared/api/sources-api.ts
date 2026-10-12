@@ -31,6 +31,11 @@ export interface SourceItem {
   level: string | null;
   license: string | null;
   originUrl: string | null;
+  /** Язык текста, уровень доверия A/B/C и отказ воронки: администратор видит разбивку по языкам (R-0080). */
+  lang?: string | null;
+  trustTier?: string | null;
+  trustReasons?: string[];
+  quarantined?: boolean;
   createdAt: string | null;
   progress: SourceProgress;
 }

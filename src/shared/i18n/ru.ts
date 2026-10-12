@@ -1063,6 +1063,7 @@ export const ru = {
   'errors.unknown': 'Неизвестная ошибка',
   'errors.outdated': 'Версия приложения устарела: обновите его, чтобы продолжить.',
   'errors.networkAt': 'Нет связи с сервером ({url})',
+  'sourcesSourcesPanel.quarantine': 'Источник в карантине, в граф не идёт: {reasons}',
 } as const satisfies Dictionary<string>;
 
 export type Key = keyof typeof ru;
