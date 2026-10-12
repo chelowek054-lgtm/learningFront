@@ -48,6 +48,9 @@ export const STATE_TEXT: Record<MasteryState, string> = {
 /** `all` — весь граф, лишнее приглушено; `focus` — только выбранное и его связи. */
 export type CanvasMode = 'all' | 'focus';
 
+// userSelect есть у веба, но не в типах ViewStyle: добавляем отдельным объектом, чтобы не ломать tsc.
+const WEB_NO_SELECT = { userSelect: 'none' };
+
 const PAD = space.lg;
 
 export function SchemeCanvas({
@@ -167,7 +170,7 @@ export function SchemeCanvas({
         backgroundColor: colors.surfaceAlt,
         overflow: 'hidden',
         // Выделение текста при перетаскивании холста мешает: узлы — кнопки, а не текст.
-        userSelect: 'none',
+        ...(WEB_NO_SELECT as object),
         ...(height ? { height } : { flex: 1 }),
       }}
     >
