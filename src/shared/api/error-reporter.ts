@@ -4,6 +4,7 @@
 // отправке отчёта породил бы новый отчёт и цикл.
 import { api } from './http';
 import { APP_VERSION } from './app-version';
+import { translate } from '../i18n/translate';
 
 export interface ErrorReport {
   message: string;
@@ -32,7 +33,7 @@ export function buildReport(
         ? ''
         : safeJson(error);
   return {
-    message: (message || 'Неизвестная ошибка').slice(0, MAX_MESSAGE),
+    message: (message || translate('errors.unknown')).slice(0, MAX_MESSAGE),
     stack: isError && error.stack ? error.stack.slice(0, MAX_STACK) : undefined,
     appVersion,
     fatal,

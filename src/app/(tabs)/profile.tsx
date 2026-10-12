@@ -7,6 +7,7 @@ export default function ProfileTab() {
     <ProfileScreen
       onOpenCurator={() => router.push('/curator')}
       onOpenLibrary={() => router.push('/library')}
+      onOpenProblems={() => router.push('/problems')}
     />
   );
 }

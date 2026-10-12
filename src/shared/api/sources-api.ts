@@ -3,6 +3,7 @@
 import { api, ApiError, apiUrl, CLIENT_HEADERS, getBaseUrl, NetworkError } from './http';
 import type { PickedFile } from './materials-api';
 import { getToken } from './token';
+import { translate } from '../i18n/translate';
 
 export type IngestStatus = 'new' | 'queued' | 'running' | 'done' | 'failed';
 
@@ -90,11 +91,11 @@ export const fillSourceGaps = (
 
 /** Причина отказа сервера по-русски: статус человеку ничего не говорит, а текст сервера понятен. */
 export function sourceErrorMessage(e: unknown): string {
-  if (e instanceof NetworkError) return 'Нет связи с сервером: загрузить файл можно только онлайн.';
+  if (e instanceof NetworkError) return translate('upload.network');
   if (e instanceof ApiError) {
-    if (e.status === 401) return 'Нужно войти заново.';
-    if (e.status === 403) return 'Загружать источники может только администратор.';
-    if (e.status === 413) return 'Файл слишком большой.';
+    if (e.status === 401) return translate('errors.unauthorized');
+    if (e.status === 403) return translate('upload.adminOnly');
+    if (e.status === 413) return translate('errors.tooLarge');
     try {
       const detail = (JSON.parse(e.message) as { detail?: unknown }).detail;
       if (typeof detail === 'string' && detail) return detail;
@@ -102,7 +103,7 @@ export function sourceErrorMessage(e: unknown): string {
       /* ответ не JSON: общее сообщение ниже */
     }
   }
-  return 'Не удалось загрузить файл. Попробуйте ещё раз.';
+  return translate('upload.failed');
 }
 
 /** Загрузка с прогрессом (XHR: fetch не отдаёт прогресс отправки). Вернёт прогресс разбора. */
@@ -142,7 +143,7 @@ export async function uploadSource(
         try {
           resolve(JSON.parse(xhr.responseText));
         } catch {
-          reject(new ApiError(xhr.status, 'Ответ сервера не разобран'));
+          reject(new ApiError(xhr.status, translate('errors.badResponse')));
         }
       } else {
         reject(new ApiError(xhr.status, xhr.responseText));

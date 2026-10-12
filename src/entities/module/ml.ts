@@ -1,6 +1,7 @@
 // Метаданные модуля «Программирование/ML». ЧИСТЫЕ данные — без рендереров/RN.
 // Типы Activity из docs/architecture/03-functional.md §2.1.
 import type { ActivityTypeDef } from '@/shared/engine';
+import { translate } from '../../shared/i18n/translate';
 
 export const ML_MODULE_ID = 'ml';
 export const ML_MODULE_TITLE = 'Программирование / ML';
@@ -10,30 +11,46 @@ export const ML_MODULE_TITLE = 'Программирование / ML';
 export const mlActivityTypes: ActivityTypeDef[] = [
   {
     type: 'material_read',
-    title: 'Чтение материала',
-    hint: 'Разобрать текст и отметить непонятное',
+    get title() {
+      return translate('act.material_read.title');
+    },
+    get hint() {
+      return translate('act.material_read.hint');
+    },
     connectivity: 'offline',
     payloadSchema: {},
   },
   {
     type: 'concept_recall',
-    title: 'Вспомнить',
-    hint: 'Ответить своими словами, не подглядывая',
+    get title() {
+      return translate('act.concept_recall.title');
+    },
+    get hint() {
+      return translate('act.concept_recall.hint');
+    },
     connectivity: 'online',
     payloadSchema: {},
     producesErrorLog: true,
   },
   {
     type: 'concept_srs',
-    title: 'Повторение понятий',
-    hint: 'Короткие карточки по интервалам',
+    get title() {
+      return translate('act.concept_srs.title');
+    },
+    get hint() {
+      return translate('act.concept_srs.hint');
+    },
     connectivity: 'offline',
     payloadSchema: {},
   },
   {
     type: 'code_task',
-    title: 'Задача на код',
-    hint: 'Написать решение и получить разбор',
+    get title() {
+      return translate('act.code_task.title');
+    },
+    get hint() {
+      return translate('act.code_task.hint');
+    },
     connectivity: 'online',
     payloadSchema: {},
     producesErrorLog: true,

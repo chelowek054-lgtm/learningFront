@@ -2,7 +2,7 @@
 // Раньше выход прятался в углу главной — теперь у него есть своё место.
 import { useEffect, useState } from 'react';
 import { targetLabel, useSession } from '@/entities/session';
-import { deleteAccount, getLocalStore, syncNow, updateProfile } from '@/shared/api';
+import { deleteAccount, getLocalStore, saveLangs, syncNow, updateProfile } from '@/shared/api';
 import { PushSettings } from '@/features/push-settings';
 import { StudyMethodPicker } from '@/features/study-method';
 import { useIsOnline } from '@/shared/lib';
@@ -25,7 +25,14 @@ import {
   useTheme,
   THEME_MODES,
 } from '@/shared/ui';
-import { LANGUAGES, LANGUAGE_NAMES, useI18n } from '@/shared/i18n';
+import {
+  deviceLocale,
+  LANGUAGES,
+  LANGUAGE_NAMES,
+  pickLanguage,
+  useI18n,
+  type Lang,
+} from '@/shared/i18n';
 
 function ThemePicker() {
   const { colors, mode, setMode } = useTheme();
@@ -69,15 +76,52 @@ function ThemePicker() {
 /** Язык интерфейса: «как на устройстве» или явный выбор; запоминается на устройстве (R-0081). */
 function LanguagePicker() {
   const { t, lang, manual, setLang } = useI18n();
+  // Сервер отдаёт уведомления, письма и перевод узлов на языке интерфейса; сообщаем ему о выборе (T-0179).
+  const choose = (next: Lang | null) => {
+    setLang(next);
+    void saveLangs({ uiLang: next ?? pickLanguage(deviceLocale()) }).catch(() => undefined);
+  };
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
-      <Chip text={t('profile.languageAuto')} selected={!manual} onPress={() => setLang(null)} />
+      <Chip text={t('profile.languageAuto')} selected={!manual} onPress={() => choose(null)} />
       {LANGUAGES.map((code) => (
         <Chip
           key={code}
           text={LANGUAGE_NAMES[code]}
           selected={manual && lang === code}
-          onPress={() => setLang(code)}
+          onPress={() => choose(code)}
+        />
+      ))}
+    </View>
+  );
+}
+
+/** Язык изучения: теория, названия и задания узлов на нём; «как интерфейс» — отдельного выбора нет (T-0174). */
+function StudyLanguagePicker() {
+  const { t } = useI18n();
+  const { user, refresh } = useSession();
+  const current = typeof user?.profile?.studyLang === 'string' ? user.profile.studyLang : null;
+  const choose = async (next: Lang | null) => {
+    try {
+      await saveLangs({ studyLang: next });
+      await refresh();
+    } catch {
+      /* нет связи: выбор не сохранён, остаётся прежний */
+    }
+  };
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+      <Chip
+        text={t('profile.studyLanguageSame')}
+        selected={current === null}
+        onPress={() => void choose(null)}
+      />
+      {LANGUAGES.map((code) => (
+        <Chip
+          key={code}
+          text={LANGUAGE_NAMES[code]}
+          selected={current === code}
+          onPress={() => void choose(code)}
         />
       ))}
     </View>
@@ -87,9 +131,11 @@ function LanguagePicker() {
 export function ProfileScreen({
   onOpenCurator,
   onOpenLibrary,
+  onOpenProblems,
 }: {
   onOpenCurator?: () => void;
   onOpenLibrary?: () => void;
+  onOpenProblems?: () => void;
 }) {
   const { t } = useI18n();
   const { user, logout, refresh, subject } = useSession();
@@ -179,6 +225,13 @@ export function ProfileScreen({
         </Card>
       )}
 
+      {user?.is_superuser && onOpenProblems && (
+        <Card onPress={onOpenProblems}>
+          <Label>{t('problems.title')}</Label>
+          <Muted>{t('problems.hint')}</Muted>
+        </Card>
+      )}
+
       <PushSettings />
 
       <Card>
@@ -194,6 +247,9 @@ export function ProfileScreen({
       <Card>
         <Label>{t('profile.language')}</Label>
         <LanguagePicker />
+        <Label>{t('profile.studyLanguage')}</Label>
+        <StudyLanguagePicker />
+        <Muted>{t('profile.studyLanguageHint')}</Muted>
       </Card>
 
       <Card>

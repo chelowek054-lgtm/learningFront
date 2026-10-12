@@ -2,6 +2,7 @@
 import { APP_VERSION } from './app-version';
 import { ClientOutdatedError, notifyClientOutdated, parseOutdatedBody } from './client-outdated';
 import { getToken } from './token';
+import { translate } from '../i18n/translate';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 
@@ -18,12 +19,25 @@ export const apiUrl = (path: string): string => `${BASE_URL}${API_PREFIX}${path}
 export const CLIENT_HEADERS = { 'X-Client-Version': APP_VERSION } as const;
 
 export class ApiError extends Error {
+  /** Код ошибки и параметры, если сервер их прислал: текст выбирает клиент на языке человека (T-0179). */
+  code?: string;
+  params?: Record<string, unknown>;
+
   constructor(
     public status: number,
     message: string,
   ) {
     super(message);
     this.name = 'ApiError';
+    try {
+      const body = JSON.parse(message) as { code?: unknown; params?: unknown };
+      if (typeof body.code === 'string') this.code = body.code;
+      if (body.params && typeof body.params === 'object') {
+        this.params = body.params as Record<string, unknown>;
+      }
+    } catch {
+      /* тело не JSON: кода нет */
+    }
   }
 }
 
@@ -33,7 +47,7 @@ export class NetworkError extends Error {
     public url: string,
     cause: unknown,
   ) {
-    super(`Нет связи с сервером (${url})`);
+    super(translate('errors.networkAt', { url }));
     this.name = 'NetworkError';
     this.cause = cause;
   }

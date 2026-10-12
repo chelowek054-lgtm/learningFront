@@ -60,6 +60,7 @@ export function navKeyForPath(pathname: string): string | null {
     ['/placement', 'index'],
     ['/curator', 'curator'],
     ['/sources', 'curator'],
+    ['/problems', 'curator'],
     ['/activities', 'curator'],
   ];
   if (pathname === '/') return 'index';
