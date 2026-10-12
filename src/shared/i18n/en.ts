@@ -1052,4 +1052,6 @@ export const en: Dictionary<Key> = {
   'errors.unknown': 'Unknown error',
   'errors.outdated': 'This app version is outdated: update it to continue.',
   'errors.networkAt': 'No connection to the server ({url})',
+  'sourcesSourcesPanel.quarantine':
+    'The source is quarantined and does not enter the graph: {reasons}',
 };

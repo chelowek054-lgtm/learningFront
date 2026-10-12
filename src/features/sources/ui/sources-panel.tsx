@@ -137,10 +137,18 @@ export function SourcesPanel() {
         <Card key={item.id}>
           <Body>{item.title}</Body>
           <Muted>
-            {[item.domain, item.level, item.license].filter(Boolean).join(' · ') ||
-              t('sourcesSourcesPanel.15')}
+            {[item.domain, item.level, item.license, item.lang, item.trustTier]
+              .filter(Boolean)
+              .join(' · ') || t('sourcesSourcesPanel.15')}
           </Muted>
           <Muted>{STATUS_LABEL[item.progress.status]}</Muted>
+          {item.quarantined && (
+            <Note tone="warn">
+              {t('sourcesSourcesPanel.quarantine', {
+                reasons: (item.trustReasons ?? []).join('; '),
+              })}
+            </Note>
+          )}
           {item.progress.status !== 'new' && <Progress value={fraction(item.progress)} />}
           {summaryLine(item.progress) !== '' && <Muted>{summaryLine(item.progress)}</Muted>}
           {item.progress.error && <Note tone="danger">{item.progress.error}</Note>}
