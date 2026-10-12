@@ -40,6 +40,35 @@ export function navItemsFor(layout: NavLayout, isAdmin: boolean): NavItem[] {
   return NAV_ITEMS.filter((i) => !i.adminOnly || (isAdmin && layout !== 'bottom'));
 }
 
+/**
+ * Какой пункт навигации подсвечен на пути. Экраны вне вкладок относятся к ближайшей:
+ * библиотека — к профилю, состав навыка и материалы — к пути, повторение и проверка уровня — к «Сегодня»,
+ * служебные — к «Куратору». Неизвестный путь — ничего не подсвечено.
+ */
+export function navKeyForPath(pathname: string): string | null {
+  const rules: [string, string][] = [
+    ['/path', 'path'],
+    ['/skill-profile', 'path'],
+    ['/materials', 'path'],
+    ['/progress', 'progress'],
+    ['/profile', 'profile'],
+    ['/library', 'profile'],
+    ['/review', 'index'],
+    ['/placement', 'index'],
+    ['/curator', 'curator'],
+    ['/sources', 'curator'],
+    ['/activities', 'curator'],
+  ];
+  if (pathname === '/') return 'index';
+  const hit = rules.find(([p]) => pathname === p || pathname.startsWith(`${p}/`));
+  return hit ? hit[1] : null;
+}
+
+/** Нижняя панель на телефоне — только на самих вкладках; вложенные экраны занимают весь экран. */
+export function showsBottomNav(pathname: string): boolean {
+  return ['/', '/path', '/progress', '/profile'].includes(pathname);
+}
+
 /** Активен ли пункт для текущего пути: «/» только точно, остальные — и вложенные пути. */
 export function isNavActive(itemPath: string, pathname: string): boolean {
   if (itemPath === '/') return pathname === '/';
