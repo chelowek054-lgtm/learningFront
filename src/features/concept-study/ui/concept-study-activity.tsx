@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import type { ActivityRendererProps } from '@/shared/engine';
 import { Body, Button, Lead, Muted, Note, space, Title } from '@/shared/ui';
 import { useI18n } from '@/shared/i18n';
+import { ClaimSources } from '@/entities/concept';
 
 interface Section {
   heading: string;
@@ -20,7 +21,12 @@ interface Content {
 
 export function ConceptStudyActivity({ activity, onComplete }: ActivityRendererProps) {
   const { t } = useI18n();
-  const payload = activity.payload as { title?: string; content?: Content; status?: string };
+  const payload = activity.payload as {
+    title?: string;
+    content?: Content;
+    status?: string;
+    conceptId?: string;
+  };
   const content = payload.content;
 
   return (
@@ -54,6 +60,8 @@ export function ConceptStudyActivity({ activity, onComplete }: ActivityRendererP
           {t('m.sourcesList', { list: (content?.references ?? []).map((r) => r.title).join(', ') })}
         </Muted>
       )}
+
+      {payload.conceptId ? <ClaimSources conceptId={payload.conceptId} /> : null}
 
       <Button
         label={t('conceptStudyConceptStudyActivity.3')}

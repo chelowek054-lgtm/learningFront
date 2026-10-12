@@ -35,6 +35,22 @@ export {
   type StudyMethodChoice,
   type StudyMethodOption,
 } from './methods-api';
+export { errorText } from './error-text';
+export { saveLangs, type LangSettings } from './lang-api';
+export {
+  getNodeClaims,
+  listProblems,
+  listReports,
+  rebuildDomain,
+  reportClaim,
+  resolveProblem,
+  type ClaimProblem,
+  type ClaimReports,
+  type ClaimSourceRef,
+  type NodeClaim,
+  type ProblemClaim,
+  type ProblemResolution,
+} from './claims-api';
 export { createJobQueue } from './job-queue';
 export { getLocalStore } from './local-store';
 export { syncNow } from './sync-service';

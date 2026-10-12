@@ -7,6 +7,7 @@
 // (modules/knowledge/course.py). Тип, который backend отдаёт, но никто не
 // объявлял, оставался без названия и рендерера.
 import type { ActivityTypeDef } from '@/shared/engine';
+import { translate } from '../../shared/i18n/translate';
 
 export const KNOWLEDGE_MODULE_ID = 'knowledge';
 export const KNOWLEDGE_MODULE_TITLE = 'Модель знаний';
@@ -14,31 +15,47 @@ export const KNOWLEDGE_MODULE_TITLE = 'Модель знаний';
 export const knowledgeActivityTypes: ActivityTypeDef[] = [
   {
     type: 'concept_study',
-    title: 'Теория',
-    hint: 'Разобрать понятие с примерами',
+    get title() {
+      return translate('act.concept_study.title');
+    },
+    get hint() {
+      return translate('act.concept_study.hint');
+    },
     connectivity: 'offline',
     payloadSchema: {},
   },
   {
     type: 'concept_contrast',
-    title: 'Отличить от заблуждения',
-    hint: 'Выбрать верное там, где легко перепутать',
+    get title() {
+      return translate('act.concept_contrast.title');
+    },
+    get hint() {
+      return translate('act.concept_contrast.hint');
+    },
     connectivity: 'online',
     payloadSchema: {},
     producesErrorLog: true,
   },
   {
     type: 'concept_apply',
-    title: 'Применить',
-    hint: 'Решить задачу на это понятие',
+    get title() {
+      return translate('act.concept_apply.title');
+    },
+    get hint() {
+      return translate('act.concept_apply.hint');
+    },
     connectivity: 'online',
     payloadSchema: {},
     producesErrorLog: true,
   },
   {
     type: 'srs',
-    title: 'Повторение',
-    hint: 'Карточка на удержание понятия',
+    get title() {
+      return translate('act.srs.title');
+    },
+    get hint() {
+      return translate('act.srs.hint');
+    },
     connectivity: 'offline',
     payloadSchema: {},
   },

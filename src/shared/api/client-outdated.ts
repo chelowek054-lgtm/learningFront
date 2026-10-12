@@ -1,10 +1,11 @@
+import { translate } from '../i18n/translate';
 // Устаревшая версия приложения (T-0033): сервер отвечает 426, и вместо непонятной
 // ошибки человек видит просьбу обновиться. Слушатели нужны потому, что запрос идёт
 // из любого экрана, а сообщение — одно на всё приложение.
 
 export class ClientOutdatedError extends Error {
   constructor(public minClientVersion: string | null) {
-    super('Версия приложения устарела: обновите его, чтобы продолжить.');
+    super(translate('errors.outdated'));
     this.name = 'ClientOutdatedError';
   }
 }

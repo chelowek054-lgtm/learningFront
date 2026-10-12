@@ -3,6 +3,7 @@
 import type { LocalStore } from '@/shared/engine';
 import { api, ApiError, apiUrl, CLIENT_HEADERS, getBaseUrl, NetworkError } from './http';
 import { getToken } from './token';
+import { translate } from '../i18n/translate';
 
 export interface MaterialFragment {
   id: string;
@@ -30,16 +31,14 @@ export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024;
 
 /** Человеческое объяснение отказа сервера: статус сам по себе человеку ничего не говорит. */
 export function uploadErrorMessage(e: unknown): string {
-  if (e instanceof NetworkError) return 'Нет связи с сервером: загрузить файл можно только онлайн.';
+  if (e instanceof NetworkError) return translate('upload.network');
   if (e instanceof ApiError) {
-    if (e.status === 413) return 'Файл больше 20 МБ.';
-    if (e.status === 415) return 'Поддерживаются PDF, Markdown и текстовые файлы (.md, .txt).';
-    if (e.status === 422) {
-      return 'В файле нет текста, который можно прочитать (скан без текстового слоя или пустой файл).';
-    }
-    if (e.status === 401) return 'Нужно войти заново.';
+    if (e.status === 413) return translate('upload.tooLarge');
+    if (e.status === 415) return translate('upload.unsupported');
+    if (e.status === 422) return translate('upload.noText');
+    if (e.status === 401) return translate('errors.unauthorized');
   }
-  return 'Не удалось загрузить файл. Попробуйте ещё раз.';
+  return translate('upload.failed');
 }
 
 export const listMaterials = () => api<MaterialSummary[]>('/content/materials');
@@ -67,7 +66,7 @@ export async function uploadMaterial(
   opts: { module: string; title?: string; onProgress?: (fraction: number) => void },
 ): Promise<MaterialSummary> {
   if (picked.size !== undefined && picked.size > MAX_UPLOAD_BYTES) {
-    throw new ApiError(413, 'Файл больше 20 МБ');
+    throw new ApiError(413, translate('upload.tooLarge'));
   }
   const token = await getToken();
   const form = new FormData();
@@ -99,7 +98,7 @@ export async function uploadMaterial(
         try {
           resolve(JSON.parse(xhr.responseText) as MaterialSummary);
         } catch {
-          reject(new ApiError(xhr.status, 'Ответ сервера не разобран'));
+          reject(new ApiError(xhr.status, translate('errors.badResponse')));
         }
       } else {
         reject(new ApiError(xhr.status, xhr.responseText));

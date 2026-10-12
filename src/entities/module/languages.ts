@@ -1,6 +1,7 @@
 // Метаданные модуля «Языки» (TOEFL/IELTS). ЧИСТЫЕ данные — без рендереров/RN.
 // Типы Activity из docs/architecture/03-functional.md §1.1.
 import type { ActivityTypeDef } from '@/shared/engine';
+import { translate } from '../../shared/i18n/translate';
 
 export const LANGUAGES_MODULE_ID = 'languages';
 export const LANGUAGES_MODULE_TITLE = 'Языки';
@@ -8,63 +9,95 @@ export const LANGUAGES_MODULE_TITLE = 'Языки';
 export const languagesActivityTypes: ActivityTypeDef[] = [
   {
     type: 'ielts_writing_task2',
-    title: 'Эссе IELTS (Task 2)',
-    hint: 'Написать эссе и получить оценку по критериям',
+    get title() {
+      return translate('act.ielts_writing_task2.title');
+    },
+    get hint() {
+      return translate('act.ielts_writing_task2.hint');
+    },
     connectivity: 'online',
     payloadSchema: {},
     producesErrorLog: true,
   },
   {
     type: 'toefl_writing_independent',
-    title: 'Эссе TOEFL (Independent)',
-    hint: 'Обосновать позицию и получить оценку по шкале 0–5',
+    get title() {
+      return translate('act.toefl_writing_independent.title');
+    },
+    get hint() {
+      return translate('act.toefl_writing_independent.hint');
+    },
     connectivity: 'online',
     payloadSchema: {},
     producesErrorLog: true,
   },
   {
     type: 'toefl_writing_integrated',
-    title: 'Пересказ TOEFL (Integrated)',
-    hint: 'Связать лекцию с текстом и получить оценку по шкале 0–5',
+    get title() {
+      return translate('act.toefl_writing_integrated.title');
+    },
+    get hint() {
+      return translate('act.toefl_writing_integrated.hint');
+    },
     connectivity: 'online',
     payloadSchema: {},
     producesErrorLog: true,
   },
   {
     type: 'ielts_writing_task1',
-    title: 'Описание данных IELTS (Task 1)',
-    hint: 'Описать график или таблицу',
+    get title() {
+      return translate('act.ielts_writing_task1.title');
+    },
+    get hint() {
+      return translate('act.ielts_writing_task1.hint');
+    },
     connectivity: 'online',
     payloadSchema: {},
     producesErrorLog: true,
   },
   {
     type: 'reading_drill',
-    title: 'Чтение',
-    hint: 'Текст с вопросами на понимание',
+    get title() {
+      return translate('act.reading_drill.title');
+    },
+    get hint() {
+      return translate('act.reading_drill.hint');
+    },
     connectivity: 'offline',
     payloadSchema: {},
   },
   {
     type: 'listening_drill',
-    title: 'Аудирование',
-    hint: 'Прослушать и ответить на вопросы',
+    get title() {
+      return translate('act.listening_drill.title');
+    },
+    get hint() {
+      return translate('act.listening_drill.hint');
+    },
     connectivity: 'offline',
     payloadSchema: {},
   },
   // Speaking — Фаза 2 (STT), тип объявлен заранее.
   {
     type: 'speaking_response',
-    title: 'Устный ответ',
-    hint: 'Записать ответ голосом',
+    get title() {
+      return translate('act.speaking_response.title');
+    },
+    get hint() {
+      return translate('act.speaking_response.hint');
+    },
     connectivity: 'online',
     payloadSchema: {},
     producesErrorLog: true,
   },
   {
     type: 'vocab_srs',
-    title: 'Повторение слов',
-    hint: 'Карточки лексики по интервалам',
+    get title() {
+      return translate('act.vocab_srs.title');
+    },
+    get hint() {
+      return translate('act.vocab_srs.hint');
+    },
     connectivity: 'offline',
     payloadSchema: {},
   },
