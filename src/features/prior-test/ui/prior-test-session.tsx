@@ -28,10 +28,12 @@ import {
   VERDICT_LABEL,
   verdictTone,
 } from '../model/report';
+import { useI18n } from '@/shared/i18n';
 
 type Phase = 'intro' | 'probing' | 'report';
 
 export function PriorTestSession({ domain }: { domain: string }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const [phase, setPhase] = useState<Phase>('intro');
@@ -105,11 +107,8 @@ export function PriorTestSession({ domain }: { domain: string }) {
   if (phase === 'intro') {
     return (
       <ScrollView contentContainerStyle={styles.pad}>
-        <Text style={styles.h1}>Что вы уже знаете для этой цели?</Text>
-        <Text style={styles.dim}>
-          Несколько вопросов по базовым областям — от самых сложных к простым. Освоенное сверху
-          снимает проверку нижнего. Тест можно пропустить: тогда курс начнётся с самого начала.
-        </Text>
+        <Text style={styles.h1}>{t('priorTestPriorTestSession.1')}</Text>
+        <Text style={styles.dim}>{t('priorTestPriorTestSession.2')}</Text>
         {MASTERY_TARGETS.map((t) => (
           <Pressable
             key={t.bloom}
@@ -124,11 +123,11 @@ export function PriorTestSession({ domain }: { domain: string }) {
           {busy ? (
             <ActivityIndicator color={colors.onAccent} />
           ) : (
-            <Text style={styles.btnText}>Пройти тест</Text>
+            <Text style={styles.btnText}>{t('priorTestPriorTestSession.3')}</Text>
           )}
         </Pressable>
         <Pressable onPress={skip} disabled={busy}>
-          <Text style={styles.link}>Пропустить, показать области</Text>
+          <Text style={styles.link}>{t('priorTestPriorTestSession.4')}</Text>
         </Pressable>
       </ScrollView>
     );
@@ -153,7 +152,7 @@ export function PriorTestSession({ domain }: { domain: string }) {
             <TextInput
               style={styles.input}
               multiline
-              placeholder="ответьте своими словами"
+              placeholder={t('priorTestPriorTestSession.5')}
               placeholderTextColor={colors.muted}
               value={answer}
               onChangeText={setAnswer}
@@ -166,7 +165,7 @@ export function PriorTestSession({ domain }: { domain: string }) {
               {busy ? (
                 <ActivityIndicator color={colors.onAccent} />
               ) : (
-                <Text style={styles.btnText}>Ответить</Text>
+                <Text style={styles.btnText}>{t('priorTestPriorTestSession.6')}</Text>
               )}
             </Pressable>
           </>
@@ -174,7 +173,7 @@ export function PriorTestSession({ domain }: { domain: string }) {
         {feedback && <Text style={styles.dim}>{feedback}</Text>}
         {error && <Text style={styles.error}>{error}</Text>}
         <Pressable onPress={() => void showReport()} disabled={busy}>
-          <Text style={styles.link}>Достаточно, покажите области</Text>
+          <Text style={styles.link}>{t('priorTestPriorTestSession.7')}</Text>
         </Pressable>
       </ScrollView>
     );
@@ -182,20 +181,16 @@ export function PriorTestSession({ domain }: { domain: string }) {
 
   return (
     <ScrollView contentContainerStyle={styles.pad}>
-      <Text style={styles.h1}>Базовые области</Text>
+      <Text style={styles.h1}>{t('priorTestPriorTestSession.8')}</Text>
       {!report ? (
         <ActivityIndicator />
       ) : !hasAreas(report) ? (
-        <Text style={styles.dim}>
-          Под этой целью нет отдельных базовых областей — проверять нечего.
-        </Text>
+        <Text style={styles.dim}>{t('priorTestPriorTestSession.9')}</Text>
       ) : (
         <>
           <Text style={styles.dim}>{summaryLine(report.summary)}</Text>
           {skipped && !report.checked && (
-            <Text style={styles.warn}>
-              Тест пропущен: курс исходит из того, что база не освоена.
-            </Text>
+            <Text style={styles.warn}>{t('priorTestPriorTestSession.10')}</Text>
           )}
           {report.areas.map((a) => (
             <View key={a.key} style={styles.row}>
@@ -210,7 +205,7 @@ export function PriorTestSession({ domain }: { domain: string }) {
           {(report.missing?.length ?? 0) > 0 && (
             <Text style={styles.warn}>
               Не хватает в графе: {report.missing?.join(', ')}. Администратору нужно добавить
-              источники по этим областям.
+              {t('priorTestPriorTestSession.11')}
             </Text>
           )}
         </>

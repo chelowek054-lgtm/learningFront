@@ -10,6 +10,7 @@ import { Pressable, Text, View } from 'react-native';
 import {
   Button,
   Card,
+  Chip,
   Empty,
   Field,
   Label,
@@ -24,6 +25,7 @@ import {
   useTheme,
   THEME_MODES,
 } from '@/shared/ui';
+import { LANGUAGES, LANGUAGE_NAMES, useI18n } from '@/shared/i18n';
 
 function ThemePicker() {
   const { colors, mode, setMode } = useTheme();
@@ -64,6 +66,24 @@ function ThemePicker() {
   );
 }
 
+/** Язык интерфейса: «как на устройстве» или явный выбор; запоминается на устройстве (R-0081). */
+function LanguagePicker() {
+  const { t, lang, manual, setLang } = useI18n();
+  return (
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+      <Chip text={t('profile.languageAuto')} selected={!manual} onPress={() => setLang(null)} />
+      {LANGUAGES.map((code) => (
+        <Chip
+          key={code}
+          text={LANGUAGE_NAMES[code]}
+          selected={manual && lang === code}
+          onPress={() => setLang(code)}
+        />
+      ))}
+    </View>
+  );
+}
+
 export function ProfileScreen({
   onOpenCurator,
   onOpenLibrary,
@@ -71,6 +91,7 @@ export function ProfileScreen({
   onOpenCurator?: () => void;
   onOpenLibrary?: () => void;
 }) {
+  const { t } = useI18n();
   const { user, logout, refresh, subject } = useSession();
   const online = useIsOnline();
   const [due, setDue] = useState<number | null>(null);
@@ -97,7 +118,7 @@ export function ProfileScreen({
       await deleteAccount(deletePassword);
       await logout();
     } catch {
-      setDeleteError('Не удалось удалить: проверьте пароль и связь.');
+      setDeleteError(t('profile.deleteFailed'));
     }
   }
 
@@ -113,67 +134,75 @@ export function ProfileScreen({
 
   return (
     <Screen>
-      <Title>Профиль</Title>
+      <Title>{t('profile.title')}</Title>
 
       <Card>
-        <Label>Аккаунт</Label>
-        <Lead>{user?.email ?? 'без email'}</Lead>
+        <Label>{t('profile.account')}</Label>
+        <Lead>{user?.email ?? t('profile.noEmail')}</Lead>
         <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
-          <Pill text={online ? 'онлайн' : 'офлайн'} tone={online ? 'accent' : 'muted'} />
-          {user?.is_superuser && <Pill text="администратор" tone="warn" />}
+          <Pill
+            text={online ? t('common.online') : t('common.offline')}
+            tone={online ? 'accent' : 'muted'}
+          />
+          {user?.is_superuser && <Pill text={t('profile.admin')} tone="warn" />}
         </View>
       </Card>
 
       <Card>
-        <Label>Предмет</Label>
+        <Label>{t('profile.subject')}</Label>
         {subject ? (
           <>
             <Muted>{subject.title}</Muted>
-            <Muted>Цель: {targetLabel(subject.target)}</Muted>
+            <Muted>{t('profile.goal', { target: targetLabel(subject.target) })}</Muted>
           </>
         ) : (
-          <Muted>Предмет не выбран</Muted>
+          <Muted>{t('profile.noSubject')}</Muted>
         )}
         {/* Смена предмета — выбор из «Моей библиотеки»: онбординг не сбрасывается (R-0059). */}
         {onOpenLibrary && (
-          <Button label="Сменить предмет" variant="quiet" onPress={onOpenLibrary} />
+          <Button label={t('profile.changeSubject')} variant="quiet" onPress={onOpenLibrary} />
         )}
       </Card>
 
       {onOpenLibrary && (
         <Card tone="accent" onPress={onOpenLibrary}>
-          <Label>Моя библиотека</Label>
+          <Label>{t('profile.library')}</Label>
           {subject && <Lead>{subject.title}</Lead>}
-          <Muted>Все ваши предметы: открыть, поставить на паузу, добавить новый</Muted>
+          <Muted>{t('profile.libraryHint')}</Muted>
         </Card>
       )}
 
       {user?.is_superuser && onOpenCurator && (
         <Card onPress={onOpenCurator}>
-          <Label>Куратор</Label>
-          <Muted>Источники знаний и служебные экраны</Muted>
+          <Label>{t('profile.curator')}</Label>
+          <Muted>{t('profile.curatorHint')}</Muted>
         </Card>
       )}
 
       <PushSettings />
 
       <Card>
-        <Label>Способ запоминания</Label>
+        <Label>{t('profile.method')}</Label>
         <StudyMethodPicker />
       </Card>
 
       <Card>
-        <Label>Оформление</Label>
+        <Label>{t('profile.appearance')}</Label>
         <ThemePicker />
       </Card>
 
       <Card>
-        <Label>Синхронизация</Label>
-        <Muted>{online ? 'Сеть есть' : 'Офлайн — изменения уйдут при подключении'}</Muted>
-        {due !== null && <Muted>Карточек к повторению: {due}</Muted>}
-        {synced && <Note tone="ok">Синхронизировано в {synced}</Note>}
+        <Label>{t('profile.language')}</Label>
+        <LanguagePicker />
+      </Card>
+
+      <Card>
+        <Label>{t('profile.sync')}</Label>
+        <Muted>{online ? t('profile.syncOn') : t('profile.syncOff')}</Muted>
+        {due !== null && <Muted>{t('profile.due', { due })}</Muted>}
+        {synced && <Note tone="ok">{t('profile.synced', { time: synced })}</Note>}
         <Button
-          label="Синхронизировать сейчас"
+          label={t('profile.syncNow')}
           variant="quiet"
           onPress={sync}
           disabled={!online}
@@ -181,34 +210,38 @@ export function ProfileScreen({
         />
       </Card>
 
-      {!user && <Empty text="Нет данных пользователя" />}
+      {!user && <Empty text={t('profile.noUser')} />}
 
       <Card>
-        <Label>Мои данные</Label>
-        <Muted>Удаление стирает аккаунт и все ваши данные без возможности восстановления.</Muted>
+        <Label>{t('profile.myData')}</Label>
+        <Muted>{t('profile.deleteHint')}</Muted>
         {deleting ? (
           <>
             <Field
-              placeholder="пароль для подтверждения"
+              placeholder={t('profile.deletePassword')}
               secureTextEntry
               value={deletePassword}
               onChangeText={setDeletePassword}
             />
             {deleteError && <Note tone="danger">{deleteError}</Note>}
             <Button
-              label="Удалить навсегда"
+              label={t('profile.deleteForever')}
               variant="danger"
               onPress={() => void removeAccount()}
               disabled={!online || deletePassword.length === 0}
             />
-            <Button label="Отмена" variant="quiet" onPress={() => setDeleting(false)} />
+            <Button label={t('common.cancel')} variant="quiet" onPress={() => setDeleting(false)} />
           </>
         ) : (
-          <Button label="Удалить аккаунт" variant="quiet" onPress={() => setDeleting(true)} />
+          <Button
+            label={t('profile.deleteAccount')}
+            variant="quiet"
+            onPress={() => setDeleting(true)}
+          />
         )}
       </Card>
 
-      <Button label="Выйти" variant="danger" onPress={() => void logout()} />
+      <Button label={t('profile.logout')} variant="danger" onPress={() => void logout()} />
     </Screen>
   );
 }

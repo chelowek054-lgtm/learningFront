@@ -7,6 +7,7 @@ import { getLocalStore, submitEvidence } from '@/shared/api';
 import type { ActivityRendererProps } from '@/shared/engine';
 import { Body, Button, Lead, Muted, Note, space, Title } from '@/shared/ui';
 import { MNEMONIC_SOURCE, SELF_RATINGS, scoreOf, type SelfRating } from '../model/rating';
+import { useI18n } from '@/shared/i18n';
 
 interface Payload {
   title?: string;
@@ -17,6 +18,7 @@ interface Payload {
 }
 
 export function MnemonicActivity({ activity, onComplete }: ActivityRendererProps) {
+  const { t } = useI18n();
   const payload = activity.payload as Payload;
   const [revealed, setRevealed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -35,7 +37,7 @@ export function MnemonicActivity({ activity, onComplete }: ActivityRendererProps
         score: scoreOf(rating),
         source: MNEMONIC_SOURCE,
       });
-      setNote(state === 'queued' ? 'Нет связи — результат отправится при подключении.' : null);
+      setNote(state === 'queued' ? t('mnemonicRecallMnemonicActivity.1') : null);
       onComplete({ activityId: activity.id, userAnswer: { rating } });
     } catch (e) {
       setError(String(e));
@@ -44,18 +46,18 @@ export function MnemonicActivity({ activity, onComplete }: ActivityRendererProps
     }
   }
 
-  if (!payload.cue) return <Muted>Для этого понятия нет формулировки.</Muted>;
+  if (!payload.cue) return <Muted>{t('mnemonicRecallMnemonicActivity.2')}</Muted>;
 
   return (
     <View style={{ gap: space.md }}>
-      <Title>{payload.title ?? 'Понятие'}</Title>
-      <Muted>Вспомните формулировку по первым буквам, затем проверьте себя.</Muted>
+      <Title>{payload.title ?? t('mnemonicRecallMnemonicActivity.3')}</Title>
+      <Muted>{t('mnemonicRecallMnemonicActivity.4')}</Muted>
       <Lead>{payload.cue}</Lead>
 
       {revealed ? (
         <>
           <Body>{payload.answer}</Body>
-          <Muted>Как получилось?</Muted>
+          <Muted>{t('mnemonicRecallMnemonicActivity.5')}</Muted>
           {SELF_RATINGS.map((r) => (
             <Button
               key={r.key}
@@ -67,7 +69,7 @@ export function MnemonicActivity({ activity, onComplete }: ActivityRendererProps
           ))}
         </>
       ) : (
-        <Button label="Показать ответ" onPress={() => setRevealed(true)} />
+        <Button label={t('mnemonicRecallMnemonicActivity.6')} onPress={() => setRevealed(true)} />
       )}
 
       {note && <Note tone="warn">{note}</Note>}

@@ -33,6 +33,7 @@ import { Card, Display, Label, Muted, Note, Progress, Screen, space } from '@/sh
 import { cardsWord, nextAction } from '../model/next-action';
 import { StateHero } from './state-hero';
 import { TodayTiles } from './today-tiles';
+import { useI18n } from '@/shared/i18n';
 
 export function HomeScreen({
   onOpenReview,
@@ -51,6 +52,7 @@ export function HomeScreen({
   onOpenLibrary?: () => void;
   onOpenMaterials?: () => void;
 }) {
+  const { t } = useI18n();
   const { user, subject } = useSession();
   const online = useIsOnline();
   const [dueCount, setDueCount] = useState(0);
@@ -177,135 +179,131 @@ export function HomeScreen({
   return (
     <Screen refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
       <View style={{ gap: space.xs }}>
-        <Display>Сегодня</Display>
+        <Display>{t('home.21')}</Display>
         <Muted>
-          {subject ? subject.title : (user?.email ?? '')} {online ? '· онлайн' : '· офлайн'}
+          {subject ? subject.title : (user?.email ?? '')} {online ? t('home.22') : t('home.23')}
         </Muted>
         {onOpenLibrary && (
           <Pressable onPress={onOpenLibrary}>
-            <Muted>Моя библиотека →</Muted>
+            <Muted>{t('home.24')}</Muted>
           </Pressable>
         )}
       </View>
 
       {!online && subject && (
         <Card>
-          <Label>Нет сети</Label>
-          <Muted>
-            Показано последнее известное состояние. Скачанные шаги и повторение работают.
-          </Muted>
+          <Label>{t('home.25')}</Label>
+          <Muted>{t('home.26')}</Muted>
         </Card>
       )}
 
       {action.kind === 'subject' && (
         <StateHero
-          label="Начало"
-          title="Что хотите изучить?"
-          reason="Назовите навык, предмет или язык — составим путь за три минуты."
-          primary={onOpenLibrary ? { label: 'Начать', onPress: onOpenLibrary } : undefined}
+          label={t('home.27')}
+          title={t('home.28')}
+          reason={t('home.29')}
+          primary={onOpenLibrary ? { label: t('home.30'), onPress: onOpenLibrary } : undefined}
           big
         />
       )}
 
       {action.kind === 'goal' && (
         <StateHero
-          label="Следующий шаг"
-          badge={{ text: 'цель', tone: 'accent' }}
-          title="Закончить постановку цели"
+          label={t('home.31')}
+          badge={{ text: t('home.32'), tone: 'accent' }}
+          title={t('home.33')}
           reason={action.reason}
-          primary={onOpenLibrary ? { label: 'Продолжить', onPress: onOpenLibrary } : undefined}
+          primary={onOpenLibrary ? { label: t('home.34'), onPress: onOpenLibrary } : undefined}
         />
       )}
 
       {action.kind === 'paused' && (
         <StateHero
           tone="plain"
-          label="Предмет на паузе"
-          title="Вы отложили его"
+          label={t('home.35')}
+          title={t('home.36')}
           reason={action.reason}
-          primary={
-            onOpenLibrary ? { label: 'Открыть библиотеку', onPress: onOpenLibrary } : undefined
-          }
+          primary={onOpenLibrary ? { label: t('home.37'), onPress: onOpenLibrary } : undefined}
         />
       )}
 
       {action.kind === 'outline' && (
         <StateHero
-          label="Состав навыка готов"
-          badge={{ text: 'ждёт вас', tone: 'info' }}
-          title="Проверьте состав и соберите карту"
+          label={t('home.38')}
+          badge={{ text: t('home.39'), tone: 'info' }}
+          title={t('home.40')}
           reason={action.reason}
-          primary={{ label: 'Проверить и собрать карту', onPress: onOpenSkillProfile }}
+          primary={{ label: t('home.41'), onPress: onOpenSkillProfile }}
         />
       )}
 
       {action.kind === 'building' && (
         <StateHero
-          label={`Карта собирается · ${elapsedLabel(action.minutes)}`}
-          badge={{ text: 'в работе', tone: 'info' }}
-          title="Собираем вашу карту"
+          label={t('home.building', { elapsed: elapsedLabel(action.minutes) })}
+          badge={{ text: t('home.42'), tone: 'info' }}
+          title={t('home.43')}
           reason={action.reason}
-          primary={{ label: 'Посмотреть ход сборки', onPress: onOpenGraph }}
+          primary={{ label: t('home.44'), onPress: onOpenGraph }}
         />
       )}
 
       {action.kind === 'failed' && (
         <StateHero
           tone="plain"
-          label="Сборка не завершилась"
-          badge={{ text: action.interrupted ? 'прервана' : 'сбой', tone: 'danger' }}
-          title="Карту нужно собрать заново"
+          label={t('home.45')}
+          badge={{ text: action.interrupted ? t('home.46') : t('home.47'), tone: 'danger' }}
+          title={t('home.48')}
           reason={action.reason}
-          primary={{ label: 'Запустить заново', onPress: () => void restart(), busy: restarting }}
+          primary={{ label: t('home.49'), onPress: () => void restart(), busy: restarting }}
         />
       )}
 
       {action.kind === 'build' && (
         <StateHero
-          label="Карта не построена"
-          title="Карты ещё нет"
+          label={t('home.50')}
+          title={t('home.51')}
           reason={action.reason}
-          primary={{ label: 'Построить карту', onPress: () => void restart(), busy: restarting }}
+          primary={{ label: t('home.52'), onPress: () => void restart(), busy: restarting }}
         />
       )}
 
       {action.kind === 'course' && (
         <StateHero
-          label="Следующий шаг"
+          label={t('home.31')}
           title={action.step.title}
           reason={action.reason}
-          primary={{ label: 'Начать шаг', onPress: onOpenCourse }}
+          primary={{ label: t('home.53'), onPress: onOpenCourse }}
         >
           <Progress value={course ? course.completed / Math.max(1, course.total) : 0} />
           <Muted>
-            Пройдено {course?.completed} из {course?.total}
+            {t('home.54', { completed: course?.completed ?? 0, total: course?.total ?? 0 })}
           </Muted>
         </StateHero>
       )}
 
       {action.kind === 'review' && (
         <StateHero
-          label="Повторение"
+          label={t('home.55')}
           title={`${action.dueCount} ${cardsWord(action.dueCount)}`}
           reason={action.reason}
-          primary={{ label: 'Повторить', onPress: onOpenReview }}
+          primary={{ label: t('home.56'), onPress: onOpenReview }}
           big
         />
       )}
 
       {action.kind === 'placement' && (
         <StateHero
-          label="Следующий шаг"
-          title="Определить уровень"
+          label={t('home.31')}
+          title={t('home.57')}
           reason={action.reason}
-          primary={{ label: 'Начать', onPress: onOpenPlacement }}
+          primary={{ label: t('home.30'), onPress: onOpenPlacement }}
         />
       )}
 
       {action.kind === 'done' && <GoalReachedCard onAddArea={onOpenSkillProfile} />}
 
       {action.kind === 'loading' && (
-        <StateHero tone="plain" label="Загрузка" title="Загружаем состояние предмета…" />
+        <StateHero tone="plain" label={t('home.58')} title={t('home.15')} />
       )}
 
       {subject && (
@@ -313,47 +311,42 @@ export function HomeScreen({
           tiles={[
             {
               id: 'review',
-              title: 'Повторение',
-              text:
-                dueCount > 0 ? `Карточек к повторению: ${dueCount}` : 'На сегодня всё повторено',
+              title: t('home.55'),
+              text: dueCount > 0 ? t('home.59', { dueCount }) : t('home.60'),
               onPress: onOpenReview,
             },
             {
               id: 'done',
-              title: 'Освоено',
+              title: t('home.61'),
               text: course
-                ? `Пройдено ${course.completed} из ${course.total}`
+                ? t('home.54', { completed: course.completed, total: course.total })
                 : stale && lastKnown
-                  ? `Пройдено ${lastKnown.completed} из ${lastKnown.total} (последнее известное, нет связи)`
-                  : 'Курс ещё не начат',
+                  ? t('home.62', { completed: lastKnown.completed, total: lastKnown.total })
+                  : t('home.63'),
               onPress: onOpenCourse,
             },
             {
               id: 'weak',
-              title: 'Слабые места',
+              title: t('home.64'),
               text:
-                weak === null
-                  ? 'Появятся после первых ответов'
-                  : weak === 0
-                    ? 'Слабых мест пока нет'
-                    : `Понятий, к которым стоит вернуться: ${weak}`,
+                weak === null ? t('home.65') : weak === 0 ? t('home.66') : t('home.67', { weak }),
               onPress: onOpenCourse,
             },
             {
               id: 'level',
-              title: 'Проверка уровня',
-              text: 'Определить, что вы уже знаете',
+              title: t('home.68'),
+              text: t('home.69'),
               onPress: onOpenPlacement,
             },
             {
               id: 'reading',
-              title: 'Читать дальше',
-              text: 'Ваши материалы по фрагментам',
+              title: t('home.70'),
+              text: t('home.71'),
               onPress: onOpenMaterials,
             },
             {
               id: 'goal',
-              title: 'Цель',
+              title: t('home.72'),
               text: `${subject.title}: ${subject.target}`,
               onPress: onOpenLibrary,
             },
@@ -363,7 +356,7 @@ export function HomeScreen({
 
       {/* Вторичное — одной спокойной строкой, чтобы не превратиться в список. */}
       {action.kind !== 'review' && dueCount > 0 && (
-        <Note tone="muted">Ещё {dueCount} карточек ждут повторения — можно после шага.</Note>
+        <Note tone="muted">{t('home.73', { dueCount })}</Note>
       )}
     </Screen>
   );

@@ -1,5 +1,6 @@
 // Офлайн-fallback грейдер эссе (WS5-02): мгновенный черновой сигнал без LLM.
 import type { LocalGrader } from '@/shared/engine';
+import { translate } from '../../../shared/i18n/translate';
 
 const AWL = [
   'analyse',
@@ -26,18 +27,35 @@ export const ieltsWritingLocalGrader: LocalGrader = (answer) => {
   const overall = wc < 150 ? 5 : wc < 250 ? 6 : 6.5;
   return {
     criteria: [
-      { name: 'Объём', score: Math.min(9, wc / 40), max: 9, comment: `${wc} слов (цель ≥250)` },
       {
-        name: 'Структура',
-        score: Math.min(9, paragraphs * 2),
+        get name() {
+          return translate('ieltsWritingLocalGrader.1');
+        },
+        score: Math.min(9, wc / 40),
         max: 9,
-        comment: `${paragraphs} абз.`,
+        get comment() {
+          return translate('ieltsWritingLocalGrader.2', { wc });
+        },
       },
       {
-        name: 'Лексика (AWL)',
+        get name() {
+          return translate('ieltsWritingLocalGrader.3');
+        },
+        score: Math.min(9, paragraphs * 2),
+        max: 9,
+        get comment() {
+          return translate('ieltsWritingLocalGrader.4', { paragraphs });
+        },
+      },
+      {
+        get name() {
+          return translate('ieltsWritingLocalGrader.5');
+        },
         score: Math.min(9, awlHits * 1.5),
         max: 9,
-        comment: `${awlHits} academic-слов`,
+        get comment() {
+          return translate('ieltsWritingLocalGrader.6', { awlHits });
+        },
       },
     ],
     overall,

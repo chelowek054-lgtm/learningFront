@@ -15,8 +15,10 @@ import type { ActivityRendererProps } from '@/shared/engine';
 import { newId } from '@/shared/lib';
 import { Body, Button, Card, Lead, Muted, Note, space } from '@/shared/ui';
 import { formatSec, parseSpeakingTask, sendBlocker } from '../model/speaking-model';
+import { useI18n } from '@/shared/i18n';
 
 export function SpeakingActivity({ activity, onComplete }: ActivityRendererProps) {
+  const { t } = useI18n();
   const { user } = useSession();
   const task = parseSpeakingTask(activity.payload);
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
@@ -33,13 +35,13 @@ export function SpeakingActivity({ activity, onComplete }: ActivityRendererProps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.durationMillis, state.isRecording]);
 
-  if (!task) return <Note tone="danger">Задание повреждено: темы ответа нет.</Note>;
+  if (!task) return <Note tone="danger">{t('speakingSpeakingActivity.1')}</Note>;
 
   async function start() {
     setError(null);
     const perm = await requestRecordingPermissionsAsync();
     if (!perm.granted) {
-      setError('Нет доступа к микрофону: разрешите его в настройках устройства.');
+      setError(t('speakingSpeakingActivity.2'));
       return;
     }
     await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
@@ -79,38 +81,39 @@ export function SpeakingActivity({ activity, onComplete }: ActivityRendererProps
 
   return (
     <View style={{ gap: space.md }}>
-      <Lead>Устный ответ</Lead>
+      <Lead>{t('speakingSpeakingActivity.3')}</Lead>
       <Card>
         <Body>{task.prompt}</Body>
-        <Muted>Можно говорить до {formatSec(task.maxSec)}. Запись сохранится без сети.</Muted>
+        <Muted>{t('m.speakLimit', { time: formatSec(task.maxSec) })}</Muted>
       </Card>
 
       {error && <Note tone="danger">{error}</Note>}
       {sent ? (
         <>
-          <Note tone="ok">
-            Ответ записан. Он уйдёт на проверку при подключении к сети, запись на устройстве после
-            отправки удаляется. Разбор появится после синхронизации.
-          </Note>
+          <Note tone="ok">{t('speakingSpeakingActivity.4')}</Note>
           <Button
-            label="Готово"
+            label={t('speakingSpeakingActivity.5')}
             onPress={() => onComplete({ activityId: activity.id, userAnswer: { audio: 'queued' } })}
           />
         </>
       ) : state.isRecording ? (
         <>
-          <Note tone="warn">Идёт запись: {formatSec(seconds)}</Note>
-          <Button label="Остановить" onPress={() => void stop()} />
+          <Note tone="warn">{t('m.recording', { time: formatSec(seconds) })}</Note>
+          <Button label={t('speakingSpeakingActivity.6')} onPress={() => void stop()} />
         </>
       ) : (
         <>
           {blocker && <Note tone="warn">{blocker}</Note>}
           <Button
-            label={recordedSec === null ? 'Начать запись' : 'Записать заново'}
+            label={
+              recordedSec === null
+                ? t('speakingSpeakingActivity.7')
+                : t('speakingSpeakingActivity.8')
+            }
             onPress={() => void start()}
           />
           {recordedSec !== null && !blocker && (
-            <Button label="Отправить на проверку" onPress={() => void send()} />
+            <Button label={t('speakingSpeakingActivity.9')} onPress={() => void send()} />
           )}
         </>
       )}

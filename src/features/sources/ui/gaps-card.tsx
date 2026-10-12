@@ -12,10 +12,12 @@ import {
 import { Body, Button, Card, Field, Label, Muted, Note, space } from '@/shared/ui';
 import { canSearch, effectiveQuery, gapsNeedPolling, resultLine } from '../model/gaps-model';
 import { STATUS_LABEL } from '../model/sources-model';
+import { useI18n } from '@/shared/i18n';
 
 const POLL_MS = 5000;
 
 export function GapsCard({ goal }: { goal: string }) {
+  const { t } = useI18n();
   const [gaps, setGaps] = useState<SourceGap[] | null>(null);
   const [queries, setQueries] = useState<Record<string, string>>({});
   const [results, setResults] = useState<Record<string, GapFillResult>>({});
@@ -57,23 +59,20 @@ export function GapsCard({ goal }: { goal: string }) {
     }
   }
 
-  if (gaps === null) return <Muted>Проверяю, чего не хватает в графе…</Muted>;
+  if (gaps === null) return <Muted>{t('sourcesGapsCard.1')}</Muted>;
   if (gaps.length === 0) {
     return (
       <Card>
-        <Label>Чего не хватает в графе</Label>
-        <Muted>Под этой целью все базовые области уже есть в графе.</Muted>
+        <Label>{t('sourcesGapsCard.2')}</Label>
+        <Muted>{t('sourcesGapsCard.3')}</Muted>
         {error && <Note tone="danger">{error}</Note>}
       </Card>
     );
   }
   return (
     <View style={{ gap: space.md }}>
-      <Label>Чего не хватает в графе</Label>
-      <Muted>
-        Базовые области цели «{goal}», по которым в графе нет ни одного понятия. Поиск идёт только
-        по белому списку доменов; найденное попадает в граф черновиками.
-      </Muted>
+      <Label>{t('sourcesGapsCard.2')}</Label>
+      <Muted>{t('m.gapsHint', { goal })}</Muted>
       {error && <Note tone="danger">{error}</Note>}
       {gaps.map((gap) => {
         const result = results[gap.key];
@@ -81,7 +80,7 @@ export function GapsCard({ goal }: { goal: string }) {
           <Card key={gap.key}>
             <Body>{gap.title}</Body>
             <Field
-              placeholder="запрос для поиска"
+              placeholder={t('sourcesGapsCard.5')}
               value={queries[gap.key] ?? gap.query}
               onChangeText={(v) => setQueries((prev) => ({ ...prev, [gap.key]: v }))}
             />
@@ -94,10 +93,10 @@ export function GapsCard({ goal }: { goal: string }) {
             <Button
               label={
                 !canSearch(gap)
-                  ? 'Разбор идёт…'
+                  ? t('sourcesGapsCard.6')
                   : busy === gap.key
-                    ? 'Ищу…'
-                    : 'Найти и поставить в разбор'
+                    ? t('sourcesGapsCard.7')
+                    : t('sourcesGapsCard.8')
               }
               onPress={() => void search(gap)}
               disabled={!canSearch(gap) || busy !== null}

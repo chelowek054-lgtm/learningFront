@@ -2,6 +2,7 @@
 // Один набор правил на встроенную схему, полноэкранный режим и «Дерево»; образцы рисует ui/scheme-legend.tsx.
 import type { GraphEdge, GraphNode } from '@/shared/api';
 import { scaleOf, type MasteryState } from './scheme';
+import { translate } from '../../../shared/i18n/translate';
 
 /** Что рисует образец: тот же вид, что у узла или линии на холсте. */
 export type LegendSample =
@@ -42,20 +43,44 @@ const TEXT: Record<
   Record<'known' | 'frontier' | 'learning' | 'locked' | 'optional' | 'edge', string>
 > = {
   map: {
-    known: 'освоено: остаётся на месте, но приглушено',
-    frontier: 'можно изучать сейчас',
-    learning: 'изучаю: чем длиннее полоса внизу, тем лучше освоено',
-    locked: 'закрыто: сначала нужны предпосылки',
-    optional: 'необязательное понятие',
-    edge: 'нужно раньше',
+    get known() {
+      return translate('graphEditorLegend.1');
+    },
+    get frontier() {
+      return translate('graphEditorLegend.2');
+    },
+    get learning() {
+      return translate('graphEditorLegend.3');
+    },
+    get locked() {
+      return translate('graphEditorLegend.4');
+    },
+    get optional() {
+      return translate('graphEditorLegend.5');
+    },
+    get edge() {
+      return translate('graphEditorLegend.6');
+    },
   },
   tree: {
-    known: 'пройдено',
-    frontier: 'следующий шаг',
-    learning: 'текущий шаг',
-    locked: 'закрыто: сначала предыдущие шаги',
-    optional: 'необязательный шаг',
-    edge: 'порядок шагов',
+    get known() {
+      return translate('graphEditorLegend.7');
+    },
+    get frontier() {
+      return translate('graphEditorLegend.8');
+    },
+    get learning() {
+      return translate('graphEditorLegend.9');
+    },
+    get locked() {
+      return translate('graphEditorLegend.10');
+    },
+    get optional() {
+      return translate('graphEditorLegend.11');
+    },
+    get edge() {
+      return translate('graphEditorLegend.12');
+    },
   },
 };
 
@@ -104,13 +129,13 @@ export function legendFor(input: LegendInput): LegendItem[] {
     add({
       id: 'own',
       sample: { kind: 'node', look: 'own' },
-      text: 'своё понятие (овал); прямоугольник — общая основа',
+      text: translate('graphEditorLegend.13'),
       count: nodes.filter((n) => n.kind === 'personal').length,
     });
     add({
       id: 'size',
       sample: { kind: 'size' },
-      text: 'размер точки: чем больше понятий на нём стоит, тем крупнее',
+      text: translate('graphEditorLegend.14'),
       count: nodes.filter((n) => scaleOf(n) > 1).length,
     });
   }
@@ -124,7 +149,7 @@ export function legendFor(input: LegendInput): LegendItem[] {
   add({
     id: 'own-edge',
     sample: { kind: 'edge', tone: 'own', dashed: true },
-    text: 'ваша личная связь (пунктир)',
+    text: translate('graphEditorLegend.15'),
     count: own,
   });
   if (input.selected) {
@@ -132,12 +157,12 @@ export function legendFor(input: LegendInput): LegendItem[] {
       {
         id: 'before',
         sample: { kind: 'edge', tone: 'before', dashed: false },
-        text: 'у выбранного: нужно раньше',
+        text: translate('graphEditorLegend.16'),
       },
       {
         id: 'after',
         sample: { kind: 'edge', tone: 'after', dashed: false },
-        text: 'у выбранного: открывает',
+        text: translate('graphEditorLegend.17'),
       },
     );
   }
@@ -145,27 +170,27 @@ export function legendFor(input: LegendInput): LegendItem[] {
     items.push({
       id: 'label',
       sample: { kind: 'label' },
-      text: 'надпись на узле: уровень, необязательное, не проверено куратором, своё',
+      text: translate('graphEditorLegend.18'),
     });
   }
   if (input.grouped) {
     items.push({
       id: 'stage',
       sample: { kind: 'stage' },
-      text: 'блок этапа: название, область, сколько освоено; нажмите, чтобы раскрыть',
+      text: translate('graphEditorLegend.19'),
     });
     // Стрелки-счётчики рисуются без выбора, призраки — только вместе с выбранным понятием.
     if (!input.selected) {
       items.push({
         id: 'count',
         sample: { kind: 'count' },
-        text: 'число на стрелке: сколько связей между этапами; нажмите, чтобы увидеть список',
+        text: translate('graphEditorLegend.20'),
       });
     } else {
       items.push({
         id: 'ghost',
         sample: { kind: 'ghost' },
-        text: 'пунктирный бледный узел: сосед выбранного из свёрнутого этапа',
+        text: translate('graphEditorLegend.21'),
       });
     }
   }

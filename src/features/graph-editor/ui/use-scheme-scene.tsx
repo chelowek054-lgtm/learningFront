@@ -15,6 +15,7 @@ import { legendFor, type LegendItem, type LegendMode } from '../model/legend';
 import { rememberFlag, remembered } from '../model/remember';
 import { stageKeyOf, type Highlight, type MasteryState, type SchemeLayout } from '../model/scheme';
 import { StageLayer } from './stage-layer';
+import { useI18n } from '@/shared/i18n';
 
 /** `auto` — по порогу (25 понятий или 40 связей), `stages` и `all` — выбор человека; он запоминается. */
 export type SchemeViewMode = 'auto' | 'stages' | 'all';
@@ -83,6 +84,8 @@ export function useSchemeScene({
   /** Свёртка колонки в обычном виде. */
   plainToggleStage: (key: string) => void;
 }): SchemeScene {
+  // Язык нужен в зависимостях легенды: строки считаются при построении и без него остались бы на прежнем языке.
+  const { lang } = useI18n();
   const [view, setViewState] = useState<SchemeViewMode>(rememberedView);
   const [expanded, setExpanded] = useState<string[]>([]);
   const [fullChain, setFullChain] = useState(false);
@@ -231,7 +234,7 @@ export function useSchemeScene({
       }),
     // legendNodes выводится из overview и graph — зависимостей ниже достаточно.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [overview, graph.nodes, graph.edges, states, mode, selected, grouped],
+    [overview, graph.nodes, graph.edges, states, mode, selected, grouped, lang],
   );
 
   const layer = useCallback(

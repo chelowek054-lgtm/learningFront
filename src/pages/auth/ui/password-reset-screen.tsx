@@ -7,22 +7,25 @@ import { View } from 'react-native';
 
 import { ApiError, NetworkError, confirmPasswordReset, requestPasswordReset } from '@/shared/api';
 import { Button, Display, Field, Muted, Note, Screen, space } from '@/shared/ui';
+import { translate, useI18n } from '@/shared/i18n';
 
 const CODE_LENGTH = 8;
 const MIN_PASSWORD = 6;
 
 /** Причина должна быть различима: просроченный код ≠ нет связи ≠ исчерпаны попытки. */
 function describe(e: unknown): string {
+  const t = translate;
   if (e instanceof NetworkError) {
-    return `${e.message}. Проверьте, что backend запущен и адрес верный.`;
+    return t('auth.networkHint', { message: e.message });
   }
   if (e instanceof ApiError) {
-    if (e.status === 400) return 'Код недействителен или просрочен — запросите новый';
-    if (e.status === 429) return 'Слишком много попыток. Запросите новый код';
-    if (e.status === 422) return `Код — ${CODE_LENGTH} цифр, пароль — от ${MIN_PASSWORD} символов`;
-    return `Ошибка сервера ${e.status}: ${e.message.slice(0, 200)}`;
+    if (e.status === 400) return t('reset.err400');
+    if (e.status === 429) return t('reset.err429');
+    if (e.status === 422)
+      return t('reset.err422', { codeLength: CODE_LENGTH, minPassword: MIN_PASSWORD });
+    return t('auth.errServer', { status: e.status, message: e.message.slice(0, 200) });
   }
-  return `Не удалось сменить пароль: ${String(e)}`;
+  return t('reset.failChange', { error: String(e) });
 }
 
 export function PasswordResetScreen({
@@ -35,6 +38,7 @@ export function PasswordResetScreen({
   onDone: (email: string) => void;
   onCancel: () => void;
 }) {
+  const { t } = useI18n();
   const [step, setStep] = useState<'request' | 'confirm'>('request');
   const [email, setEmail] = useState(initialEmail);
   const [code, setCode] = useState('');
@@ -75,12 +79,12 @@ export function PasswordResetScreen({
     <Screen>
       <View style={{ gap: space.xs, marginTop: space.xxl }}>
         <Display>Praxis</Display>
-        <Muted>Восстановление пароля</Muted>
+        <Muted>{t('reset.title')}</Muted>
       </View>
 
       {step === 'request' ? (
         <>
-          <Muted>Укажите email — вышлем код для смены пароля.</Muted>
+          <Muted>{t('reset.askEmail')}</Muted>
           <Field
             placeholder="email"
             autoCapitalize="none"
@@ -90,31 +94,25 @@ export function PasswordResetScreen({
             onChangeText={setEmail}
           />
           {error && <Note tone="danger">{error}</Note>}
-          <Button label="Получить код" onPress={askCode} busy={busy} disabled={!emailReady} />
-          <Button label="Вернуться ко входу" variant="quiet" onPress={onCancel} />
+          <Button label={t('reset.getCode')} onPress={askCode} busy={busy} disabled={!emailReady} />
+          <Button label={t('reset.backToLogin')} variant="quiet" onPress={onCancel} />
         </>
       ) : (
         <>
-          <Note tone="ok">
-            {ttl === null
-              ? 'Код выпущен.'
-              : `Код выпущен и действует ${ttl} мин. Действителен только последний код.`}
-          </Note>
+          <Note tone="ok">{ttl === null ? t('reset.issued') : t('reset.issuedTtl', { ttl })}</Note>
           {/* Честно: доставки писем ещё нет (см. ROADMAP), код лежит в БД. Без
               этой строки экран выглядит сломанным — письмо не приходит никогда. */}
-          <Note tone="warn">
-            Отправка писем пока не подключена: код смотрите в таблице password_reset_code (pgAdmin).
-          </Note>
+          <Note tone="warn">{t('reset.noMail')}</Note>
 
           <Field
-            placeholder={`код из ${CODE_LENGTH} цифр`}
+            placeholder={t('reset.codePlaceholder', { codeLength: CODE_LENGTH })}
             keyboardType="number-pad"
             maxLength={CODE_LENGTH}
             value={code}
             onChangeText={(t) => setCode(t.replace(/\D/g, ''))}
           />
           <Field
-            placeholder={`новый пароль (мин. ${MIN_PASSWORD})`}
+            placeholder={t('reset.passwordPlaceholder', { minPassword: MIN_PASSWORD })}
             secureTextEntry
             autoComplete="new-password"
             value={password}
@@ -124,13 +122,13 @@ export function PasswordResetScreen({
           {error && <Note tone="danger">{error}</Note>}
 
           <Button
-            label="Сменить пароль"
+            label={t('reset.change')}
             onPress={applyNewPassword}
             busy={busy}
             disabled={!confirmReady}
           />
-          <Button label="Запросить код заново" variant="quiet" onPress={askCode} disabled={busy} />
-          <Button label="Вернуться ко входу" variant="quiet" onPress={onCancel} />
+          <Button label={t('reset.again')} variant="quiet" onPress={askCode} disabled={busy} />
+          <Button label={t('reset.backToLogin')} variant="quiet" onPress={onCancel} />
         </>
       )}
     </Screen>

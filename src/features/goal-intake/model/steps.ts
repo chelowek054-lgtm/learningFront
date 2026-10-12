@@ -1,3 +1,4 @@
+import { translate } from '../../../shared/i18n/translate';
 // Шаги онбординга (макет Claude Design): пять шагов от цели до сборки карты.
 // Диалог цели закрывает первые три; состав навыка и сборка идут на своих экранах.
 
@@ -12,7 +13,7 @@ export function stepOf(stage: DialogStage): number {
   return 3;
 }
 
-export const stepLabel = (n: number): string => `Шаг ${n} из ${STEP_COUNT}`;
+export const stepLabel = (n: number): string => translate('onb.step', { n, total: STEP_COUNT });
 
 /**
  * Почему уточнять нечем: нет связи с сервером или сервер/модель не ответили.
@@ -24,6 +25,10 @@ export const failureKind = (isNetworkError: boolean): FailureKind =>
   isNetworkError ? 'offline' : 'model';
 
 export const FAILURE_TEXT: Record<FailureKind, string> = {
-  offline: 'Нет сети. Диалог с помощником недоступен — введите область и цель сами.',
-  model: 'Помощник не ответил. Введите область и цель сами или попробуйте ещё раз позже.',
+  get offline() {
+    return translate('onb.offline');
+  },
+  get model() {
+    return translate('onb.modelDown');
+  },
 };

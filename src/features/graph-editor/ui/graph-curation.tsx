@@ -27,6 +27,7 @@ import {
   type Graph,
   type GraphNode,
 } from '@/shared/api';
+import { useI18n } from '@/shared/i18n';
 
 export function GraphCuration({
   domain,
@@ -35,6 +36,7 @@ export function GraphCuration({
   domain: string;
   onOpenOutline?: () => void;
 }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const [graph, setGraph] = useState<Graph | null>(null);
@@ -120,18 +122,22 @@ export function GraphCuration({
       {!selected && (
         <>
           <Section
-            title={`Ядро · обязательное (${core.length})`}
+            title={t('graphEditorGraphCuration.1', { length: core.length })}
             nodes={core}
             onPick={setSelectedId}
           />
-          <Section title={`Ветви (${derived.length})`} nodes={derived} onPick={setSelectedId} />
+          <Section
+            title={t('graphEditorGraphCuration.2', { length: derived.length })}
+            nodes={derived}
+            onPick={setSelectedId}
+          />
         </>
       )}
 
       {selected && (
         <View style={styles.detail}>
           <Pressable onPress={() => setSelectedId(null)}>
-            <Text style={styles.back}>← К списку</Text>
+            <Text style={styles.back}>{t('graphEditorGraphCuration.3')}</Text>
           </Pressable>
           <Text style={styles.title}>{selected.title}</Text>
           <Text style={styles.meta}>
@@ -150,8 +156,10 @@ export function GraphCuration({
             />
           )}
 
-          <Text style={styles.sub}>Соседи</Text>
-          {neighbors.length === 0 && <Text style={styles.dim}>нет связей</Text>}
+          <Text style={styles.sub}>{t('graphEditorGraphCuration.4')}</Text>
+          {neighbors.length === 0 && (
+            <Text style={styles.dim}>{t('graphEditorGraphCuration.5')}</Text>
+          )}
           {neighbors.map((n) => (
             <Text key={n} style={styles.neighbor}>
               {n}
@@ -164,11 +172,11 @@ export function GraphCuration({
                 style={styles.act}
                 onPress={() => setEditSummary(selected.content.summary ?? '')}
               >
-                <Text style={styles.actText}>Править</Text>
+                <Text style={styles.actText}>{t('graphEditorGraphCuration.6')}</Text>
               </Pressable>
             ) : (
               <Pressable style={styles.act} onPress={saveSummary} disabled={busy}>
-                <Text style={styles.actText}>Сохранить</Text>
+                <Text style={styles.actText}>{t('graphEditorGraphCuration.7')}</Text>
               </Pressable>
             )}
             {selected.kind === 'canonical' && selected.tier !== 'core' && (
@@ -177,21 +185,21 @@ export function GraphCuration({
                 onPress={() => run(() => approveNode(selected.id, 'core'))}
                 disabled={busy}
               >
-                <Text style={styles.actText}>В ядро</Text>
+                <Text style={styles.actText}>{t('graphEditorGraphCuration.8')}</Text>
               </Pressable>
             )}
           </View>
 
-          <Text style={styles.sub}>Дорастить ветку</Text>
+          <Text style={styles.sub}>{t('graphEditorGraphCuration.9')}</Text>
           <View style={styles.deepenRow}>
             <TextInput
               style={[styles.input, styles.deepenInput]}
-              placeholder="направление интереса"
+              placeholder={t('graphEditorGraphCuration.10')}
               value={direction}
               onChangeText={setDirection}
             />
             <Pressable style={styles.act} onPress={deepen} disabled={busy || !direction.trim()}>
-              <Text style={styles.actText}>Расти</Text>
+              <Text style={styles.actText}>{t('graphEditorGraphCuration.11')}</Text>
             </Pressable>
           </View>
         </View>

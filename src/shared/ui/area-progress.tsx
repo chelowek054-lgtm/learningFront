@@ -2,6 +2,7 @@
 import { View } from 'react-native';
 import { Body, Pill } from './kit';
 import { space } from './theme';
+import { translate } from '@/shared/i18n';
 
 export type AreaStatus = 'waiting' | 'working' | 'done' | 'failed';
 
@@ -12,10 +13,18 @@ export interface AreaProgressItem {
 }
 
 const LABEL: Record<AreaStatus, string> = {
-  waiting: 'ждёт',
-  working: 'в работе',
-  done: 'готово',
-  failed: 'не вышло',
+  get waiting() {
+    return translate('sharedAreaProgress.1');
+  },
+  get working() {
+    return translate('sharedAreaProgress.2');
+  },
+  get done() {
+    return translate('sharedAreaProgress.3');
+  },
+  get failed() {
+    return translate('sharedAreaProgress.4');
+  },
 };
 
 export function AreaProgress({ items }: { items: AreaProgressItem[] }) {

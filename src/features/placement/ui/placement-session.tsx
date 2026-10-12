@@ -21,20 +21,33 @@ import {
   type ProbeResult,
   type StopCode,
 } from '@/shared/api';
+import { useI18n, translate } from '@/shared/i18n';
 
 /** Останов — не ошибка, но и не всегда успех: пользователю нужен следующий шаг. */
 const STOP: Record<StopCode, { title: string; hint: string }> = {
   empty: {
-    title: 'Граф этой области ещё не построен',
-    hint: 'Определять уровень пока не по чему. Граф готовит администратор.',
+    get title() {
+      return translate('placementPlacementSession.1');
+    },
+    get hint() {
+      return translate('placementPlacementSession.2');
+    },
   },
   no_theory: {
-    title: 'В узлах графа пока нет теории',
-    hint: 'Вопросы строятся из содержания узлов, а его ещё не наполнили. Попросите администратора достроить граф — после этого проверка уровня заработает.',
+    get title() {
+      return translate('placementPlacementSession.3');
+    },
+    get hint() {
+      return translate('placementPlacementSession.4');
+    },
   },
   settled: {
-    title: 'Уровень определён',
-    hint: 'Уточнять больше нечего — карта ниже отражает текущую картину.',
+    get title() {
+      return translate('placementPlacementSession.5');
+    },
+    get hint() {
+      return translate('placementPlacementSession.6');
+    },
   },
 };
 
@@ -49,6 +62,7 @@ function isProbe(r: ProbeResult): r is Probe {
 }
 
 export function PlacementSession({ domain }: { domain: string }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const styles = makeStyles(colors);
   const [phase, setPhase] = useState<Phase>('target');
@@ -120,11 +134,8 @@ export function PlacementSession({ domain }: { domain: string }) {
   if (phase === 'target') {
     return (
       <ScrollView contentContainerStyle={styles.pad}>
-        <Text style={styles.h1}>До какого уровня хотите дойти?</Text>
-        <Text style={styles.dim}>
-          Это потолок для вопросов. Начнём с самых фундаментальных узлов и будем спускаться туда,
-          где меньше всего ясности.
-        </Text>
+        <Text style={styles.h1}>{t('placementPlacementSession.7')}</Text>
+        <Text style={styles.dim}>{t('m.placementCeiling')}</Text>
         {TARGETS.map((t) => (
           <Pressable
             key={t.bloom}
@@ -140,7 +151,7 @@ export function PlacementSession({ domain }: { domain: string }) {
           {busy ? (
             <ActivityIndicator color={colors.onAccent} />
           ) : (
-            <Text style={styles.btnText}>Начать</Text>
+            <Text style={styles.btnText}>{t('placementPlacementSession.9')}</Text>
           )}
         </Pressable>
       </ScrollView>
@@ -152,7 +163,7 @@ export function PlacementSession({ domain }: { domain: string }) {
     return (
       <ScrollView contentContainerStyle={styles.pad}>
         <Text style={styles.eyebrow}>
-          вопрос {asked + 1} · {probe.conceptTitle} · {probe.bloom}
+          {t('m.probeLine', { n: asked + 1, concept: probe.conceptTitle, bloom: probe.bloom })}
         </Text>
         <Text style={styles.question}>{probe.item.prompt}</Text>
 
@@ -167,7 +178,7 @@ export function PlacementSession({ domain }: { domain: string }) {
             <TextInput
               style={styles.input}
               multiline
-              placeholder="ответьте своими словами"
+              placeholder={t('placementPlacementSession.10')}
               value={answer}
               onChangeText={setAnswer}
             />
@@ -179,7 +190,7 @@ export function PlacementSession({ domain }: { domain: string }) {
               {busy ? (
                 <ActivityIndicator color={colors.onAccent} />
               ) : (
-                <Text style={styles.btnText}>Ответить</Text>
+                <Text style={styles.btnText}>{t('placementPlacementSession.11')}</Text>
               )}
             </Pressable>
           </>
@@ -187,10 +198,8 @@ export function PlacementSession({ domain }: { domain: string }) {
 
         {feedback && <Text style={styles.dim}>{feedback}</Text>}
         {error && <Text style={styles.error}>{error}</Text>}
-        <Pressable
-          onPress={() => finish('Плейсмент прерван — карта построена по уже данным ответам.')}
-        >
-          <Text style={styles.link}>Достаточно, покажите карту</Text>
+        <Pressable onPress={() => finish(t('placementPlacementSession.12'))}>
+          <Text style={styles.link}>{t('placementPlacementSession.13')}</Text>
         </Pressable>
       </ScrollView>
     );
@@ -198,7 +207,7 @@ export function PlacementSession({ domain }: { domain: string }) {
 
   return (
     <ScrollView contentContainerStyle={styles.pad}>
-      <Text style={styles.h1}>{stop ? STOP[stop].title : 'Карта знаний'}</Text>
+      <Text style={styles.h1}>{stop ? STOP[stop].title : t('placementPlacementSession.14')}</Text>
       {stop && <Text style={styles.dim}>{STOP[stop].hint}</Text>}
       {!stop && feedback && <Text style={styles.dim}>{feedback}</Text>}
       {!map ? (
@@ -206,20 +215,23 @@ export function PlacementSession({ domain }: { domain: string }) {
       ) : (
         <>
           <Text style={styles.dim}>
-            Освоено {map.summary.known ?? 0} · в работе {map.summary.learning ?? 0} · на границе{' '}
-            {map.summary.frontier ?? 0} · закрыто {map.summary.locked ?? 0}
+            {t('m.mapSummary', {
+              known: map.summary.known ?? 0,
+              learning: map.summary.learning ?? 0,
+              frontier: map.summary.frontier ?? 0,
+              locked: map.summary.locked ?? 0,
+            })}
           </Text>
-          {!map.coreCovered && (
-            <Text style={styles.warn}>
-              Фундаментальное ядро пройдено не полностью — курс начнётся с него.
-            </Text>
-          )}
+          {!map.coreCovered && <Text style={styles.warn}>{t('placementPlacementSession.15')}</Text>}
           {map.nodes.map((n) => (
             <View key={n.conceptId} style={styles.row}>
               <View style={styles.rowMain}>
                 <Text style={styles.rowTitle}>{n.title}</Text>
                 <Text style={styles.dim}>
-                  {n.tier === 'core' ? 'ядро' : 'ветвь'} · {STATUS[n.status]}
+                  {n.tier === 'core'
+                    ? t('placementPlacementSession.16')
+                    : t('placementPlacementSession.17')}{' '}
+                  · {STATUS[n.status]}
                   {n.bloom_reached ? ` · ${n.bloom_reached}` : ''}
                 </Text>
               </View>
@@ -235,10 +247,18 @@ export function PlacementSession({ domain }: { domain: string }) {
 }
 
 const STATUS: Record<string, string> = {
-  known: 'освоено',
-  learning: 'в работе',
-  frontier: 'на границе',
-  locked: 'ждёт предпосылок',
+  get known() {
+    return translate('placementPlacementSession.18');
+  },
+  get learning() {
+    return translate('placementPlacementSession.19');
+  },
+  get frontier() {
+    return translate('placementPlacementSession.20');
+  },
+  get locked() {
+    return translate('placementPlacementSession.21');
+  },
 };
 
 const makeStyles = (c: Palette) =>

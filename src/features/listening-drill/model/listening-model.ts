@@ -1,6 +1,7 @@
 // Listening-дрилл (T-0037, R-0022): разбор payload, лимит прослушиваний, состояние кэша аудио.
 // Всё чистое. Проверка ответов — та же, что у чтения: вопросы и их формат общие.
 import { parseQuestions, type QuizQuestion } from '../../../shared/engine';
+import { translate } from '../../../shared/i18n/translate';
 
 /** Сколько раз можно слушать, если задание не сказало иначе (как на экзамене — один раз). */
 export const DEFAULT_MAX_PLAYS = 1;
@@ -34,10 +35,8 @@ export type AudioState = 'cached' | 'missing' | 'checking';
 
 /** Что показать вместо кнопки «Слушать»; null — слушать можно. */
 export function listenBlocker(state: AudioState, maxPlays: number, used: number): string | null {
-  if (state === 'checking') return 'Проверяю, есть ли запись на устройстве…';
-  if (state === 'missing')
-    return 'Записи нет на устройстве. Откройте задание при подключении к сети — она загрузится и дальше будет работать без сети.';
-  if (playsLeft(maxPlays, used) === 0)
-    return 'Прослушиваний не осталось. Ответьте на вопросы по тому, что услышали.';
+  if (state === 'checking') return translate('listeningDrillListeningModel.1');
+  if (state === 'missing') return translate('listeningDrillListeningModel.2');
+  if (playsLeft(maxPlays, used) === 0) return translate('listeningDrillListeningModel.3');
   return null;
 }

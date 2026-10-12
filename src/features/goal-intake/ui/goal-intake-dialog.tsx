@@ -33,6 +33,7 @@ import {
 import { failureKind, stepOf, type FailureKind } from '../model/steps';
 import { ChoiceRow } from './choice-chip';
 import { StepHeader } from './step-header';
+import { useI18n } from '@/shared/i18n';
 
 type Stage = 'ask' | 'clarify' | 'recap' | 'volume';
 
@@ -46,6 +47,7 @@ export function GoalIntakeDialog({
   /** Уточнять нечем: форма заменяется прямым вводом. `kind` — нет сети или не ответил помощник. */
   onFallback: (kind?: FailureKind) => void;
 }) {
+  const { t } = useI18n();
   const [stage, setStage] = useState<Stage>('ask');
   const [text, setText] = useState(initialText);
   const [questions, setQuestions] = useState<GoalQuestion[]>([]);
@@ -92,7 +94,7 @@ export function GoalIntakeDialog({
       setHoursText(got.constraints?.hoursPerWeek ? String(got.constraints.hoursPerWeek) : '');
       setStage('recap');
     } catch (e) {
-      setError(`Не удалось подвести итог: ${String(e).slice(0, 160)}`);
+      setError(t('goal.summarizeFailed', { error: String(e).slice(0, 160) }));
     } finally {
       setBusy(false);
     }
@@ -114,7 +116,7 @@ export function GoalIntakeDialog({
       }
       await onConfirmed(summary);
     } catch (e) {
-      setError(`Не удалось подтвердить: ${String(e).slice(0, 160)}`);
+      setError(t('goal.confirmFailed', { error: String(e).slice(0, 160) }));
     } finally {
       setBusy(false);
     }
@@ -124,25 +126,23 @@ export function GoalIntakeDialog({
     return (
       <View style={{ gap: space.md }}>
         <StepHeader step={stepOf('ask')} />
-        <Display>Что хотите изучить?</Display>
-        <Muted>
-          Своими словами: навык, предмет, язык. Дальше два-три уточняющих вопроса — их можно
-          пропустить.
-        </Muted>
+        <Display>{t('goal.askTitle')}</Display>
+        <Muted>{t('goal.askHint')}</Muted>
         <Field
-          placeholder="например: машинное обучение"
+          placeholder={t('onb.whatLearnPlaceholder')}
           autoFocus
           multiline
           value={text}
           onChangeText={setText}
         />
         {error && <Note tone="danger">{error}</Note>}
-        <Button label="Дальше" onPress={() => void ask()} busy={busy} disabled={!canAsk(text)} />
         <Button
-          label="Ввести область и цель напрямую"
-          variant="quiet"
-          onPress={() => onFallback()}
+          label={t('common.next')}
+          onPress={() => void ask()}
+          busy={busy}
+          disabled={!canAsk(text)}
         />
+        <Button label={t('goal.direct')} variant="quiet" onPress={() => onFallback()} />
       </View>
     );
   }
@@ -153,23 +153,18 @@ export function GoalIntakeDialog({
         <StepHeader step={stepOf('clarify')} />
         {askFailed ? (
           <Card>
-            <Title>Не удалось задать уточнения</Title>
-            <Muted>
-              Помощник не ответил. Ваша цель сохранена: «{text.trim()}». Повторите или идите дальше
-              без уточнений.
-            </Muted>
-            <Button label="Повторить" onPress={() => void ask()} busy={busy} />
+            <Title>{t('goal.clarifyFailTitle')}</Title>
+            <Muted>{t('goal.clarifyFailBody', { text: text.trim() })}</Muted>
+            <Button label={t('common.retry')} onPress={() => void ask()} busy={busy} />
           </Card>
         ) : (
-          <Muted>
-            Пара уточнений, чтобы построить путь точнее. Отвечать на всё не обязательно.
-          </Muted>
+          <Muted>{t('goal.clarifyHint')}</Muted>
         )}
         {questions.map((q) => (
           <View key={q.id} style={{ gap: space.xs }}>
             <Label>{q.text}</Label>
             <Field
-              placeholder="можно пропустить"
+              placeholder={t('goal.optionalPlaceholder')}
               multiline
               value={values[q.id] ?? ''}
               onChangeText={(v) => setValues((prev) => ({ ...prev, [q.id]: v }))}
@@ -181,14 +176,14 @@ export function GoalIntakeDialog({
           label={
             answeredCount(collectAnswers(questions, values)) === 0
               ? askFailed
-                ? 'Пропустить уточнения и продолжить'
-                : 'Пропустить уточнения'
-              : 'Подвести итог'
+                ? t('goal.skipAndContinue')
+                : t('goal.skip')
+              : t('goal.summarize')
           }
           onPress={() => void recap()}
           busy={busy}
         />
-        <Button label="Назад" variant="quiet" onPress={() => setStage('ask')} />
+        <Button label={t('common.back')} variant="quiet" onPress={() => setStage('ask')} />
       </View>
     );
   }
@@ -206,7 +201,7 @@ export function GoalIntakeDialog({
         if (short) await confirmGoal(toSubjectId(summary.area), chosen);
         await onConfirmed(chosen);
       } catch (e) {
-        setError(`Не удалось продолжить: ${String(e).slice(0, 160)}`);
+        setError(t('goal.continueFailed', { error: String(e).slice(0, 160) }));
       } finally {
         setBusy(false);
       }
@@ -214,15 +209,15 @@ export function GoalIntakeDialog({
     return (
       <View style={{ gap: space.md }}>
         <StepHeader step={stepOf('volume')} />
-        <Title>Что лежит под этой целью</Title>
-        <Muted>Чтобы дойти до цели, нужны базовые области. Выберите, насколько глубоко идти.</Muted>
-        <Body>Полный путь: {volumeLine(full)}</Body>
-        <Body>Интуитивный: {volumeLine(intuitive)} — без глубоких деталей</Body>
-        {full.unbuilt.length > 0 && <Muted>Карты для части областей ещё не построены.</Muted>}
+        <Title>{t('goal.volumeTitle')}</Title>
+        <Muted>{t('goal.volumeHint')}</Muted>
+        <Body>{t('goal.volumeFull', { line: volumeLine(full) })}</Body>
+        <Body>{t('goal.volumeIntuitive', { line: volumeLine(intuitive) })}</Body>
+        {full.unbuilt.length > 0 && <Muted>{t('goal.unbuilt')}</Muted>}
         {error && <Note tone="danger">{error}</Note>}
-        <Button label="Полный путь" onPress={() => void choose(false)} busy={busy} />
+        <Button label={t('goal.fullPath')} onPress={() => void choose(false)} busy={busy} />
         <Button
-          label="Интуитивный вариант"
+          label={t('goal.intuitive')}
           variant="quiet"
           onPress={() => void choose(true)}
           disabled={busy}
@@ -234,34 +229,34 @@ export function GoalIntakeDialog({
   return (
     <View style={{ gap: space.md }}>
       <StepHeader step={stepOf('recap')} />
-      <Title>Правильно ли понята цель</Title>
+      <Title>{t('goal.recapTitle')}</Title>
       <Body>{recapLine(summary)}</Body>
       <Field
-        placeholder="область"
+        placeholder={t('goal.areaPlaceholder')}
         value={summary.area}
         onChangeText={(v) => setSummary({ ...summary, area: v })}
         onBlur={() => setSummary(editSummary(summary, {}))}
       />
       <Field
-        placeholder="цель"
+        placeholder={t('goal.goalPlaceholder')}
         value={summary.goal}
         onChangeText={(v) => setSummary({ ...summary, goal: v })}
       />
       <Field
-        placeholder="что уже знаете (можно оставить пустым)"
+        placeholder={t('goal.knowsPlaceholder')}
         multiline
         value={summary.knows ?? ''}
         onChangeText={(v) => setSummary({ ...summary, knows: v })}
       />
       <Field
-        placeholder="срок, например: через 3 месяца"
+        placeholder={t('onb.deadlinePlaceholder')}
         value={summary.constraints?.deadline ?? ''}
         onChangeText={(v) =>
           setSummary({ ...summary, constraints: { ...summary.constraints, deadline: v } })
         }
       />
       <Field
-        placeholder="часов в неделю"
+        placeholder={t('onb.hoursPlaceholder')}
         keyboardType="numeric"
         value={hoursText}
         onChangeText={(v) => {
@@ -273,18 +268,20 @@ export function GoalIntakeDialog({
         }}
       />
       <Field
-        placeholder="формат занятий, например: короткие уроки"
+        placeholder={t('goal.formatPlaceholder')}
         value={summary.constraints?.format ?? ''}
         onChangeText={(v) =>
           setSummary({ ...summary, constraints: { ...summary.constraints, format: v } })
         }
       />
-      {summary.wishes.length > 0 && <Muted>Важно: {summary.wishes.join('; ')}</Muted>}
+      {summary.wishes.length > 0 && (
+        <Muted>{t('goal.important', { wishes: summary.wishes.join('; ') })}</Muted>
+      )}
       {assumedLine(assumedFields(summary, levelChosen)) !== '' && (
         <Note tone="warn">{assumedLine(assumedFields(summary, levelChosen))}</Note>
       )}
 
-      <Label>До какого уровня</Label>
+      <Label>{t('onb.toWhatLevel')}</Label>
       <View style={{ gap: space.sm }}>
         {MASTERY_TARGETS.map((t) => (
           <ChoiceRow
@@ -299,15 +296,15 @@ export function GoalIntakeDialog({
         ))}
       </View>
 
-      <Muted>Та ли это область? Пока вы не подтвердите, карта не строится.</Muted>
+      <Muted>{t('goal.rightArea')}</Muted>
       {error && <Note tone="danger">{error}</Note>}
       <Button
-        label="Да, всё верно"
+        label={t('goal.confirm')}
         onPress={() => void confirm()}
         busy={busy}
         disabled={!canConfirm(summary)}
       />
-      <Button label="Уточнить заново" variant="quiet" onPress={() => setStage('clarify')} />
+      <Button label={t('goal.again')} variant="quiet" onPress={() => setStage('clarify')} />
     </View>
   );
 }

@@ -3,6 +3,7 @@
 import { View } from 'react-native';
 import type { ActivityRendererProps } from '@/shared/engine';
 import { Body, Button, Lead, Muted, Note, space, Title } from '@/shared/ui';
+import { useI18n } from '@/shared/i18n';
 
 interface Section {
   heading: string;
@@ -18,17 +19,15 @@ interface Content {
 }
 
 export function ConceptStudyActivity({ activity, onComplete }: ActivityRendererProps) {
+  const { t } = useI18n();
   const payload = activity.payload as { title?: string; content?: Content; status?: string };
   const content = payload.content;
 
   return (
     <View style={{ gap: space.md }}>
-      <Title>{payload.title ?? 'Концепция'}</Title>
+      <Title>{payload.title ?? t('conceptStudyConceptStudyActivity.1')}</Title>
       {payload.status === 'draft' && (
-        <Note tone="warn">
-          Черновик: понятие собрано автоматически и ещё не проверено специалистом. Учиться по нему
-          можно, но возможны неточности.
-        </Note>
+        <Note tone="warn">{t('conceptStudyConceptStudyActivity.2')}</Note>
       )}
       {content?.summary ? <Lead>{content.summary}</Lead> : null}
 
@@ -51,11 +50,13 @@ export function ConceptStudyActivity({ activity, onComplete }: ActivityRendererP
       ))}
 
       {(content?.references ?? []).length > 0 && (
-        <Muted>Источники: {(content?.references ?? []).map((r) => r.title).join(', ')}</Muted>
+        <Muted>
+          {t('m.sourcesList', { list: (content?.references ?? []).map((r) => r.title).join(', ') })}
+        </Muted>
       )}
 
       <Button
-        label="Разобрался"
+        label={t('conceptStudyConceptStudyActivity.3')}
         onPress={() => onComplete({ activityId: activity.id, userAnswer: { read: true } })}
       />
     </View>

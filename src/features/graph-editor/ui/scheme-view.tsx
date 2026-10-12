@@ -46,6 +46,7 @@ import {
 } from '../model/scheme';
 import { rememberFlag, remembered } from '../model/remember';
 import { SchemeLegend } from './scheme-legend';
+import { translate, useI18n } from '@/shared/i18n';
 
 const ZOOMS = [0.5, 0.7, 1, 1.3];
 
@@ -53,10 +54,10 @@ export function SchemeView({
   graph,
   mastery,
   onStudy,
-  studyLabel = 'Изучать',
+  studyLabel = translate('graphEditorSchemeView.1'),
   domain,
   onChanged,
-  fullscreenTitle = 'Схема пути',
+  fullscreenTitle = translate('graphEditorSchemeView.2'),
   mode = 'map',
 }: {
   graph: Graph;
@@ -71,6 +72,7 @@ export function SchemeView({
   /** «map» — понятия канона; «tree» — шаги курса: у них своя легенда (T-0137). */
   mode?: LegendMode;
 }) {
+  const { t } = useI18n();
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [selected, setSelected] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -121,17 +123,17 @@ export function SchemeView({
       const made = await createOwnNode(domain, title, title);
       madeId = made.userConceptId;
       if (from) await createUserEdge(domain, from, madeId);
-      setNote('Добавлено.');
+      setNote(t('graphEditorSchemeView.3'));
     } catch (e) {
       if (e instanceof ApiError && e.status >= 400 && e.status < 500) {
-        setNote('Сервер отклонил правку. Проверьте название.');
+        setNote(t('graphEditorSchemeView.4'));
       } else if (madeId && from) {
         // Узел уже создан: в очередь идёт только связь, иначе при повторе появился бы второй узел.
         queueEdit({ kind: 'add-edge', domain, from, to: madeId });
-        setNote('Понятие добавлено, связь появится, когда будет сеть.');
+        setNote(t('graphEditorSchemeView.5'));
       } else {
         queueEdit({ kind: 'add-node', domain, title, summary: title, linkTo: from ?? undefined });
-        setNote('Нет связи: понятие добавится, когда она появится.');
+        setNote(t('graphEditorSchemeView.6'));
       }
     }
     setOwnTitle('');
@@ -145,7 +147,7 @@ export function SchemeView({
       setSelected(null);
       onChanged?.();
     } catch {
-      setNote('Не удалось убрать: нет связи.');
+      setNote(t('graphEditorSchemeView.7'));
     }
   }
 
@@ -153,10 +155,10 @@ export function SchemeView({
     if (!node.userConceptId || !title.trim()) return;
     try {
       await patchUserNode(node.userConceptId, { title: title.trim() });
-      setNote('Переименовано.');
+      setNote(t('graphEditorSchemeView.8'));
       onChanged?.();
     } catch {
-      setNote('Не удалось переименовать: нет связи.');
+      setNote(t('graphEditorSchemeView.9'));
     }
   }
 
@@ -181,7 +183,7 @@ export function SchemeView({
           rememberFlag('graph-legend-open', !legendOpen);
           setLegendOpen(!legendOpen);
         }}
-        title={mode === 'tree' ? 'Как читать дерево' : 'Как читать схему'}
+        title={mode === 'tree' ? t('graphEditorSchemeView.10') : t('graphEditorSchemeView.11')}
       />
 
       {domain && (
@@ -189,10 +191,14 @@ export function SchemeView({
           <Field
             value={ownTitle}
             onChangeText={setOwnTitle}
-            placeholder={selected ? 'своё понятие, связанное с выбранным' : 'своё понятие'}
+            placeholder={selected ? t('graphEditorSchemeView.12') : t('graphEditorSchemeView.13')}
             style={{ flex: 1 }}
           />
-          <Button label="Добавить" variant="quiet" onPress={() => void addOwn()} />
+          <Button
+            label={t('graphEditorSchemeView.14')}
+            variant="quiet"
+            onPress={() => void addOwn()}
+          />
         </View>
       )}
       {note && <Muted>{note}</Muted>}
@@ -200,20 +206,20 @@ export function SchemeView({
       <Field
         value={filters.query}
         onChangeText={(query) => setFilters((f) => ({ ...f, query }))}
-        placeholder="найти понятие"
-        accessibilityLabel="Найти понятие"
+        placeholder={t('graphEditorSchemeView.15')}
+        accessibilityLabel={t('graphEditorSchemeView.16')}
       />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm, alignItems: 'center' }}>
-        {flag('studyNow', 'можно изучать сейчас')}
-        {flag('hideKnown', 'скрыть пройденное')}
-        {flag('optionalOnly', 'только необязательное')}
-        {flag('mineOnly', 'только своё')}
+        {flag('studyNow', t('graphEditorSchemeView.17'))}
+        {flag('hideKnown', t('graphEditorSchemeView.18'))}
+        {flag('optionalOnly', t('graphEditorSchemeView.19'))}
+        {flag('mineOnly', t('graphEditorSchemeView.20'))}
         {filtering && (
           <Pressable
             onPress={() => setFilters(NO_FILTERS)}
             style={{ minHeight: 44, justifyContent: 'center' }}
           >
-            <Muted>сбросить</Muted>
+            <Muted>{t('graphEditorSchemeView.21')}</Muted>
           </Pressable>
         )}
       </View>
@@ -232,8 +238,12 @@ export function SchemeView({
           disabled={zoomIndex === ZOOMS.length - 1}
           onPress={() => setZoomIndex((i) => Math.min(ZOOMS.length - 1, i + 1))}
         />
-        <Button label="Во весь экран" variant="quiet" onPress={() => setFullscreen(true)} />
-        <Muted>Этап можно раскрыть или свернуть нажатием на его название</Muted>
+        <Button
+          label={t('graphEditorSchemeView.22')}
+          variant="quiet"
+          onPress={() => setFullscreen(true)}
+        />
+        <Muted>{t('graphEditorSchemeView.23')}</Muted>
       </View>
 
       <StageControls scene={scene} selected={selected} stageTitle={stageTitle} />
@@ -304,7 +314,9 @@ export function SchemeView({
           onClose={() => setSelected(null)}
           onPick={scene.select}
           onStudy={onStudy ? () => onStudy(selectedNode.id) : undefined}
-          studyLabel={states[selectedNode.id] === 'learning' ? 'Продолжить' : studyLabel}
+          studyLabel={
+            states[selectedNode.id] === 'learning' ? t('graphEditorSchemeView.24') : studyLabel
+          }
           onRemove={
             selectedNode.kind === 'personal' ? () => void removeOwn(selectedNode) : undefined
           }
@@ -342,6 +354,7 @@ function NodeCard({
   onStudy?: () => void;
   studyLabel: string;
 }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const [title, setTitle] = useState(node.title);
   const before = graph.edges.filter((e) => e.to === node.id && e.type === 'prereq');
@@ -367,16 +380,16 @@ function NodeCard({
         ))}
         {state && <Pill text={STATE_TEXT[state]} tone={state === 'known' ? 'core' : 'accent'} />}
       </View>
-      <Body>{node.content.summary ?? 'Пояснение пока не готово.'}</Body>
+      <Body>{node.content.summary ?? t('graphEditorSchemeView.25')}</Body>
       {before.length > 0 && (
         <View style={{ gap: space.xs }}>
-          <Muted>Нужно раньше</Muted>
+          <Muted>{t('graphEditorSchemeView.26')}</Muted>
           {before.map((e) => link(e.from))}
         </View>
       )}
       {after.length > 0 && (
         <View style={{ gap: space.xs }}>
-          <Muted>Открывает</Muted>
+          <Muted>{t('graphEditorSchemeView.27')}</Muted>
           {after.map((e) => link(e.to))}
         </View>
       )}
@@ -388,7 +401,7 @@ function NodeCard({
           <TextInput
             value={title}
             onChangeText={setTitle}
-            placeholder="название"
+            placeholder={t('graphEditorSchemeView.28')}
             placeholderTextColor={colors.muted}
             style={{
               borderWidth: 1,
@@ -400,15 +413,17 @@ function NodeCard({
             }}
           />
           <Button
-            label="Переименовать"
+            label={t('graphEditorSchemeView.29')}
             variant="quiet"
             disabled={!title.trim() || title.trim() === node.title}
             onPress={() => onRename(title)}
           />
         </View>
       )}
-      {onRemove && <Button label="Убрать своё понятие" variant="danger" onPress={onRemove} />}
-      <Button label="Закрыть" variant="quiet" onPress={onClose} />
+      {onRemove && (
+        <Button label={t('graphEditorSchemeView.30')} variant="danger" onPress={onRemove} />
+      )}
+      <Button label={t('graphEditorSchemeView.31')} variant="quiet" onPress={onClose} />
     </Card>
   );
 }

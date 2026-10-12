@@ -12,8 +12,10 @@ import type { Activity } from '@/shared/engine';
 import { useModuleRegistry } from '@/shared/lib';
 import { Body, Card, Empty, Muted, Screen, TopBar } from '@/shared/ui';
 import { ActivityDispatcher } from '@/widgets/activity-dispatcher';
+import { useI18n } from '@/shared/i18n';
 
 export default function ActivitiesRoute() {
+  const { t } = useI18n();
   const router = useRouter();
   const { user } = useSession();
   const registry = useModuleRegistry();
@@ -28,8 +30,8 @@ export default function ActivitiesRoute() {
   if (!user?.is_superuser) {
     return (
       <Screen>
-        <TopBar title="Недоступно" onBack={() => router.back()} />
-        <Empty text="Раздел доступен только администратору." />
+        <TopBar title={t('appActivities.1')} onBack={() => router.back()} />
+        <Empty text={t('appActivities.2')} />
       </Screen>
     );
   }
@@ -37,7 +39,7 @@ export default function ActivitiesRoute() {
   if (running) {
     return (
       <Screen>
-        <TopBar title="Задание" onBack={() => setRunning(null)} />
+        <TopBar title={t('appActivities.3')} onBack={() => setRunning(null)} />
         <ActivityDispatcher activity={running} onComplete={() => setRunning(null)} />
       </Screen>
     );
@@ -45,9 +47,9 @@ export default function ActivitiesRoute() {
 
   return (
     <Screen>
-      <TopBar title="Все задания" onBack={() => router.back()} />
+      <TopBar title={t('appActivities.4')} onBack={() => router.back()} />
       {activities.length === 0 ? (
-        <Empty text="Пусто. Синхронизируйте в профиле." />
+        <Empty text={t('appActivities.5')} />
       ) : (
         activities.map((a) => (
           <Card key={a.id} onPress={() => setRunning(a)}>

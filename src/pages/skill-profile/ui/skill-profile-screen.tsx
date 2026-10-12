@@ -2,19 +2,21 @@
 import { useSession } from '@/entities/session';
 import { SkillProfileEditor } from '@/features/skill-profile';
 import { Empty, Muted, Screen, TopBar } from '@/shared/ui';
+import { useI18n } from '@/shared/i18n';
 
 export function SkillProfileScreen({ onBack }: { onBack?: () => void }) {
+  const { t } = useI18n();
   const { subject } = useSession();
   return (
     <Screen>
-      <TopBar title="Профиль навыка" onBack={onBack} />
+      <TopBar title={t('skillProfileSkillProfileScreen.1')} onBack={onBack} />
       {subject ? (
         <>
-          <Muted>Что нужно знать для вашей цели, по областям и этапам. Можно поправить.</Muted>
+          <Muted>{t('skillProfileSkillProfileScreen.2')}</Muted>
           <SkillProfileEditor domain={subject.id} />
         </>
       ) : (
-        <Empty text="Сначала выберите предмет." />
+        <Empty text={t('skillProfileSkillProfileScreen.3')} />
       )}
     </Screen>
   );

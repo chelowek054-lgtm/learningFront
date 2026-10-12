@@ -5,6 +5,7 @@ import type { CourseStep } from '@/shared/api';
 import { rememberFlag, remembered } from '@/shared/lib';
 import { Card, Label, Muted, space } from '@/shared/ui';
 import { groupSteps } from '../model/group-steps';
+import { useI18n } from '@/shared/i18n';
 
 /** Зона нажатия заголовка: не меньше 44 px, чтобы попасть пальцем. */
 const hit = { minHeight: 44, justifyContent: 'center' } as const;
@@ -18,6 +19,7 @@ export function PathAccordion({
   currentId: string | null;
   renderStep: (step: CourseStep, index: number) => ReactNode;
 }) {
+  const { t } = useI18n();
   // Выбор человека в этой сессии держим в состоянии компонента: перерисовка не зависит от того,
   // записалось ли значение в хранилище. Запоминание между запусками — в дополнение к нему.
   const [chosen, setChosen] = useState<Record<string, boolean>>({});
@@ -49,7 +51,8 @@ export function PathAccordion({
               style={hit}
             >
               <Label>
-                {open ? '▾' : '▸'} {area.title} · пройдено {area.done} из {area.total}
+                {open ? '▾' : '▸'}{' '}
+                {t('m.areaProgress', { title: area.title, done: area.done, total: area.total })}
               </Label>
             </Pressable>
             {open &&
@@ -67,7 +70,12 @@ export function PathAccordion({
                       style={hit}
                     >
                       <Muted>
-                        {stageOpen ? '▾' : '▸'} {stage.title} · {done} из {stage.steps.length}
+                        {stageOpen ? '▾' : '▸'}{' '}
+                        {t('m.stageProgress', {
+                          title: stage.title,
+                          done,
+                          total: stage.steps.length,
+                        })}
                       </Muted>
                     </Pressable>
                     {stageOpen && stage.steps.map((x) => renderStep(x.step, x.index))}

@@ -20,6 +20,7 @@ import { font, radius, space, useTheme } from './theme';
 import { backdropStyle } from './backdrop';
 import { SMALL, SMALL_HIT_SLOP, type ControlSize, type ControlTone } from './control-size';
 import { typography } from '@/shared/config';
+import { useI18n } from '@/shared/i18n';
 
 /** Экран: фон темы + безопасные зоны. `scroll` — для длинного содержимого. */
 export function Screen({
@@ -463,6 +464,7 @@ export function Progress({ value, tone = 'accent' }: { value: number; tone?: 'ac
 
 /** Заголовок вложенного экрана с возвратом — единый на все стековые страницы. */
 export function TopBar({ title, onBack }: { title: string; onBack?: () => void }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   return (
     <View style={{ gap: space.xs }}>
@@ -472,7 +474,9 @@ export function TopBar({ title, onBack }: { title: string; onBack?: () => void }
           accessibilityRole="button"
           style={{ minHeight: 44, justifyContent: 'center' }}
         >
-          <Text style={{ color: colors.accentText, fontSize: font.body }}>← Назад</Text>
+          <Text style={{ color: colors.accentText, fontSize: font.body }}>
+            ← {t('common.back')}
+          </Text>
         </Pressable>
       )}
       <Title>{title}</Title>

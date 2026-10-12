@@ -6,11 +6,18 @@ import type {
   ProfileConcept,
   SkillProfile,
 } from '@/shared/api';
+import { translate } from '../../../shared/i18n/translate';
 
 export const LEVEL_LABEL: Record<ConceptLevel, string> = {
-  basic: 'база',
-  middle: 'средний',
-  advanced: 'продвинутый',
+  get basic() {
+    return translate('skillProfileProfileModel.1');
+  },
+  get middle() {
+    return translate('skillProfileProfileModel.2');
+  },
+  get advanced() {
+    return translate('skillProfileProfileModel.3');
+  },
 };
 
 export interface StageGroup {
@@ -31,7 +38,8 @@ export function groupByStage(area: ProfileArea): StageGroup[] {
   const loose = area.concepts.filter(
     (c) => !c.stage || !area.stages.some((s) => s.key === c.stage),
   );
-  if (loose.length > 0) groups.push({ key: null, title: 'Без этапа', concepts: loose });
+  if (loose.length > 0)
+    groups.push({ key: null, title: translate('skillProfileProfileModel.4'), concepts: loose });
   return groups.filter((g) => g.concepts.length > 0);
 }
 
@@ -94,9 +102,9 @@ export const conceptCount = (profile: SkillProfile): number =>
 /** «Охвачено 87% · не хватает 4 · проверено 2» — итог отчёта полноты одной строкой. */
 export function coverageLine(report: CoverageReport): string {
   const s = report.summary;
-  const parts = [`охвачено ${Math.round(s.coverage * 100)}%`];
-  if (s.missing > 0) parts.push(`не хватает ${s.missing}`);
-  if (s.verified > 0) parts.push(`проверено ${s.verified}`);
+  const parts = [translate('m.covered', { percent: Math.round(s.coverage * 100) })];
+  if (s.missing > 0) parts.push(translate('skillProfileProfileModel.5', { missing: s.missing }));
+  if (s.verified > 0) parts.push(translate('skillProfileProfileModel.6', { verified: s.verified }));
   return parts.join(' · ');
 }
 
@@ -125,6 +133,6 @@ export const knownLine = (profile: SkillProfile): string => {
   const base = profile.areas.filter((a) => a.role !== 'goal');
   const known = base.filter((a) => a.known).length;
   return known === 0
-    ? 'ни одной области не отмечено как знакомая'
-    : `уже владею: ${known} из ${base.length}`;
+    ? translate('skillProfileProfileModel.7')
+    : translate('skillProfileProfileModel.8', { known, length: base.length });
 };

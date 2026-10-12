@@ -11,13 +11,22 @@ import {
   type SrsCardRecord,
 } from '@/shared/engine';
 import { getLocalStore } from '@/shared/api';
+import { useI18n, translate } from '@/shared/i18n';
 
 const RATINGS: Rating[] = ['again', 'hard', 'good', 'easy'];
 const RATING_LABEL: Record<Rating, string> = {
-  again: 'Снова',
-  hard: 'Трудно',
-  good: 'Хорошо',
-  easy: 'Легко',
+  get again() {
+    return translate('reviewReviewScreen.1');
+  },
+  get hard() {
+    return translate('reviewReviewScreen.2');
+  },
+  get good() {
+    return translate('reviewReviewScreen.3');
+  },
+  get easy() {
+    return translate('reviewReviewScreen.4');
+  },
 };
 
 function reviveCard(state: Record<string, unknown>, now: Date): FsrsCardState {
@@ -58,6 +67,7 @@ export function ReviewScreen({
   /** Повторить только эти карточки (шаг курса); без списка — вся очередь. */
   cardIds?: string[];
 }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const { subject } = useSession();
   const styles = makeStyles(colors);
@@ -100,10 +110,10 @@ export function ReviewScreen({
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.center}>
-          <Text style={styles.done}>Повторения на сегодня сделаны 🎉</Text>
+          <Text style={styles.done}>{t('reviewReviewScreen.5')}</Text>
           {onDone && (
             <Pressable onPress={onDone}>
-              <Text style={styles.link}>← На главную</Text>
+              <Text style={styles.link}>{t('reviewReviewScreen.6')}</Text>
             </Pressable>
           )}
         </View>
@@ -116,12 +126,12 @@ export function ReviewScreen({
       <View style={styles.content}>
         <Text style={styles.counter}>
           {subject ? `${subject.title} · ` : ''}
-          Осталось: {queue.length}
+          {t('reviewReviewScreen.7', { length: queue.length })}
         </Text>
         <Pressable style={styles.card} onPress={() => setRevealed(true)}>
           <Text style={styles.front}>{frontText(card)}</Text>
           {revealed && <Text style={styles.back}>{backText(card)}</Text>}
-          {!revealed && <Text style={styles.hint}>нажмите, чтобы показать ответ</Text>}
+          {!revealed && <Text style={styles.hint}>{t('reviewReviewScreen.8')}</Text>}
         </Pressable>
 
         {revealed && (

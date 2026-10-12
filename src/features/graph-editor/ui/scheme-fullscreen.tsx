@@ -45,15 +45,36 @@ import { LegendList } from './scheme-legend';
 import { SchemeCanvas, type CanvasMode } from './scheme-canvas';
 import { StageControls, StageLinksCard } from './stage-controls';
 import type { SchemeScene } from './use-scheme-scene';
+import { useI18n, translate } from '@/shared/i18n';
 
 /** Нижняя граница масштаба при открытии: текст узлов остаётся читаемым. */
 const OPEN_ZOOM_MIN = 0.75;
 
 const FILTER_FLAGS: readonly { key: keyof Omit<Filters, 'query'>; text: string }[] = [
-  { key: 'studyNow', text: 'можно изучать сейчас' },
-  { key: 'hideKnown', text: 'скрыть пройденное' },
-  { key: 'optionalOnly', text: 'только необязательное' },
-  { key: 'mineOnly', text: 'только своё' },
+  {
+    key: 'studyNow',
+    get text() {
+      return translate('graphEditorSchemeFullscreen.1');
+    },
+  },
+  {
+    key: 'hideKnown',
+    get text() {
+      return translate('graphEditorSchemeFullscreen.2');
+    },
+  },
+  {
+    key: 'optionalOnly',
+    get text() {
+      return translate('graphEditorSchemeFullscreen.3');
+    },
+  },
+  {
+    key: 'mineOnly',
+    get text() {
+      return translate('graphEditorSchemeFullscreen.4');
+    },
+  },
 ];
 
 const ARROW_KEYS: Record<string, KeyDirection> = {
@@ -100,6 +121,7 @@ export function SchemeFullscreen({
   onRemove?: (node: GraphNode) => void;
   onRename?: (node: GraphNode, title: string) => void;
 }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { width, height: windowHeight } = useWindowDimensions();
@@ -216,7 +238,7 @@ export function SchemeFullscreen({
       onClose={() => onSelect(null)}
       onPick={onSelect}
       onStudy={onStudy ? () => onStudy(node.id) : undefined}
-      studyLabel={states[node.id] === 'learning' ? 'Продолжить' : studyLabel}
+      studyLabel={states[node.id] === 'learning' ? t('graphEditorSchemeFullscreen.5') : studyLabel}
       onRemove={node.kind === 'personal' && onRemove ? () => onRemove(node) : undefined}
       onRename={node.kind === 'personal' && onRename ? (t) => onRename(node, t) : undefined}
       maxHeight={Math.round(windowHeight * 0.5)}
@@ -270,7 +292,7 @@ export function SchemeFullscreen({
           <Pressable
             onPress={onClose}
             accessibilityRole="button"
-            accessibilityLabel="Закрыть схему"
+            accessibilityLabel={t('graphEditorSchemeFullscreen.6')}
             style={{
               minHeight: 44,
               minWidth: 44,
@@ -288,7 +310,7 @@ export function SchemeFullscreen({
             <Text style={{ color: colors.ink, fontSize: font.body }}>✕</Text>
             {wide && (
               <Text style={{ color: colors.ink, fontSize: font.body, fontWeight: '600' }}>
-                Закрыть
+                {t('graphEditorSchemeFullscreen.7')}
               </Text>
             )}
             {wide && Platform.OS === 'web' && (
@@ -300,14 +322,14 @@ export function SchemeFullscreen({
               numberOfLines={1}
               style={{ color: colors.ink, fontSize: font.body, fontWeight: '700' }}
             >
-              Схема пути
+              {t('graphEditorSchemeFullscreen.8')}
             </Text>
             <Text numberOfLines={1} style={{ color: colors.muted, fontSize: font.small }}>
               {title}
-              {filtering ? ` · найдено ${matched}` : ''}
+              {filtering ? t('graphEditorSchemeFullscreen.9', { matched }) : ''}
             </Text>
           </View>
-          {ctl('⌕', 'Найти понятие', () => setSearching((v) => !v))}
+          {ctl('⌕', t('graphEditorSchemeFullscreen.10'), () => setSearching((v) => !v))}
         </View>
 
         {searching && (
@@ -315,8 +337,8 @@ export function SchemeFullscreen({
             autoFocus
             value={filters.query}
             onChangeText={(query) => onFilters({ ...filters, query })}
-            placeholder="найти понятие"
-            accessibilityLabel="Найти понятие"
+            placeholder={t('graphEditorSchemeFullscreen.11')}
+            accessibilityLabel={t('graphEditorSchemeFullscreen.10')}
           />
         )}
         <View
@@ -324,25 +346,27 @@ export function SchemeFullscreen({
         >
           <Chip
             size="sm"
-            text="Легенда"
+            text={t('graphEditorSchemeFullscreen.12')}
             selected={panel === 'legend'}
             onPress={() => togglePanel('legend')}
           />
           <Chip
             size="sm"
-            text={filtering ? 'Фильтры ●' : 'Фильтры'}
+            text={
+              filtering ? t('graphEditorSchemeFullscreen.13') : t('graphEditorSchemeFullscreen.14')
+            }
             selected={panel === 'filters'}
             onPress={() => togglePanel('filters')}
           />
           <Chip
             size="sm"
-            text="Только связи"
+            text={t('graphEditorSchemeFullscreen.15')}
             selected={mode === 'focus'}
             onPress={() => setMode((m) => (m === 'focus' ? 'all' : 'focus'))}
           />
           <Chip
             size="sm"
-            text="Мини-карта"
+            text={t('graphEditorSchemeFullscreen.16')}
             selected={showMap}
             onPress={() => setShowMap((v) => !v)}
           />
@@ -404,9 +428,14 @@ export function SchemeFullscreen({
                 alignItems: 'flex-end',
               }}
             >
-              {ctl('+', 'Приблизить', () => zoomBy(1.25), zoom >= ZOOM_MAX)}
-              {ctl('−', 'Отдалить', () => zoomBy(1 / 1.25), zoom <= ZOOM_MIN)}
-              {ctl('Вписать', 'Вписать схему в экран', fit)}
+              {ctl('+', t('graphEditorSchemeFullscreen.17'), () => zoomBy(1.25), zoom >= ZOOM_MAX)}
+              {ctl(
+                '−',
+                t('graphEditorSchemeFullscreen.18'),
+                () => zoomBy(1 / 1.25),
+                zoom <= ZOOM_MIN,
+              )}
+              {ctl(t('graphEditorSchemeFullscreen.19'), t('graphEditorSchemeFullscreen.20'), fit)}
             </View>
             {panel !== 'none' && (
               <View
@@ -440,7 +469,7 @@ export function SchemeFullscreen({
                           <Button
                             size="sm"
                             variant="quiet"
-                            label="Сбросить"
+                            label={t('graphEditorSchemeFullscreen.21')}
                             onPress={() => onFilters(NO_FILTERS)}
                           />
                         )}
@@ -450,7 +479,7 @@ export function SchemeFullscreen({
                   <Button
                     size="sm"
                     variant="quiet"
-                    label="Закрыть"
+                    label={t('graphEditorSchemeFullscreen.7')}
                     onPress={() => setPanel('none')}
                   />
                 </Card>
@@ -462,7 +491,7 @@ export function SchemeFullscreen({
                 style={{ position: 'absolute', left: space.md, bottom: space.sm }}
               >
                 <Text style={{ color: colors.muted, fontSize: font.caption }}>
-                  Нажмите на понятие, чтобы увидеть его связи
+                  {t('graphEditorSchemeFullscreen.22')}
                 </Text>
               </View>
             )}
@@ -471,12 +500,11 @@ export function SchemeFullscreen({
           {!plate && wide && (
             <View style={{ width: 300, maxWidth: '40%' }}>
               <Text style={{ color: colors.muted, fontSize: font.small }}>
-                Плашка понятия появится справа: описание, связи и действия. Остальной граф
-                приглушится.
+                {t('graphEditorSchemeFullscreen.23')}
               </Text>
               {Platform.OS === 'web' && (
                 <Text style={{ color: colors.muted, fontSize: font.caption, marginTop: space.sm }}>
-                  Esc — закрыть · F — вписать · «+» и «−» — масштаб · стрелки — по соседям
+                  {t('graphEditorSchemeFullscreen.24')}
                 </Text>
               )}
             </View>

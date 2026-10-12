@@ -3,6 +3,7 @@ import { Pressable, View, type GestureResponderEvent } from 'react-native';
 import { radius, useTheme } from '@/shared/ui';
 import { NODE_H, NODE_W, type SchemeLayout } from '../model/scheme';
 import type { StageBox } from '../model/overview';
+import { useI18n } from '@/shared/i18n';
 
 const W = 168;
 const H = 108;
@@ -27,6 +28,7 @@ export function MiniMap({
   /** Куда прокрутить холст, в пикселях окна: левый верхний угол. */
   onJump: (x: number, y: number) => void;
 }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const contentW = layout.width + PAD * 2;
   const contentH = layout.height + PAD * 2;
@@ -49,7 +51,7 @@ export function MiniMap({
     <Pressable
       onPress={jump}
       accessibilityRole="button"
-      accessibilityLabel="Мини-карта схемы: нажмите, чтобы перейти к месту"
+      accessibilityLabel={t('graphEditorMiniMap.1')}
       style={{
         width: contentW * k,
         height: contentH * k,

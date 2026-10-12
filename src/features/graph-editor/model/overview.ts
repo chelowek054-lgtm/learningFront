@@ -18,6 +18,7 @@ import {
   type Position,
   type SchemeLayout,
 } from './scheme';
+import { translate } from '../../../shared/i18n/translate';
 
 /** Порог автоматического обзора: больше понятий или связей (и хотя бы два этапа). */
 export const OVERVIEW_NODES = 25;
@@ -391,5 +392,5 @@ export function stageSummary(links: StageLink[], key: string): { before: number;
 export function stageTitleOf(nodes: GraphNode[], key: string): string {
   const n = nodes.find((x) => stageKeyOf(x) === key);
   if (!n) return key;
-  return `${n.stage ?? 'Прочее'}${n.area ? ` (${n.area})` : ''}`;
+  return `${n.stage ?? translate('m.stageOther')}${n.area ? ` (${n.area})` : ''}`;
 }

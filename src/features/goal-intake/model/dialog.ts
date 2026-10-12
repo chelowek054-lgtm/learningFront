@@ -7,6 +7,7 @@ import type {
   GoalVolume,
   VolumeVariant,
 } from '@/shared/api';
+import { translate } from '../../../shared/i18n/translate';
 
 /** Свободный ввод достаточно содержателен, чтобы задавать по нему вопросы. */
 export const canAsk = (text: string): boolean => text.trim().length > 1;
@@ -60,12 +61,12 @@ export function cleanConstraints(raw: GoalConstraints | undefined): GoalConstrai
   return out;
 }
 
-const ASSUMED_LABEL: Record<string, string> = {
-  goal: 'зачем это нужно',
-  level: 'до какого уровня',
-  knows: 'что уже знаете',
-  constraints: 'срок и время на занятия',
-};
+const ASSUMED_KEY = {
+  goal: 'goal.assumed.goal',
+  level: 'goal.assumed.level',
+  knows: 'goal.assumed.knows',
+  constraints: 'goal.assumed.constraints',
+} as const;
 
 /** Какие из пяти полей человек не назвал: по текущим значениям, а не по ответу сервера (он мог устареть после правки). */
 export function assumedFields(summary: GoalSummary, levelChosen: boolean): string[] {
@@ -80,21 +81,27 @@ export function assumedFields(summary: GoalSummary, levelChosen: boolean): strin
 /** «Не указано, предположили: …» для экрана пересказа; пусто, если всё названо. */
 export function assumedLine(fields: string[]): string {
   if (fields.length === 0) return '';
-  return `Не указано, предположили: ${fields.map((f) => ASSUMED_LABEL[f] ?? f).join(', ')}.`;
+  const names = fields.map((f) =>
+    f in ASSUMED_KEY ? translate(ASSUMED_KEY[f as keyof typeof ASSUMED_KEY]) : f,
+  );
+  return translate('goal.assumedLine', { fields: names.join(', ') });
 }
 
 /** Пересказ для строки подтверждения: «область X, цель Y». */
 export function recapLine(summary: GoalSummary): string {
-  const goal = summary.goal && summary.goal !== summary.area ? `, цель — ${summary.goal}` : '';
-  const knows = summary.knows ? `, уже знаете: ${summary.knows}` : '';
+  const goal =
+    summary.goal && summary.goal !== summary.area
+      ? translate('goal.line.goal', { goal: summary.goal })
+      : '';
+  const knows = summary.knows ? translate('goal.line.knows', { knows: summary.knows }) : '';
   const c = summary.constraints ?? {};
   const limits = [
-    c.deadline ? `срок ${c.deadline}` : '',
-    c.hoursPerWeek ? `${c.hoursPerWeek} ч в неделю` : '',
-    c.format ? `формат: ${c.format}` : '',
+    c.deadline ? translate('goal.line.deadline', { deadline: c.deadline }) : '',
+    c.hoursPerWeek ? translate('goal.line.hours', { hours: c.hoursPerWeek }) : '',
+    c.format ? translate('goal.line.format', { format: c.format }) : '',
   ].filter((x) => x !== '');
-  const tail = limits.length ? `, ограничения: ${limits.join(', ')}` : '';
-  return `область «${summary.area}»${goal}${knows}${tail}`;
+  const tail = limits.length ? translate('goal.line.limits', { limits: limits.join(', ') }) : '';
+  return `${translate('goal.line.area', { area: summary.area })}${goal}${knows}${tail}`;
 }
 
 /** Из подтверждённого пересказа получается предмет профиля; идентификатор считает вызывающий. */
@@ -110,19 +117,11 @@ export function needsChoice(volume: GoalVolume | null): boolean {
   return !!volume && volume.registered && volume.differs === true && !!volume.variants.full;
 }
 
-const plural = (n: number, one: string, few: string, many: string): string => {
-  const m10 = n % 10;
-  const m100 = n % 100;
-  if (m10 === 1 && m100 !== 11) return one;
-  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
-  return many;
-};
-
 /** «5 областей, около 60 понятий» — с пометкой, если это оценка, а не точный расчёт. */
 export function volumeLine(v: VolumeVariant): string {
-  const areas = `${v.domainCount} ${plural(v.domainCount, 'область', 'области', 'областей')}`;
-  const concepts = `${v.conceptCount} ${plural(v.conceptCount, 'понятие', 'понятия', 'понятий')}`;
-  return `${areas}, ${v.precise ? '' : 'около '}${concepts}`;
+  const areas = translate('plural.areas', { count: v.domainCount });
+  const concepts = translate('plural.concepts', { count: v.conceptCount });
+  return `${areas}, ${v.precise ? '' : translate('goal.volume.about')}${concepts}`;
 }
 
 /** Поля прямой формы (без сети) в виде, который хранится в профиле: пустое не попадает. */

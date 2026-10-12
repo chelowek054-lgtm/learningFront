@@ -37,8 +37,10 @@ import {
   toggleKnown,
   toggleOptional,
 } from '../model/profile-model';
+import { useI18n } from '@/shared/i18n';
 
 export function SkillProfileEditor({ domain }: { domain: string }) {
+  const { t } = useI18n();
   const [state, setState] = useState<ProfileState | null>(null);
   const [draft, setDraft] = useState<SkillProfile | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -56,7 +58,7 @@ export function SkillProfileEditor({ domain }: { domain: string }) {
       setDirty(false);
       if (s.exists && s.profile) setCoverage(await getCoverage(domain).catch(() => null));
     } catch {
-      setError('Не удалось загрузить профиль. Попробуйте позже.');
+      setError(t('skillProfileSkillProfileEditor.1'));
     }
   }, [domain]);
 
@@ -101,7 +103,7 @@ export function SkillProfileEditor({ domain }: { domain: string }) {
       if (!draft) return;
       setState(await saveProfile(domain, draft));
       setDirty(false);
-      setInfo('Правки сохранены.');
+      setInfo(t('skillProfileSkillProfileEditor.2'));
     });
 
   // «Собрать карту»: контур подтверждён, наполнение идёт в фоне по всем областям сразу.
@@ -120,24 +122,27 @@ export function SkillProfileEditor({ domain }: { domain: string }) {
       setDraft(r.profile);
       setDirty(false);
       setInfo(
-        `Граф дополнен: новых понятий ${r.build.created}, уже было ${r.build.reused}. ` +
-          'Убранное здесь из построенного графа не удаляется.',
+        t('skillProfileSkillProfileEditor.3', {
+          created: r.build.created,
+          reused: r.build.reused,
+        }) + t('skillProfileSkillProfileEditor.4'),
       );
       setCoverage(await getCoverage(domain).catch(() => null));
     });
 
-  if (!state) return <Muted>Загружаю профиль…</Muted>;
+  if (!state) return <Muted>{t('skillProfileSkillProfileEditor.5')}</Muted>;
 
   if (!state.exists || !draft) {
     return (
       <Card>
-        <Label>Профиля пока нет</Label>
-        <Muted>
-          Составим полное описание: из каких областей состоит навык и что в каждой нужно знать, с
-          этапами и уровнем сложности. Построение занимает время.
-        </Muted>
+        <Label>{t('skillProfileSkillProfileEditor.6')}</Label>
+        <Muted>{t('skillProfileSkillProfileEditor.7')}</Muted>
         {error && <Note tone="danger">{error}</Note>}
-        <Button label="Составить профиль" onPress={() => void create()} busy={busy} />
+        <Button
+          label={t('skillProfileSkillProfileEditor.8')}
+          onPress={() => void create()}
+          busy={busy}
+        />
       </Card>
     );
   }
@@ -145,14 +150,22 @@ export function SkillProfileEditor({ domain }: { domain: string }) {
   if (state.status === 'building') {
     return (
       <Card>
-        <Label>{state.progress ? 'Карта собирается' : 'Составляем контур навыка'}</Label>
+        <Label>
+          {state.progress
+            ? t('skillProfileSkillProfileEditor.9')
+            : t('skillProfileSkillProfileEditor.10')}
+        </Label>
         <Muted>
           {state.progress
-            ? 'Каждая область наполняется отдельно; можно закрыть экран — сборка продолжится.'
-            : 'Обычно около минуты.'}
+            ? t('skillProfileSkillProfileEditor.11')
+            : t('skillProfileSkillProfileEditor.12')}
         </Muted>
         {areaProgressItems(state).length > 0 && <AreaProgress items={areaProgressItems(state)} />}
-        <Button label="Обновить" variant="quiet" onPress={() => void load()} />
+        <Button
+          label={t('skillProfileSkillProfileEditor.13')}
+          variant="quiet"
+          onPress={() => void load()}
+        />
       </Card>
     );
   }
@@ -161,48 +174,52 @@ export function SkillProfileEditor({ domain }: { domain: string }) {
 
   return (
     <View style={{ gap: space.md }}>
-      {outline && (
-        <Note tone="ok">
-          Контур готов: проверьте, из чего состоит навык. Отметьте области, которые уже знаете, — по
-          ним понятий будет меньше. Потом соберите карту.
-        </Note>
-      )}
+      {outline && <Note tone="ok">{t('skillProfileSkillProfileEditor.14')}</Note>}
       <Muted>
-        {draft.skill} · {draft.areas.length} обл.
+        {t('skillProfileSkillProfileEditor.15', { skill: draft.skill, length: draft.areas.length })}
         {outline
           ? ` · ${knownLine(draft)}`
-          : ` · ${conceptCount(draft)} понятий · ${state.status === 'confirmed' ? 'граф построен' : 'черновик'}`}
+          : ` · ${t('m.conceptsAndStatus', { count: conceptCount(draft), status: state.status === 'confirmed' ? t('m.graphBuilt') : t('m.draft') })}`}
       </Muted>
-      {coverage && <Note tone="ok">В графе: {coverageLine(coverage)}</Note>}
+      {coverage && <Note tone="ok">{t('m.inGraph', { line: coverageLine(coverage) })}</Note>}
       {state.status === 'failed' && (
-        <Note tone="danger">{state.error ?? 'Профиль не построился.'}</Note>
+        <Note tone="danger">{state.error ?? t('skillProfileSkillProfileEditor.16')}</Note>
       )}
 
       {draft.areas.map((area) => (
         <Card key={area.key}>
           <Label>
-            {area.title} {area.role === 'goal' ? '· цель' : '· основа'}
+            {area.title}{' '}
+            {area.role === 'goal'
+              ? t('skillProfileSkillProfileEditor.17')
+              : t('skillProfileSkillProfileEditor.18')}
           </Label>
           {area.summary !== '' && <Muted>{area.summary}</Muted>}
           {outline && area.stages.length > 0 && (
             <Muted>
-              Этапы:{' '}
+              {t('m.stagesLabel')}{' '}
               {[...area.stages]
                 .sort((a, b) => a.order - b.order)
                 .map((s) => s.title)
                 .join(' → ')}
             </Muted>
           )}
-          {outline && area.known && <Pill text="уже владею" tone="core" />}
+          {outline && area.known && (
+            <Pill text={t('skillProfileSkillProfileEditor.19')} tone="core" />
+          )}
           {outline && area.role !== 'goal' && (
             <View style={{ flexDirection: 'row', gap: space.sm }}>
               <Button
-                label={area.known ? 'Не знаю' : 'Уже владею'}
+                label={
+                  area.known
+                    ? t('skillProfileSkillProfileEditor.20')
+                    : t('skillProfileSkillProfileEditor.21')
+                }
                 variant="quiet"
                 onPress={() => edit(toggleKnown(draft, area.key))}
               />
               <Button
-                label="Убрать область"
+                label={t('skillProfileSkillProfileEditor.22')}
                 variant="quiet"
                 onPress={() => edit(removeArea(draft, area.key))}
               />
@@ -216,16 +233,22 @@ export function SkillProfileEditor({ domain }: { domain: string }) {
                   <Body>{c.title}</Body>
                   <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
                     {c.level && <Pill text={LEVEL_LABEL[c.level]} />}
-                    {c.optional && <Pill text="необязательное" tone="muted" />}
+                    {c.optional && (
+                      <Pill text={t('skillProfileSkillProfileEditor.23')} tone="muted" />
+                    )}
                   </View>
                   <View style={{ flexDirection: 'row', gap: space.sm }}>
                     <Button
-                      label={c.optional ? 'Сделать обязательным' : 'Необязательное'}
+                      label={
+                        c.optional
+                          ? t('skillProfileSkillProfileEditor.24')
+                          : t('skillProfileSkillProfileEditor.25')
+                      }
                       variant="quiet"
                       onPress={() => edit(toggleOptional(draft, area.key, c.key))}
                     />
                     <Button
-                      label="Убрать"
+                      label={t('skillProfileSkillProfileEditor.26')}
                       variant="quiet"
                       onPress={() => edit(removeConcept(draft, area.key, c.key))}
                     />
@@ -236,7 +259,7 @@ export function SkillProfileEditor({ domain }: { domain: string }) {
           ))}
           {!outline && (
             <Field
-              placeholder="добавить своё понятие"
+              placeholder={t('skillProfileSkillProfileEditor.27')}
               value={newTitles[area.key] ?? ''}
               onChangeText={(v) => setNewTitles((p) => ({ ...p, [area.key]: v }))}
               onSubmitEditing={() => {
@@ -257,20 +280,31 @@ export function SkillProfileEditor({ domain }: { domain: string }) {
 
       {error && <Note tone="danger">{error}</Note>}
       {info && <Note tone="ok">{info}</Note>}
-      <Button label="Сохранить правки" onPress={() => void save()} disabled={!dirty} busy={busy} />
+      <Button
+        label={t('skillProfileSkillProfileEditor.28')}
+        onPress={() => void save()}
+        disabled={!dirty}
+        busy={busy}
+      />
       {outline ? (
-        <Button label="Собрать карту" onPress={() => void fill()} busy={busy} />
+        <Button
+          label={t('skillProfileSkillProfileEditor.29')}
+          onPress={() => void fill()}
+          busy={busy}
+        />
       ) : (
         <Button
           label={
-            state.status === 'confirmed' ? 'Дополнить граф по профилю' : 'Построить граф по профилю'
+            state.status === 'confirmed'
+              ? t('skillProfileSkillProfileEditor.30')
+              : t('skillProfileSkillProfileEditor.31')
           }
           onPress={() => void build()}
           busy={busy}
         />
       )}
       <Button
-        label="Составить заново"
+        label={t('skillProfileSkillProfileEditor.32')}
         variant="quiet"
         onPress={() => void create()}
         disabled={busy}

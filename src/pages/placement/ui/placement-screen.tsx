@@ -6,21 +6,33 @@ import { useSession } from '@/entities/session';
 import { PlacementSession } from '@/features/placement';
 import { PriorTestSession } from '@/features/prior-test';
 import { Empty, Screen, TopBar, useTheme } from '@/shared/ui';
+import { useI18n, translate } from '@/shared/i18n';
 
 type Mode = 'subject' | 'foundations';
 
 const MODES: { key: Mode; label: string }[] = [
-  { key: 'subject', label: 'В предмете' },
-  { key: 'foundations', label: 'Базовые области' },
+  {
+    key: 'subject',
+    get label() {
+      return translate('placementPlacementScreen.1');
+    },
+  },
+  {
+    key: 'foundations',
+    get label() {
+      return translate('placementPlacementScreen.2');
+    },
+  },
 ];
 
 export function PlacementScreen({ onBack }: { onBack?: () => void }) {
+  const { t } = useI18n();
   const { subject } = useSession();
   const { colors } = useTheme();
   const [mode, setMode] = useState<Mode>('subject');
   return (
     <Screen scroll={false}>
-      <TopBar title="Определить уровень" onBack={onBack} />
+      <TopBar title={t('placementPlacementScreen.3')} onBack={onBack} />
       {subject ? (
         <>
           <View style={styles.tabs}>
@@ -48,7 +60,7 @@ export function PlacementScreen({ onBack }: { onBack?: () => void }) {
           )}
         </>
       ) : (
-        <Empty text="Сначала выберите предмет." />
+        <Empty text={t('placementPlacementScreen.4')} />
       )}
     </Screen>
   );

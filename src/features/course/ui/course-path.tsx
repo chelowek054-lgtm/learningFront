@@ -35,13 +35,22 @@ import {
 } from '@/shared/ui';
 import { draftNotice, isDraft } from '../model/draft';
 import { noticesFor, noticeTone } from '../model/notices';
+import { useI18n, translate } from '@/shared/i18n';
 
 /** Каждая стадия развития объясняется пользователю, а не остаётся кодом. */
 const REASON: Record<StepReason, string> = {
-  rooting: 'фундамент',
-  differentiation: 'вглубь',
-  branch: 'ваш интерес',
-  spiral: 'на новый уровень',
+  get rooting() {
+    return translate('courseCoursePath.1');
+  },
+  get differentiation() {
+    return translate('courseCoursePath.2');
+  },
+  get branch() {
+    return translate('courseCoursePath.3');
+  },
+  get spiral() {
+    return translate('courseCoursePath.4');
+  },
 };
 
 // Названия активностей и уровней держит не этот экран: они жили здесь, в
@@ -56,6 +65,7 @@ export function CoursePath({
   /** Прохождение шага оркеструет страница: диспетчер живёт в widgets, фича его не видит. */
   onStartStep: (conceptId: string) => void;
 }) {
+  const { t } = useI18n();
   const registry = useModuleRegistry();
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
@@ -116,11 +126,8 @@ export function CoursePath({
   if (!course) {
     return (
       <Screen>
-        <Title>Курс ещё не построен</Title>
-        <Muted>
-          Путь собирается от вашей текущей границы знаний: сначала непройденный фундамент, затем
-          вглубь к цели. Выберите, до какого уровня хотите дойти.
-        </Muted>
+        <Title>{t('courseCoursePath.5')}</Title>
+        <Muted>{t('courseCoursePath.6')}</Muted>
         {MASTERY_TARGETS.map((t) => (
           <Button
             key={t.bloom}
@@ -136,30 +143,35 @@ export function CoursePath({
 
   return (
     <Screen>
-      <Title>Курс · чтобы {targetLabel(course.target.bloom)}</Title>
-      <Muted>
-        Пройдено {course.completed} из {course.total}
-      </Muted>
+      <Title>{t('m.courseTitle', { target: targetLabel(course.target.bloom) })}</Title>
+      <Muted>{t('courseCoursePath.7', { completed: course.completed, total: course.total })}</Muted>
       <Progress value={course.completed / Math.max(1, course.total)} />
       {notices.map((n) => (
         <Card key={n.id}>
           <Label>{n.title}</Label>
           <Note tone={noticeTone(n)}>{n.body}</Note>
-          <Button label="Понятно" variant="quiet" onPress={() => void dismiss(n.id)} />
+          <Button
+            label={t('courseCoursePath.8')}
+            variant="quiet"
+            onPress={() => void dismiss(n.id)}
+          />
         </Card>
       ))}
       {draftNotice(course) !== '' && <Note tone="warn">{draftNotice(course)}</Note>}
 
       {course.current && (
         <Card tone="accent">
-          <Label>Сейчас</Label>
+          <Label>{t('courseCoursePath.9')}</Label>
           <Lead>{course.current.title}</Lead>
           <Muted>
             {course.current.activities.map((a) => registry.getActivityTitle(a.type)).join(' → ')}
           </Muted>
-          <Button label="Начать" onPress={() => onStartStep(course.current!.conceptId)} />
           <Button
-            label="Уже знаю, пропустить"
+            label={t('courseCoursePath.10')}
+            onPress={() => onStartStep(course.current!.conceptId)}
+          />
+          <Button
+            label={t('courseCoursePath.11')}
             variant="quiet"
             onPress={() => run(() => completeStep(domain, course.current!.conceptId))}
             busy={busy}
@@ -167,11 +179,9 @@ export function CoursePath({
         </Card>
       )}
 
-      {course.total === 0 && (
-        <Muted>Идти некуда: всё, что есть в графе, уже освоено до выбранного уровня.</Muted>
-      )}
+      {course.total === 0 && <Muted>{t('courseCoursePath.12')}</Muted>}
 
-      <Label>Весь путь</Label>
+      <Label>{t('courseCoursePath.13')}</Label>
       <PathAccordion
         steps={course.steps}
         currentId={course.current?.conceptId ?? null}
@@ -188,7 +198,7 @@ export function CoursePath({
 
       {error && <Note tone="danger">{error}</Note>}
       <Button
-        label="Пересобрать путь по текущим знаниям"
+        label={t('courseCoursePath.14')}
         variant="quiet"
         onPress={() => run(() => buildCourse(domain, course.target.bloom))}
         busy={busy}
@@ -208,6 +218,7 @@ function StepRow({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const registry = useModuleRegistry();
   return (
@@ -240,9 +251,9 @@ function StepRow({
           <Body>{step.title}</Body>
           <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
             <Pill text={REASON[step.reason]} />
-            {isDraft(step) && <Pill text="не проверено" tone="muted" />}
+            {isDraft(step) && <Pill text={t('courseCoursePath.15')} tone="muted" />}
             <Pill
-              text={step.tier === 'core' ? 'обязательное' : 'по интересу'}
+              text={step.tier === 'core' ? t('courseCoursePath.16') : t('courseCoursePath.17')}
               tone={step.tier === 'core' ? 'core' : 'muted'}
             />
           </View>

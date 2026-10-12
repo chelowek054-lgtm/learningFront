@@ -4,6 +4,7 @@ import type { ComponentType } from 'react';
 import { Text } from 'react-native';
 import type { Activity, ActivityRendererProps, ResponseDraft } from '@/shared/engine';
 import { useModuleRegistry } from '@/shared/lib';
+import { useI18n } from '@/shared/i18n';
 
 export function ActivityDispatcher({
   activity,
@@ -12,11 +13,12 @@ export function ActivityDispatcher({
   activity: Activity;
   onComplete?: (draft: ResponseDraft) => void;
 }) {
+  const { t } = useI18n();
   const registry = useModuleRegistry();
   const renderer = registry.getRenderer(activity.type);
 
   if (!renderer) {
-    return <Text>Неизвестный тип Activity: {activity.type}</Text>;
+    return <Text>{t('m.unknownActivity', { type: activity.type })}</Text>;
   }
 
   // Рендерер в ядре opaque (`(props) => unknown`, без зависимости от React).

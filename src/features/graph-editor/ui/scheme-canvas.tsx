@@ -29,20 +29,37 @@ import {
   type SchemeLayout,
 } from '../model/scheme';
 import { isGhost } from '../model/overview';
+import { useI18n, translate } from '@/shared/i18n';
 
 /** Короткие подписи для плашки и чипов: подробное объяснение остаётся в подписи узла для читалок экрана. */
 export const STATE_SHORT: Record<MasteryState, string> = {
-  known: 'освоено',
-  learning: 'изучаю',
-  frontier: 'можно изучать',
-  locked: 'закрыто',
+  get known() {
+    return translate('graphEditorSchemeCanvas.1');
+  },
+  get learning() {
+    return translate('graphEditorSchemeCanvas.2');
+  },
+  get frontier() {
+    return translate('graphEditorSchemeCanvas.3');
+  },
+  get locked() {
+    return translate('graphEditorSchemeCanvas.4');
+  },
 };
 
 export const STATE_TEXT: Record<MasteryState, string> = {
-  known: 'освоено',
-  learning: 'изучаю сейчас',
-  frontier: 'можно изучать сейчас',
-  locked: 'закрыто: сначала предпосылки',
+  get known() {
+    return translate('graphEditorSchemeCanvas.1');
+  },
+  get learning() {
+    return translate('graphEditorSchemeCanvas.5');
+  },
+  get frontier() {
+    return translate('graphEditorSchemeCanvas.6');
+  },
+  get locked() {
+    return translate('graphEditorSchemeCanvas.7');
+  },
 };
 
 /** `all` — весь граф, лишнее приглушено; `focus` — только выбранное и его связи. */
@@ -103,6 +120,7 @@ export function SchemeCanvas({
   /** Куда прокручен холст, в пикселях окна: нужно мини-карте (T-0147). */
   onScroll?: (offset: { x: number; y: number }) => void;
 }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const lanes = laneYs(layout);
   const offset = useRef({ x: 0, y: 0 });
@@ -207,7 +225,10 @@ export function SchemeCanvas({
                     onPress={() => onToggleStage(c.key)}
                     accessibilityRole="button"
                     accessibilityState={{ expanded: !collapsed.has(c.key) }}
-                    accessibilityLabel={`Этап ${c.title}${c.area ? `, ${c.area}` : ''}`}
+                    accessibilityLabel={t('m.stageA11y', {
+                      title: c.title,
+                      area: c.area ? `, ${c.area}` : '',
+                    })}
                     style={{
                       position: 'absolute',
                       left: c.x,
@@ -339,6 +360,7 @@ function NodeBox({
   ghost?: boolean;
   onPress: () => void;
 }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   const look = lookOf(n, state);
   const border = isSelected
@@ -397,9 +419,11 @@ function NodeBox({
       {/* Метки на самом узле: уровень, необязательное, не проверено, своё, «сейчас». */}
       {tags.length > 0 || state === 'learning' || port ? (
         <Text numberOfLines={1} style={{ color: colors.muted, fontSize: 10 }}>
-          {[...(port ? [port] : []), ...(state === 'learning' ? ['сейчас'] : []), ...tags].join(
-            ' · ',
-          )}
+          {[
+            ...(port ? [port] : []),
+            ...(state === 'learning' ? [t('graphEditorSchemeCanvas.8')] : []),
+            ...tags,
+          ].join(' · ')}
         </Text>
       ) : null}
       {state === 'learning' && (

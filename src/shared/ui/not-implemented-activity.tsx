@@ -2,8 +2,10 @@
 import { StyleSheet, View } from 'react-native';
 import { Body, Muted } from './kit';
 import { radius, space, useTheme } from './theme';
+import { useI18n } from '@/shared/i18n';
 
 export function NotImplementedActivity({ activity }: { activity: { type: string } }) {
+  const { t } = useI18n();
   const { colors } = useTheme();
   return (
     <View
@@ -17,7 +19,7 @@ export function NotImplementedActivity({ activity }: { activity: { type: string 
       }}
     >
       <Body>{activity.type}</Body>
-      <Muted>рендерер ещё не реализован</Muted>
+      <Muted>{t('m.notImplemented')}</Muted>
     </View>
   );
 }
