@@ -4,17 +4,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import type { Graph, GraphNode } from '@/shared/api';
-import {
-  Body,
-  Button,
-  Card,
-  Field,
-  font,
-  Muted,
-  Pill,
-  space,
-  useTheme,
-} from '@/shared/ui';
+import { Body, Button, Card, Field, font, Muted, Pill, space, useTheme } from '@/shared/ui';
 import { tagsOf, type MasteryState } from '../model/scheme';
 import { STATE_SHORT } from './scheme-canvas';
 

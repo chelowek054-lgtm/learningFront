@@ -15,6 +15,7 @@ import { canResume, elapsedLabel, isPending, POLL_MS } from '@/features/graph-ed
 import {
   ApiError,
   getCourse,
+  getGoalIntake,
   getGraph,
   getLocalStore,
   fillGraph,
@@ -60,6 +61,7 @@ export function HomeScreen({
   const [restarting, setRestarting] = useState(false);
   const [weak, setWeak] = useState<number | null>(null);
   const [paused, setPaused] = useState(false);
+  const [goalPending, setGoalPending] = useState(false);
   const [stale, setStale] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -97,6 +99,13 @@ export function HomeScreen({
       setPaused(
         await listSubjects().then(
           (list) => list.some((s) => s.domain === subject.id && s.status === 'paused'),
+          () => false,
+        ),
+      );
+      // Цель ставится, пока она не подтверждена; нет связи — не блокируем «Сегодня» по неизвестности.
+      setGoalPending(
+        await getGoalIntake(subject.id).then(
+          (g) => !g.confirmed,
           () => false,
         ),
       );
@@ -151,6 +160,8 @@ export function HomeScreen({
     graphSize,
     now,
     paused,
+    // Старые цели без подтверждения не должны прятать готовый путь: «ставится» — только пока пути ещё нет.
+    goalPending: goalPending && !course,
   });
 
   // Нет связи: «освоено» берём из последнего известного состояния и говорим об этом.

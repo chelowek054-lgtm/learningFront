@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { elevationCard } from './elevation';
 import { mixColors } from './color';
 import { font, radius, space, useTheme } from './theme';
+import { backdropStyle } from './backdrop';
 import { SMALL, SMALL_HIT_SLOP, type ControlSize, type ControlTone } from './control-size';
 import { typography } from '@/shared/config';
 
@@ -30,7 +31,7 @@ export function Screen({
   scroll?: boolean;
   refreshControl?: React.ReactElement<RefreshControlProps>;
 }) {
-  const { colors } = useTheme();
+  const { colors, name } = useTheme();
   const body = scroll ? (
     <ScrollView contentContainerStyle={styles.content} refreshControl={refreshControl}>
       {children}
@@ -38,7 +39,13 @@ export function Screen({
   ) : (
     <View style={[styles.content, styles.flex]}>{children}</View>
   );
-  return <SafeAreaView style={[styles.flex, { backgroundColor: colors.bg }]}>{body}</SafeAreaView>;
+  return (
+    <SafeAreaView
+      style={[styles.flex, { backgroundColor: colors.bg }, backdropStyle(name, colors)]}
+    >
+      {body}
+    </SafeAreaView>
+  );
 }
 
 export function Card({
