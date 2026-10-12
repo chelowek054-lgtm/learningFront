@@ -123,3 +123,12 @@ export function nextAction({
     reason: 'Карта готова. Чтобы построить путь, нужно понять, откуда стартуем',
   };
 }
+
+/** «6 карточек», «1 карточка», «2 карточки»: форма слова по числу. */
+export function cardsWord(n: number): string {
+  const last = n % 10;
+  const tens = n % 100;
+  if (last === 1 && tens !== 11) return 'карточка';
+  if (last >= 2 && last <= 4 && (tens < 12 || tens > 14)) return 'карточки';
+  return 'карточек';
+}

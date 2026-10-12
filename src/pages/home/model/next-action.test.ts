@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Course, CourseStep, ProfileState } from '@/shared/api';
-import { nextAction, reasonForStep } from './next-action';
+import { cardsWord, nextAction, reasonForStep } from './next-action';
 
 const step = (over: Partial<CourseStep> = {}): CourseStep => ({
   conceptId: 'c1',
@@ -139,5 +139,20 @@ describe('nextAction: добавленные состояния и приори�
   it('мусорная метка времени не даёт NaN минут', () => {
     const a = nextAction({ ...base, build: profileState({ updatedAt: 'не дата' }) });
     expect(a).toMatchObject({ kind: 'building', minutes: 0 });
+  });
+});
+
+describe('cardsWord', () => {
+  it('склоняет по числу', () => {
+    expect([1, 2, 5, 11, 12, 21, 24, 25].map(cardsWord)).toEqual([
+      'карточка',
+      'карточки',
+      'карточек',
+      'карточек',
+      'карточек',
+      'карточка',
+      'карточки',
+      'карточек',
+    ]);
   });
 });

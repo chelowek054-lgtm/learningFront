@@ -27,20 +27,10 @@ import {
   type ProfileState,
 } from '@/shared/api';
 import { useIsOnline } from '@/shared/lib';
-import {
-  Body,
-  Button,
-  Card,
-  Display,
-  Label,
-  Muted,
-  Note,
-  Progress,
-  Screen,
-  space,
-} from '@/shared/ui';
+import { Card, Display, Label, Muted, Note, Progress, Screen, space } from '@/shared/ui';
 
-import { nextAction } from '../model/next-action';
+import { cardsWord, nextAction } from '../model/next-action';
+import { StateHero } from './state-hero';
 import { TodayTiles } from './today-tiles';
 
 export function HomeScreen({
@@ -187,96 +177,124 @@ export function HomeScreen({
         )}
       </View>
 
-      {action.kind === 'course' && (
-        <Card tone="accent" onPress={onOpenCourse}>
-          <Label>Следующий шаг</Label>
-          <Body>{action.step.title}</Body>
-          <Muted>{action.reason}</Muted>
-          <Progress value={course ? course.completed / Math.max(1, course.total) : 0} />
+      {!online && subject && (
+        <Card>
+          <Label>Нет сети</Label>
           <Muted>
-            Пройдено {course?.completed} из {course?.total}
+            Показано последнее известное состояние. Скачанные шаги и повторение работают.
           </Muted>
         </Card>
       )}
 
-      {action.kind === 'review' && (
-        <Card tone="accent" onPress={onOpenReview}>
-          <Label>Следующий шаг</Label>
-          <Body>Повторение · {action.dueCount}</Body>
-          <Muted>{action.reason}</Muted>
-        </Card>
+      {action.kind === 'subject' && (
+        <StateHero
+          label="Начало"
+          title="Что хотите изучить?"
+          reason="Назовите навык, предмет или язык — составим путь за три минуты."
+          primary={onOpenLibrary ? { label: 'Начать', onPress: onOpenLibrary } : undefined}
+          big
+        />
       )}
 
-      {action.kind === 'placement' && (
-        <Card>
-          <Label>Следующий шаг</Label>
-          <Body>Определить уровень</Body>
-          <Muted>{action.reason}</Muted>
-          <Button label="Начать" variant="quiet" onPress={onOpenPlacement} />
-        </Card>
+      {action.kind === 'goal' && (
+        <StateHero
+          label="Следующий шаг"
+          badge={{ text: 'цель', tone: 'accent' }}
+          title="Закончить постановку цели"
+          reason={action.reason}
+          primary={onOpenLibrary ? { label: 'Продолжить', onPress: onOpenLibrary } : undefined}
+        />
       )}
 
-      {action.kind === 'building' && (
-        <Card tone="accent" onPress={onOpenGraph}>
-          <Label>Карта собирается · {elapsedLabel(action.minutes)}</Label>
-          <Muted>{action.reason}</Muted>
-        </Card>
-      )}
-
-      {action.kind === 'failed' && (
-        <Card>
-          <Label>Сборка не завершилась</Label>
-          <Muted>{action.reason}</Muted>
-          <Button label="Запустить заново" onPress={() => void restart()} busy={restarting} />
-        </Card>
+      {action.kind === 'paused' && (
+        <StateHero
+          tone="plain"
+          label="Предмет на паузе"
+          title="Вы отложили его"
+          reason={action.reason}
+          primary={
+            onOpenLibrary ? { label: 'Открыть библиотеку', onPress: onOpenLibrary } : undefined
+          }
+        />
       )}
 
       {action.kind === 'outline' && (
-        <Card tone="accent" onPress={onOpenSkillProfile}>
-          <Label>Следующий шаг</Label>
-          <Body>Проверить состав навыка</Body>
-          <Muted>{action.reason}</Muted>
-        </Card>
+        <StateHero
+          label="Состав навыка готов"
+          badge={{ text: 'ждёт вас', tone: 'info' }}
+          title="Проверьте состав и соберите карту"
+          reason={action.reason}
+          primary={{ label: 'Проверить и собрать карту', onPress: onOpenSkillProfile }}
+        />
+      )}
+
+      {action.kind === 'building' && (
+        <StateHero
+          label={`Карта собирается · ${elapsedLabel(action.minutes)}`}
+          badge={{ text: 'в работе', tone: 'info' }}
+          title="Собираем вашу карту"
+          reason={action.reason}
+          primary={{ label: 'Посмотреть ход сборки', onPress: onOpenGraph }}
+        />
+      )}
+
+      {action.kind === 'failed' && (
+        <StateHero
+          tone="plain"
+          label="Сборка не завершилась"
+          badge={{ text: action.interrupted ? 'прервана' : 'сбой', tone: 'danger' }}
+          title="Карту нужно собрать заново"
+          reason={action.reason}
+          primary={{ label: 'Запустить заново', onPress: () => void restart(), busy: restarting }}
+        />
       )}
 
       {action.kind === 'build' && (
-        <Card>
-          <Label>Следующий шаг</Label>
-          <Body>Собрать карту знаний</Body>
-          <Muted>{action.reason}</Muted>
-          <Button label="Собрать" onPress={() => void restart()} busy={restarting} />
-        </Card>
+        <StateHero
+          label="Карта не построена"
+          title="Карты ещё нет"
+          reason={action.reason}
+          primary={{ label: 'Построить карту', onPress: () => void restart(), busy: restarting }}
+        />
+      )}
+
+      {action.kind === 'course' && (
+        <StateHero
+          label="Следующий шаг"
+          title={action.step.title}
+          reason={action.reason}
+          primary={{ label: 'Начать шаг', onPress: onOpenCourse }}
+        >
+          <Progress value={course ? course.completed / Math.max(1, course.total) : 0} />
+          <Muted>
+            Пройдено {course?.completed} из {course?.total}
+          </Muted>
+        </StateHero>
+      )}
+
+      {action.kind === 'review' && (
+        <StateHero
+          label="Повторение"
+          title={`${action.dueCount} ${cardsWord(action.dueCount)}`}
+          reason={action.reason}
+          primary={{ label: 'Повторить', onPress: onOpenReview }}
+          big
+        />
+      )}
+
+      {action.kind === 'placement' && (
+        <StateHero
+          label="Следующий шаг"
+          title="Определить уровень"
+          reason={action.reason}
+          primary={{ label: 'Начать', onPress: onOpenPlacement }}
+        />
       )}
 
       {action.kind === 'done' && <GoalReachedCard onAddArea={onOpenSkillProfile} />}
 
-      {action.kind === 'goal' && (
-        <Card>
-          <Label>Следующий шаг</Label>
-          <Body>Закончить постановку цели</Body>
-          <Muted>{action.reason}</Muted>
-        </Card>
-      )}
-
-      {action.kind === 'paused' && (
-        <Card onPress={onOpenLibrary}>
-          <Label>Предмет на паузе</Label>
-          <Muted>{action.reason}</Muted>
-        </Card>
-      )}
-
       {action.kind === 'loading' && (
-        <Card>
-          <Muted>{action.reason}</Muted>
-        </Card>
-      )}
-
-      {action.kind === 'subject' && (
-        <Card>
-          <Label>Следующий шаг</Label>
-          <Body>Выбрать предмет</Body>
-          <Muted>{action.reason}</Muted>
-        </Card>
+        <StateHero tone="plain" label="Загрузка" title="Загружаем состояние предмета…" />
       )}
 
       {subject && (
