@@ -75,6 +75,7 @@ async function replayQueue(domain: string): Promise<void> {
 
 export function GraphMap({
   domain,
+  subjectTitle,
   onOpenOutline,
   onStudy,
 }: {
@@ -169,6 +170,7 @@ export function GraphMap({
           domain={domain}
           onStudy={onStudy}
           onChanged={() => void load()}
+          fullscreenTitle={`${subjectTitle ?? domain} · Карта`}
         />
       </Screen>
     );

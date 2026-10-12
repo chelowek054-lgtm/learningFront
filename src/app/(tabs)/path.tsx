@@ -40,7 +40,13 @@ export default function PathTab() {
         {mode === 'steps' ? (
           <CourseScreen />
         ) : mode === 'tree' ? (
-          subject && <CourseTree domain={subject.id} onStart={() => setMode('steps')} />
+          subject && (
+            <CourseTree
+              domain={subject.id}
+              title={subject.title}
+              onStart={() => setMode('steps')}
+            />
+          )
         ) : (
           <GraphScreen
             onOpenOutline={() => router.push('/skill-profile')}

@@ -6,7 +6,15 @@ import { Empty, Screen, space } from '@/shared/ui';
 import { courseAsGraph } from '../model/scheme';
 import { SchemeView } from './scheme-view';
 
-export function CourseTree({ domain, onStart }: { domain: string; onStart?: () => void }) {
+export function CourseTree({
+  domain,
+  title,
+  onStart,
+}: {
+  domain: string;
+  title?: string;
+  onStart?: () => void;
+}) {
   const [course, setCourse] = useState<Course | null | undefined>(undefined);
   useEffect(() => {
     getCourse(domain).then(setCourse, () => setCourse(null));
@@ -22,6 +30,7 @@ export function CourseTree({ domain, onStart }: { domain: string; onStart?: () =
         mastery={view.mastery}
         onStudy={onStart}
         studyLabel="Начать"
+        fullscreenTitle={`${title ?? domain} · Дерево`}
       />
     </Screen>
   );
