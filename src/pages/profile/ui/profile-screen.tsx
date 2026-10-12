@@ -20,29 +20,25 @@ import {
   space,
   Title,
   useTheme,
-  type ThemeMode,
+  THEME_MODES,
 } from '@/shared/ui';
-
-const THEMES: { key: ThemeMode; label: string }[] = [
-  { key: 'system', label: 'Как в системе' },
-  { key: 'light', label: 'Светлая' },
-  { key: 'dark', label: 'Тёмная' },
-];
 
 function ThemePicker() {
   const { colors, mode, setMode } = useTheme();
   return (
-    <View style={{ flexDirection: 'row', gap: space.sm }}>
-      {THEMES.map((t) => {
-        const active = mode === t.key;
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+      {THEME_MODES.map((t) => {
+        const active = mode === t.mode;
         return (
           <Pressable
-            key={t.key}
-            onPress={() => setMode(t.key)}
+            key={t.mode}
+            onPress={() => setMode(t.mode)}
             accessibilityRole="radio"
             accessibilityState={{ selected: active }}
             style={{
-              flex: 1,
+              flexGrow: 1,
+              minHeight: 44,
+              justifyContent: 'center',
               paddingVertical: space.sm,
               paddingHorizontal: space.xs,
               borderRadius: radius.sm,

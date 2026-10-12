@@ -1,8 +1,8 @@
 // Тема: провайдер + хук. Значения берутся из shared/config/design.ts — здесь
 // только выбор палитры и переключение режима.
 //
-// Три режима, а не два: `system` следует за устройством, `light`/`dark` — явный
-// выбор пользователя, который переживает перезапуск.
+// Режим `system` следует за устройством; светлая, тёмная, OLED и контрастная —
+// явный выбор человека, который переживает перезапуск.
 import {
   createContext,
   useCallback,
@@ -13,24 +13,26 @@ import {
   type ReactNode,
 } from 'react';
 import { useColorScheme } from 'react-native';
-import { getThemeMode, setThemeMode, type ThemeMode } from './theme-storage';
+import { getThemeMode, setThemeMode } from './theme-storage';
+import { resolveThemeName, type ThemeMode } from './theme-mode';
 import {
-  darkPalette,
-  fontSize,
-  fontWeight,
-  lightPalette,
-  lineHeightRatio,
-  radii,
+  Themes,
+  radius as radiusTokens,
   spacing,
-  type Palette,
+  typography,
+  type ThemeColors,
+  type ThemeName,
 } from '@/shared/config';
 
 export type { ThemeMode };
 
 export interface Theme {
-  colors: Palette;
+  colors: ThemeColors;
+  /** Имя действующей темы. */
+  name: ThemeName;
+  /** Тёмная ли поверхность: у dark, oled и contrast фон тёмный. */
   dark: boolean;
-  /** Что выбрано пользователем (может быть `system`). */
+  /** Что выбрано человеком (может быть `system`). */
   mode: ThemeMode;
   setMode: (mode: ThemeMode) => void;
 }
@@ -51,8 +53,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<Theme>(() => {
-    const dark = mode === 'system' ? system === 'dark' : mode === 'dark';
-    return { colors: dark ? darkPalette : lightPalette, dark, mode, setMode };
+    const name = resolveThemeName(mode, system);
+    return { colors: Themes[name], name, dark: name !== 'light', mode, setMode };
   }, [mode, system, setMode]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
@@ -66,7 +68,20 @@ export function useTheme(): Theme {
 
 // Реэкспорт токенов под привычными именами — чтобы экраны тянули всё из shared/ui.
 export const space = spacing;
-export const radius = radii;
-export const font = fontSize;
-export { fontWeight, lineHeightRatio };
-export type { Palette };
+export const radius = radiusTokens;
+/** Кегли по ролям шкалы; значения берутся из typography, а не заводятся заново. */
+export const font = {
+  caption: typography.caption.fontSize,
+  small: typography.small.fontSize,
+  body: typography.body.fontSize,
+  lead: typography.lead.fontSize,
+  title: typography.title.fontSize,
+  display: typography.display.fontSize,
+} as const;
+export const fontWeight = {
+  regular: typography.body.fontWeight,
+  medium: typography.lead.fontWeight,
+  semibold: typography.title.fontWeight,
+  bold: typography.display.fontWeight,
+} as const;
+export type Palette = ThemeColors;

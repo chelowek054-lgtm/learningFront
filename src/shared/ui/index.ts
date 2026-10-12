@@ -1,5 +1,6 @@
 // Публичный API shared/ui.
 export { NotImplementedActivity } from './not-implemented-activity';
+export { THEME_MODES } from './theme-mode';
 export { GradeView } from './grade-view';
 export {
   ThemeProvider,
@@ -8,7 +9,6 @@ export {
   radius,
   font,
   fontWeight,
-  lineHeightRatio,
   type Theme,
   type ThemeMode,
   type Palette,

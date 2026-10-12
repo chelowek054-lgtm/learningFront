@@ -4,3 +4,5 @@ src/global.css
 # Сборки/зависимости
 node_modules/
 .expo/
+# Выгрузка консоли DocDD: правится токенами, не руками
+src/shared/config/design.ts
