@@ -54,6 +54,9 @@ export interface SchemeScene {
   closeLink: () => void;
   /** Раскрытые этапы в порядке раскрытия: для пути «Все этапы › …». */
   expandedKeys: string[];
+  /** Области схемы (если их больше одной): свернуть или раскрыть сразу все этапы области (T-0113). */
+  areas: { name: string; collapsed: boolean }[];
+  toggleArea: (name: string) => void;
 }
 
 export function useSchemeScene({
@@ -64,6 +67,7 @@ export function useSchemeScene({
   selected,
   setSelected,
   mode,
+  collapsed,
   plainToggleStage,
 }: {
   graph: Graph;
@@ -74,6 +78,8 @@ export function useSchemeScene({
   selected: string | null;
   setSelected: (id: string | null) => void;
   mode: LegendMode;
+  /** Свёрнутые колонки обычного вида. */
+  collapsed: ReadonlySet<string>;
   /** Свёртка колонки в обычном виде. */
   plainToggleStage: (key: string) => void;
 }): SchemeScene {
@@ -156,6 +162,43 @@ export function useSchemeScene({
     setLink(null);
   }, [setSelected]);
 
+  // Области: этапы одной области сворачиваются одним действием; у схемы одной области этого нет.
+  const areaKeys = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const n of graph.nodes) {
+      if (!n.area) continue;
+      const key = stageKeyOf(n);
+      const keys = map.get(n.area) ?? [];
+      if (!keys.includes(key)) keys.push(key);
+      map.set(n.area, keys);
+    }
+    return map.size > 1 ? map : new Map<string, string[]>();
+  }, [graph.nodes]);
+  const areas = [...areaKeys].map(([name, keys]) => ({
+    name,
+    collapsed: grouped
+      ? !keys.some((k) => expanded.includes(k))
+      : keys.every((k) => collapsed.has(k)),
+  }));
+  const toggleArea = useCallback(
+    (name: string) => {
+      const keys = areaKeys.get(name) ?? [];
+      if (grouped) {
+        const open = keys.some((k) => expanded.includes(k));
+        setExpanded((prev) =>
+          open ? prev.filter((k) => !keys.includes(k)) : [...new Set([...prev, ...keys])],
+        );
+        const node = selected ? byId.get(selected) : undefined;
+        if (open && node && keys.includes(stageKeyOf(node))) setSelected(null);
+        setLink(null);
+        return;
+      }
+      const target = !keys.every((k) => collapsed.has(k));
+      for (const k of keys) if (collapsed.has(k) !== target) plainToggleStage(k);
+    },
+    [areaKeys, grouped, expanded, collapsed, plainToggleStage, selected, byId, setSelected],
+  );
+
   const canvasGraph = useMemo<Graph>(
     () =>
       overview ? ({ ...graph, nodes: overview.nodes, edges: overview.edges } as Graph) : graph,
@@ -225,6 +268,8 @@ export function useSchemeScene({
     collapseAll,
     link,
     closeLink: () => setLink(null),
+    areas,
+    toggleArea,
     expandedKeys: overview ? expanded.filter((k) => overview.boxes.some((b) => b.key === k)) : [],
   };
 }

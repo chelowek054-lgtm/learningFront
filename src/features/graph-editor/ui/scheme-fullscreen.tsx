@@ -101,7 +101,7 @@ export function SchemeFullscreen({
   filters: Filters;
   onFilters: (f: Filters) => void;
   byId: Map<string, GraphNode>;
-  onStudy?: () => void;
+  onStudy?: (conceptId?: string) => void;
   studyLabel: string;
   onRemove?: (node: GraphNode) => void;
   onRename?: (node: GraphNode, title: string) => void;
@@ -221,7 +221,7 @@ export function SchemeFullscreen({
       onToggleExpanded={() => setExpanded((v) => !v)}
       onClose={() => onSelect(null)}
       onPick={onSelect}
-      onStudy={onStudy}
+      onStudy={onStudy ? () => onStudy(node.id) : undefined}
       studyLabel={states[node.id] === 'learning' ? 'Продолжить' : studyLabel}
       onRemove={node.kind === 'personal' && onRemove ? () => onRemove(node) : undefined}
       onRename={node.kind === 'personal' && onRename ? (t) => onRename(node, t) : undefined}

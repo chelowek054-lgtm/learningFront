@@ -64,7 +64,7 @@ export function SchemeView({
   onChanged?: () => void;
   mastery: MasteryMap | null;
   /** Открыть курс; шаг по понятию выбирает сам курс. */
-  onStudy?: () => void;
+  onStudy?: (conceptId?: string) => void;
   studyLabel?: string;
   /** Подпись в шапке полноэкранного режима: какой предмет и какой режим. */
   fullscreenTitle?: string;
@@ -104,6 +104,7 @@ export function SchemeView({
     selected,
     setSelected,
     mode,
+    collapsed,
     plainToggleStage: toggleStage,
   });
   const stageTitle = (key: string) => stageTitleOf(graph.nodes, key);
@@ -281,7 +282,14 @@ export function SchemeView({
         filters={filters}
         onFilters={setFilters}
         byId={byId}
-        onStudy={onStudy}
+        onStudy={
+          onStudy
+            ? (id) => {
+                setFullscreen(false);
+                onStudy(id);
+              }
+            : undefined
+        }
         studyLabel={studyLabel}
         onRemove={(n) => void removeOwn(n)}
         onRename={(n, t) => void renameOwn(n, t)}
@@ -295,7 +303,7 @@ export function SchemeView({
           byId={byId}
           onClose={() => setSelected(null)}
           onPick={scene.select}
-          onStudy={onStudy}
+          onStudy={onStudy ? () => onStudy(selectedNode.id) : undefined}
           studyLabel={states[selectedNode.id] === 'learning' ? 'Продолжить' : studyLabel}
           onRemove={
             selectedNode.kind === 'personal' ? () => void removeOwn(selectedNode) : undefined

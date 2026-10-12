@@ -2,7 +2,7 @@
 // (план курса) и виджет-диспетчер (исполнение активностей); FSD запрещает
 // фиче импортировать widgets.
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSession } from '@/entities/session';
@@ -35,7 +35,14 @@ function conceptTitle(activity: StepActivity): string | null {
   return typeof title === 'string' && title.trim() !== '' ? title : null;
 }
 
-export function CourseScreen() {
+export function CourseScreen({
+  startConceptId = null,
+  onStartHandled,
+}: {
+  /** Понятие, шаг по которому нужно открыть сразу: человек нажал «Изучать» на схеме (T-0116). */
+  startConceptId?: string | null;
+  onStartHandled?: () => void;
+} = {}) {
   const { user, subject } = useSession();
   const registry = useModuleRegistry();
   const domain = subject?.id ?? '';
@@ -67,6 +74,15 @@ export function CourseScreen() {
       setBusy(false);
     }
   }
+
+  // Запрос шага по понятию со схемы: открываем один раз и сообщаем, что он обработан.
+  useEffect(() => {
+    if (!startConceptId || !domain) return;
+    onStartHandled?.();
+    void begin(startConceptId);
+    // begin зависит только от domain; повторно по смене функции запускать нельзя.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startConceptId, domain]);
 
   function back() {
     setRunning(null);

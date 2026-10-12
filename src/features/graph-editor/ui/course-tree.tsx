@@ -13,7 +13,7 @@ export function CourseTree({
 }: {
   domain: string;
   title?: string;
-  onStart?: () => void;
+  onStart?: (conceptId?: string) => void;
 }) {
   const [course, setCourse] = useState<Course | null | undefined>(undefined);
   useEffect(() => {

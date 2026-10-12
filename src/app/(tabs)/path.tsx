@@ -21,6 +21,12 @@ export default function PathTab() {
   const router = useRouter();
   const { colors } = useTheme();
   const [mode, setMode] = useState<PathMode>('steps');
+  // Понятие, выбранное на схеме: «Изучать» открывает шаг по нему, а не общий курс (T-0116).
+  const [studyConcept, setStudyConcept] = useState<string | null>(null);
+  const study = (conceptId?: string) => {
+    setStudyConcept(conceptId ?? null);
+    setMode('steps');
+  };
   const { subject } = useSession();
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -38,20 +44,14 @@ export default function PathTab() {
       </View>
       <View style={{ flex: 1 }}>
         {mode === 'steps' ? (
-          <CourseScreen />
-        ) : mode === 'tree' ? (
-          subject && (
-            <CourseTree
-              domain={subject.id}
-              title={subject.title}
-              onStart={() => setMode('steps')}
-            />
-          )
-        ) : (
-          <GraphScreen
-            onOpenOutline={() => router.push('/skill-profile')}
-            onStudy={() => setMode('steps')}
+          <CourseScreen
+            startConceptId={studyConcept}
+            onStartHandled={() => setStudyConcept(null)}
           />
+        ) : mode === 'tree' ? (
+          subject && <CourseTree domain={subject.id} title={subject.title} onStart={study} />
+        ) : (
+          <GraphScreen onOpenOutline={() => router.push('/skill-profile')} onStudy={study} />
         )}
       </View>
     </SafeAreaView>
