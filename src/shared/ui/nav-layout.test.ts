@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { isNavActive, navItemsFor, navLayoutFor, withAlpha } from './nav-layout';
+import { isNavActive, navItemsFor, navLayoutFor } from './nav-layout';
+import { mixColors, withAlpha } from './color';
 
 vi.mock('react-native', () => ({ useColorScheme: () => 'light' }));
 
@@ -50,5 +51,15 @@ describe('withAlpha', () => {
     expect(withAlpha('#22C55E', 0.14)).toBe('#22C55E24');
     expect(withAlpha('#000000', 1)).toBe('#000000FF');
     expect(withAlpha('#000000', 0)).toBe('#00000000');
+  });
+});
+
+describe('mixColors', () => {
+  it('доля 0 даёт фон, доля 1 — передний цвет', () => {
+    expect(mixColors('#22C55E', '#FFFFFF', 0)).toBe('#FFFFFF');
+    expect(mixColors('#22C55E', '#FFFFFF', 1)).toBe('#22C55E');
+  });
+  it('12 % акцента на белом — светлая заливка', () => {
+    expect(mixColors('#22C55E', '#FFFFFF', 0.12)).toBe('#E4F8EC');
   });
 });

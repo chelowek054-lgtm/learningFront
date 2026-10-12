@@ -15,6 +15,9 @@ export interface Tile {
 
 const ORDER_KEY = 'tiles-order';
 
+/** Зона нажатия не меньше 44 px (D-0001). */
+const hit = { minHeight: 44, justifyContent: 'center' } as const;
+
 export function TodayTiles({ tiles }: { tiles: Tile[] }) {
   const [editing, setEditing] = useState(false);
   const [, force] = useState(0);
@@ -44,13 +47,14 @@ export function TodayTiles({ tiles }: { tiles: Tile[] }) {
               <Muted>{t.text}</Muted>
               {editing && (
                 <View style={{ flexDirection: 'row', gap: space.md, flexWrap: 'wrap' }}>
-                  <Pressable onPress={() => move(t.id, -1)}>
+                  <Pressable style={hit} onPress={() => move(t.id, -1)}>
                     <Muted>↑ выше</Muted>
                   </Pressable>
-                  <Pressable onPress={() => move(t.id, 1)}>
+                  <Pressable style={hit} onPress={() => move(t.id, 1)}>
                     <Muted>↓ ниже</Muted>
                   </Pressable>
                   <Pressable
+                    style={hit}
                     onPress={() => {
                       rememberFlag(`tile:${t.id}`, !shown(t.id));
                       force((n) => n + 1);
@@ -64,7 +68,7 @@ export function TodayTiles({ tiles }: { tiles: Tile[] }) {
           </View>
         ))}
       </View>
-      <Pressable onPress={() => setEditing(!editing)}>
+      <Pressable style={hit} onPress={() => setEditing(!editing)}>
         <Muted>{editing ? 'Готово' : 'Настроить плашки'}</Muted>
       </Pressable>
     </View>

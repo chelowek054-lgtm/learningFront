@@ -2,6 +2,8 @@
 // Макет: телефон — вкладки внизу, планшет — рейка слева, десктоп — боковая панель.
 import { grid } from '../config';
 
+export { withAlpha } from './color';
+
 export type NavLayout = 'bottom' | 'rail' | 'side';
 
 /** Ширина панели навигации в dp; у нижней вкладочной панели её нет. */
@@ -42,13 +44,4 @@ export function navItemsFor(layout: NavLayout, isAdmin: boolean): NavItem[] {
 export function isNavActive(itemPath: string, pathname: string): boolean {
   if (itemPath === '/') return pathname === '/';
   return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
-}
-
-/** Цвет `#RRGGBB` с прозрачностью 0–1 → `#RRGGBBAA`: в RN нет color-mix. */
-export function withAlpha(hex: string, alpha: number): string {
-  const a = Math.round(Math.min(1, Math.max(0, alpha)) * 255)
-    .toString(16)
-    .padStart(2, '0')
-    .toUpperCase();
-  return `${hex}${a}`;
 }

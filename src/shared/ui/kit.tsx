@@ -1,6 +1,6 @@
 // Базовые элементы интерфейса поверх темы. Экраны собираются из них, а не
 // объявляют свои цвета и отступы — иначе тёмная тема и ритм расходятся.
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   type RefreshControlProps,
@@ -11,11 +11,13 @@ import {
   TextInput,
   type TextInputProps,
   View,
-  type TextStyle,
   type ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { elevationCard } from './elevation';
+import { mixColors } from './color';
 import { font, radius, space, useTheme } from './theme';
+import { typography } from '@/shared/config';
 
 /** Экран: фон темы + безопасные зоны. `scroll` — для длинного содержимого. */
 export function Screen({
@@ -45,22 +47,37 @@ export function Card({
 }: {
   children: ReactNode;
   onPress?: () => void;
-  /** `accent` — карточка текущего действия; `core` — фундаментальный узел графа. */
+  /** `accent` — главный блок экрана (текущее действие); `core` — фундаментальный узел графа. */
   tone?: 'plain' | 'accent' | 'core';
 }) {
   const { colors } = useTheme();
-  const border = tone === 'accent' ? colors.accent : tone === 'core' ? colors.core : colors.line;
+  const [focused, setFocused] = useState(false);
+  // Блоки отделяются фоном и мягкой тенью; рамка — только у акцентного блока экрана (D-0001).
+  const border = focused
+    ? colors.focus
+    : tone === 'accent'
+      ? mixColors(colors.accent, colors.line, 0.45)
+      : tone === 'core'
+        ? colors.core
+        : colors.line;
   const style: ViewStyle = {
-    backgroundColor: colors.surface,
+    backgroundColor:
+      tone === 'accent' ? mixColors(colors.accent, colors.surface, 0.12) : colors.surface,
     borderColor: border,
-    borderWidth: tone === 'plain' ? StyleSheet.hairlineWidth : 1.5,
-    borderRadius: radius.md,
+    borderWidth: focused ? 2 : tone === 'plain' ? StyleSheet.hairlineWidth : 1,
+    borderRadius: radius.lg,
     padding: space.lg,
     gap: space.sm,
+    ...elevationCard(colors.shadow),
   };
   if (!onPress) return <View style={style}>{children}</View>;
   return (
-    <Pressable style={({ pressed }) => [style, pressed && styles.pressed]} onPress={onPress}>
+    <Pressable
+      style={({ pressed }) => [style, pressed && styles.pressed]}
+      onPress={onPress}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+    >
       {children}
     </Pressable>
   );
@@ -80,24 +97,34 @@ export function Button({
   busy?: boolean;
 }) {
   const { colors } = useTheme();
+  const [focused, setFocused] = useState(false);
   const bg =
     variant === 'primary' ? colors.accent : variant === 'danger' ? colors.danger : 'transparent';
-  const fg = variant === 'quiet' ? colors.accent : colors.onAccent;
+  const fg =
+    variant === 'quiet'
+      ? colors.accentText
+      : variant === 'danger'
+        ? colors.onDanger
+        : colors.onAccent;
   return (
     <Pressable
       accessibilityRole="button"
       disabled={disabled || busy}
       onPress={onPress}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
       style={({ pressed }) => [
         {
           backgroundColor: bg,
-          borderRadius: radius.sm,
-          paddingVertical: space.md + 2,
+          borderRadius: radius.md,
+          minHeight: 48,
+          justifyContent: 'center',
           paddingHorizontal: space.lg,
           alignItems: 'center',
-          borderWidth: variant === 'quiet' ? StyleSheet.hairlineWidth : 0,
-          borderColor: colors.line,
+          borderWidth: focused ? 2 : variant === 'quiet' ? 1 : 0,
+          borderColor: focused ? colors.focus : colors.line,
         },
+        variant === 'primary' && elevationCard(colors.accent, 0.3),
         (disabled || busy) && styles.dim,
         pressed && styles.pressed,
       ]}
@@ -113,32 +140,38 @@ export function Button({
 
 // ---- типографика ----
 
-function useText(size: number, weight: TextStyle['fontWeight'], color: ToneKey) {
+function useText(role: keyof typeof typography, color: ToneKey) {
   const { colors } = useTheme();
-  return { fontSize: size, fontWeight: weight, color: colors[color], lineHeight: size * 1.4 };
+  const t = typography[role];
+  return {
+    fontSize: t.fontSize,
+    fontWeight: t.fontWeight,
+    color: colors[color],
+    lineHeight: t.lineHeight,
+  };
 }
 /** Ключи палитры, доступные тексту. Раньше это был объект-пустышка ради
  *  `keyof typeof`; тип выражает то же самое и не создаёт значения. */
-type ToneKey = 'ink' | 'muted' | 'accent' | 'ok' | 'warn' | 'danger' | 'core';
+type ToneKey = 'ink' | 'muted' | 'accentText' | 'ok' | 'warn' | 'danger' | 'core';
 
 export const Display = ({ children }: { children: ReactNode }) => (
-  <Text style={useText(font.display, '700', 'ink')}>{children}</Text>
+  <Text style={useText('display', 'ink')}>{children}</Text>
 );
 
 export const Title = ({ children }: { children: ReactNode }) => (
-  <Text style={useText(font.title, '700', 'ink')}>{children}</Text>
+  <Text style={useText('title', 'ink')}>{children}</Text>
 );
 
 export const Lead = ({ children }: { children: ReactNode }) => (
-  <Text style={useText(font.lead, '500', 'ink')}>{children}</Text>
+  <Text style={useText('lead', 'ink')}>{children}</Text>
 );
 
 export const Body = ({ children }: { children: ReactNode }) => (
-  <Text style={useText(font.body, '400', 'ink')}>{children}</Text>
+  <Text style={useText('body', 'ink')}>{children}</Text>
 );
 
 export const Muted = ({ children }: { children: ReactNode }) => (
-  <Text style={useText(font.small, '400', 'muted')}>{children}</Text>
+  <Text style={useText('small', 'muted')}>{children}</Text>
 );
 
 export function Note({
@@ -148,7 +181,7 @@ export function Note({
   children: ReactNode;
   tone?: 'muted' | 'ok' | 'warn' | 'danger';
 }) {
-  return <Text style={useText(font.small, '500', tone)}>{children}</Text>;
+  return <Text style={useText('small', tone)}>{children}</Text>;
 }
 
 /** Надпись-метка: короткая, разряженная, всегда приглушённая. */
@@ -158,7 +191,7 @@ export function Label({ children }: { children: ReactNode }) {
     <Text
       style={{
         fontSize: font.caption,
-        letterSpacing: 1,
+        letterSpacing: font.caption * 0.08,
         textTransform: 'uppercase',
         color: colors.muted,
         fontWeight: '600',
@@ -173,16 +206,20 @@ export function Label({ children }: { children: ReactNode }) {
  *  стилей уже разъезжались между экранами при правке темы. */
 export function Field({ invalid, style, ...rest }: TextInputProps & { invalid?: boolean }) {
   const { colors } = useTheme();
+  const [focused, setFocused] = useState(false);
   return (
     <TextInput
       placeholderTextColor={colors.muted}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
       style={[
         {
-          borderWidth: StyleSheet.hairlineWidth,
-          borderColor: invalid ? colors.danger : colors.line,
+          borderWidth: focused ? 2 : 1,
+          borderColor: invalid ? colors.danger : focused ? colors.focus : colors.line,
+          minHeight: 48,
           backgroundColor: colors.surface,
           color: colors.ink,
-          borderRadius: radius.sm,
+          borderRadius: radius.md,
           padding: space.md,
           fontSize: font.body,
         },
@@ -200,21 +237,34 @@ export function Pill({
   tone = 'muted',
 }: {
   text: string;
-  tone?: 'muted' | 'accent' | 'core';
+  tone?: 'muted' | 'accent' | 'core' | 'info' | 'warn' | 'danger';
 }) {
   const { colors } = useTheme();
-  const fg = tone === 'accent' ? colors.accent : tone === 'core' ? colors.core : colors.muted;
+  // Мягкая заливка — 12 % роли поверх поверхности, текст — роль (D-0001, tint.soft).
+  const role =
+    tone === 'accent'
+      ? colors.accentText
+      : tone === 'core'
+        ? colors.core
+        : tone === 'info'
+          ? colors.info
+          : tone === 'warn'
+            ? colors.warn
+            : tone === 'danger'
+              ? colors.danger
+              : colors.muted;
   return (
     <View
       style={{
         alignSelf: 'flex-start',
         borderRadius: radius.pill,
-        paddingHorizontal: space.sm,
-        paddingVertical: 2,
-        backgroundColor: colors.surfaceAlt,
+        paddingHorizontal: space.sm + 2,
+        paddingVertical: 3,
+        backgroundColor:
+          tone === 'muted' ? colors.surfaceAlt : mixColors(role, colors.surface, 0.12),
       }}
     >
-      <Text style={{ fontSize: font.caption, color: fg, fontWeight: '600' }}>{text}</Text>
+      <Text style={{ fontSize: font.caption, color: role, fontWeight: '600' }}>{text}</Text>
     </View>
   );
 }
@@ -225,7 +275,7 @@ export function Progress({ value, tone = 'accent' }: { value: number; tone?: 'ac
   return (
     <View
       style={{
-        height: 6,
+        height: 8,
         borderRadius: radius.pill,
         backgroundColor: colors.surfaceAlt,
         overflow: 'hidden',
@@ -249,8 +299,12 @@ export function TopBar({ title, onBack }: { title: string; onBack?: () => void }
   return (
     <View style={{ gap: space.xs }}>
       {onBack && (
-        <Pressable onPress={onBack} accessibilityRole="button" hitSlop={8}>
-          <Text style={{ color: colors.accent, fontSize: font.body }}>← Назад</Text>
+        <Pressable
+          onPress={onBack}
+          accessibilityRole="button"
+          style={{ minHeight: 44, justifyContent: 'center' }}
+        >
+          <Text style={{ color: colors.accentText, fontSize: font.body }}>← Назад</Text>
         </Pressable>
       )}
       <Title>{title}</Title>
