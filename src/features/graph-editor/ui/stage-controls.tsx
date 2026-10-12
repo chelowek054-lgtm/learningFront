@@ -22,7 +22,7 @@ export function StageControls({
   stageTitle: (key: string) => string;
 }) {
   const { colors } = useTheme();
-  if (!scene.switchable) return null;
+  if (!scene.switchable && scene.areas.length === 0) return null;
   const current = scene.grouped ? 'stages' : 'all';
   const keys = scene.expandedKeys;
   const one = keys.length === 1 ? keys[0]! : null;
@@ -49,6 +49,22 @@ export function StageControls({
           />
         )}
       </View>
+      {scene.areas.length > 0 && (
+        <View
+          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.xs, alignItems: 'center' }}
+        >
+          <Muted>Области:</Muted>
+          {scene.areas.map((a) => (
+            <Chip
+              key={a.name}
+              size="sm"
+              text={a.collapsed ? `▸ ${a.name}` : `▾ ${a.name}`}
+              selected={!a.collapsed}
+              onPress={() => scene.toggleArea(a.name)}
+            />
+          ))}
+        </View>
+      )}
       {scene.grouped && keys.length > 0 && (
         <View
           style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.xs, alignItems: 'center' }}

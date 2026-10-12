@@ -13,7 +13,8 @@ export function GraphScreen({
   onStudy,
 }: {
   onOpenOutline?: () => void;
-  onStudy?: () => void;
+  /** Открыть шаг курса; понятие, которое человек выбрал на схеме, передаётся, чтобы шаг был по нему. */
+  onStudy?: (conceptId?: string) => void;
 }) {
   const { colors } = useTheme();
   const { isAdmin, subject } = useSession();

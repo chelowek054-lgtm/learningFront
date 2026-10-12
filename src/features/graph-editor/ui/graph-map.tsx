@@ -82,7 +82,8 @@ export function GraphMap({
   domain: string;
   subjectTitle?: string;
   onOpenOutline?: () => void;
-  onStudy?: () => void;
+  /** Открыть шаг курса; понятие, которое человек выбрал на схеме, передаётся, чтобы шаг был по нему. */
+  onStudy?: (conceptId?: string) => void;
 }) {
   const [graph, setGraph] = useState<Graph | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);

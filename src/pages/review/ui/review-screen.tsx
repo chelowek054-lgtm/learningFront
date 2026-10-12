@@ -1,6 +1,7 @@
 // Экран интервального повторения (WS6): очередь due-карточек + FSRS.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSession } from '@/entities/session';
 import { useTheme, type Palette } from '@/shared/ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -58,6 +59,7 @@ export function ReviewScreen({
   cardIds?: string[];
 }) {
   const { colors } = useTheme();
+  const { subject } = useSession();
   const styles = makeStyles(colors);
   const scheduler = useMemo(() => createScheduler(), []);
   const [queue, setQueue] = useState<SrsCardRecord[]>([]);
@@ -112,7 +114,10 @@ export function ReviewScreen({
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.content}>
-        <Text style={styles.counter}>Осталось: {queue.length}</Text>
+        <Text style={styles.counter}>
+          {subject ? `${subject.title} · ` : ''}
+          Осталось: {queue.length}
+        </Text>
         <Pressable style={styles.card} onPress={() => setRevealed(true)}>
           <Text style={styles.front}>{frontText(card)}</Text>
           {revealed && <Text style={styles.back}>{backText(card)}</Text>}
