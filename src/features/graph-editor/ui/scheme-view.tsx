@@ -2,7 +2,7 @@
 // состояния освоения, поиск, фильтры, подсветка пути и карточка узла — без выхода со схемы.
 // Без новых зависимостей: узлы и рёбра — обычные View, прокрутка и масштаб — ScrollView и transform.
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
 import {
   ApiError,
   createOwnNode,
@@ -13,6 +13,8 @@ import {
   type GraphNode,
   type MasteryMap,
 } from '@/shared/api';
+import { SchemeCanvas, STATE_TEXT } from './scheme-canvas';
+import { SchemeFullscreen } from './scheme-fullscreen';
 import { queueEdit } from '../model/offline';
 import {
   Body,
@@ -31,15 +33,9 @@ import {
   highlightPath,
   isFiltering,
   layoutScheme,
-  lookOf,
   masteryEstimates,
   masteryStates,
-  matches,
   NO_FILTERS,
-  NODE_H,
-  NODE_W,
-  scaleOf,
-  segmentBetween,
   tagsOf,
   type Filters,
   type MasteryState,
@@ -48,12 +44,6 @@ import { rememberFlag, remembered } from '../model/remember';
 import { SchemeLegend } from './scheme-legend';
 
 const ZOOMS = [0.5, 0.7, 1, 1.3];
-const STATE_TEXT: Record<MasteryState, string> = {
-  known: 'освоено',
-  learning: 'изучаю сейчас',
-  frontier: 'можно изучать сейчас',
-  locked: 'закрыто: сначала предпосылки',
-};
 
 export function SchemeView({
   graph,
@@ -62,6 +52,7 @@ export function SchemeView({
   studyLabel = 'Изучать',
   domain,
   onChanged,
+  fullscreenTitle = 'Схема пути',
 }: {
   graph: Graph;
   domain?: string;
@@ -70,12 +61,15 @@ export function SchemeView({
   /** Открыть курс; шаг по понятию выбирает сам курс. */
   onStudy?: () => void;
   studyLabel?: string;
+  /** Подпись в шапке полноэкранного режима: какой предмет и какой режим. */
+  fullscreenTitle?: string;
 }) {
   const { colors } = useTheme();
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [selected, setSelected] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [zoomIndex, setZoomIndex] = useState(2);
+  const [fullscreen, setFullscreen] = useState(false);
   const [legendOpen, setLegendOpen] = useState(() => remembered('graph-legend-open', true));
 
   const states = useMemo(() => masteryStates(mastery, graph.nodes), [mastery, graph.nodes]);
@@ -218,176 +212,47 @@ export function SchemeView({
           disabled={zoomIndex === ZOOMS.length - 1}
           onPress={() => setZoomIndex((i) => Math.min(ZOOMS.length - 1, i + 1))}
         />
+        <Button label="Во весь экран" variant="quiet" onPress={() => setFullscreen(true)} />
         <Muted>Этап можно свернуть нажатием на его название</Muted>
       </View>
 
-      <View
-        style={{
-          borderWidth: 1,
-          borderColor: colors.line,
-          borderRadius: radius.md,
-          backgroundColor: colors.surfaceAlt,
-          height: 420,
-        }}
-      >
-        <ScrollView horizontal nestedScrollEnabled>
-          <ScrollView nestedScrollEnabled>
-            <View
-              style={{
-                width: (layout.width + space.lg * 2) * zoom,
-                height: (layout.height + space.lg * 2) * zoom,
-              }}
-            >
-              <View
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  width: layout.width + space.lg * 2,
-                  height: layout.height + space.lg * 2,
-                  padding: space.lg,
-                  transform: [{ scale: zoom }],
-                  transformOrigin: 'top left',
-                }}
-              >
-                <View style={{ position: 'absolute', left: space.lg, top: space.lg }}>
-                  {layout.columns.map((c) => (
-                    <Pressable
-                      key={c.key}
-                      onPress={() => toggleStage(c.key)}
-                      style={{
-                        position: 'absolute',
-                        left: c.x,
-                        top: 0,
-                        // Зона нажатия заголовка — не меньше 44 px при любом масштабе.
-                        minHeight: Math.ceil(44 / zoom) - 10,
-                        width: collapsed.has(c.key) ? 56 : NODE_W,
-                      }}
-                    >
-                      <Text
-                        numberOfLines={1}
-                        style={{ color: colors.muted, fontWeight: '600', fontSize: 12 }}
-                      >
-                        {collapsed.has(c.key) ? '▸ ' : ''}
-                        {c.title} · {c.count}
-                      </Text>
-                    </Pressable>
-                  ))}
+      <SchemeCanvas
+        graph={graph}
+        layout={layout}
+        states={states}
+        estimates={estimates}
+        highlight={highlight}
+        selected={selected}
+        filters={filters}
+        filtering={filtering}
+        zoom={zoom}
+        collapsed={collapsed}
+        onSelect={setSelected}
+        onToggleStage={toggleStage}
+        height={420}
+      />
 
-                  {graph.edges.map((e) => {
-                    const a = layout.positions[e.from];
-                    const b = layout.positions[e.to];
-                    if (!a || !b) return null;
-                    const s = segmentBetween(a, b);
-                    const on = highlight?.edges.has(e.id) ?? false;
-                    const dim = highlight && !on;
-                    const mine = e.kind === 'personal';
-                    return (
-                      <View
-                        key={e.id}
-                        pointerEvents="none"
-                        style={{
-                          position: 'absolute',
-                          left: s.left,
-                          top: s.top,
-                          width: s.length,
-                          height: on ? 3 : mine ? 2.5 : 1.5,
-                          // Личная связь — цветом и пунктиром, как личный узел отличается овалом.
-                          backgroundColor: on ? colors.accent : mine ? colors.core : colors.muted,
-                          borderStyle: mine ? 'dashed' : 'solid',
-                          opacity: dim ? 0.12 : mine ? 0.9 : e.type === 'prereq' ? 0.55 : 0.3,
-                          transform: [{ rotate: `${s.angle}deg` }],
-                        }}
-                      />
-                    );
-                  })}
-
-                  {graph.nodes.map((n) => {
-                    const p = layout.positions[n.id];
-                    if (!p) return null;
-                    const state = states[n.id];
-                    const look = lookOf(n, state);
-                    const inPath = highlight?.nodes.has(n.id) ?? true;
-                    const hit = !filtering || matches(n, filters, states);
-                    const tags = tagsOf(n);
-                    const border =
-                      n.id === selected
-                        ? colors.accent
-                        : look.emphasis === 'frontier'
-                          ? colors.accent
-                          : look.emphasis === 'learning'
-                            ? colors.core
-                            : colors.line;
-                    const dot = 6 + (scaleOf(n) - 1) * 30;
-                    return (
-                      <Pressable
-                        key={n.id}
-                        onPress={() => setSelected(n.id === selected ? null : n.id)}
-                        accessibilityLabel={`${n.title}${state ? `, ${STATE_TEXT[state]}` : ''}`}
-                        style={{
-                          position: 'absolute',
-                          left: p.x,
-                          top: p.y,
-                          width: NODE_W,
-                          height: NODE_H,
-                          paddingHorizontal: space.sm,
-                          justifyContent: 'center',
-                          overflow: 'hidden',
-                          borderRadius: n.kind === 'personal' ? NODE_H / 2 : radius.sm,
-                          borderWidth:
-                            look.emphasis === 'frontier' ||
-                            look.emphasis === 'learning' ||
-                            n.id === selected
-                              ? 2.5
-                              : 1,
-                          borderStyle: look.dashed ? 'dashed' : 'solid',
-                          borderColor: border,
-                          backgroundColor: state === 'locked' ? colors.surfaceAlt : colors.surface,
-                          opacity: Math.min(look.opacity, hit ? 1 : 0.15, inPath ? 1 : 0.2),
-                        }}
-                      >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs }}>
-                          <View
-                            style={{
-                              width: dot,
-                              height: dot,
-                              borderRadius: dot,
-                              backgroundColor: state === 'known' ? colors.core : colors.accent,
-                            }}
-                          />
-                          <Text
-                            numberOfLines={1}
-                            style={{ flex: 1, color: colors.ink, fontSize: 12 }}
-                          >
-                            {state === 'locked' ? '🔒 ' : ''}
-                            {n.title}
-                          </Text>
-                        </View>
-                        {/* Метки на самом узле: уровень, необязательное, не проверено, своё, «сейчас». */}
-                        <Text numberOfLines={1} style={{ color: colors.muted, fontSize: 10 }}>
-                          {[...(state === 'learning' ? ['сейчас'] : []), ...tags].join(' · ')}
-                        </Text>
-                        {state === 'learning' && (
-                          <View
-                            style={{
-                              position: 'absolute',
-                              left: 0,
-                              bottom: 0,
-                              height: 4,
-                              width: `${Math.max(8, Math.round((estimates[n.id] ?? 0) * 100))}%`,
-                              backgroundColor: colors.core,
-                            }}
-                          />
-                        )}
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>
-            </View>
-          </ScrollView>
-        </ScrollView>
-      </View>
+      <SchemeFullscreen
+        visible={fullscreen}
+        onClose={() => setFullscreen(false)}
+        title={fullscreenTitle}
+        graph={graph}
+        layout={layout}
+        states={states}
+        estimates={estimates}
+        highlight={highlight}
+        selected={selected}
+        onSelect={setSelected}
+        filters={filters}
+        onFilters={setFilters}
+        collapsed={collapsed}
+        onToggleStage={toggleStage}
+        byId={byId}
+        onStudy={onStudy}
+        studyLabel={studyLabel}
+        onRemove={(n) => void removeOwn(n)}
+        onRename={(n, t) => void renameOwn(n, t)}
+      />
 
       {selectedNode && (
         <NodeCard

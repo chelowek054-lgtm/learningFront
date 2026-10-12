@@ -9,7 +9,11 @@ import {
   matches,
   NO_FILTERS,
   scaleOf,
-  segmentBetween,
+  fitZoom,
+  jitterOf,
+  laneYs,
+  routeEdge,
+  type Bar,
   tagsOf,
   NODE_H,
   NODE_W,
@@ -148,11 +152,114 @@ describe('подсветка пути', () => {
   });
 });
 
-describe('отрезок для ребра', () => {
-  it('горизонтальное ребро идёт без наклона от правой кромки к левой', () => {
-    const s = segmentBetween({ x: 0, y: 0 }, { x: NODE_W + 100, y: 0 });
-    expect(s.angle).toBeCloseTo(0);
-    expect(s.length).toBeCloseTo(100);
-    expect(s.top).toBe(NODE_H / 2);
+describe('рёбра ломаными', () => {
+  const grid = (cols: number, rows: number) => {
+    const nodes: GraphNode[] = [];
+    for (let c = 0; c < cols; c++)
+      for (let r = 0; r < rows; r++)
+        nodes.push(node(`n${c}${r}`, { stage: `Э${c}`, stageOrder: c, title: `Т${c}${r}` }));
+    return nodes;
+  };
+  const rects = (layout: ReturnType<typeof layoutScheme>) =>
+    Object.entries(layout.positions).map(([id, p]) => ({ id, ...p }));
+  const hits = (bar: Bar, n: { x: number; y: number }) =>
+    bar.left < n.x + NODE_W &&
+    bar.left + bar.width > n.x &&
+    bar.top < n.y + NODE_H &&
+    bar.top + bar.height > n.y;
+
+  it('соседние колонки: ломаная из трёх отрезков, острие у левой кромки цели', () => {
+    const layout = layoutScheme(grid(2, 2));
+    const r = routeEdge(layout.positions.n00!, layout.positions.n11!, laneYs(layout));
+    expect(r.bars).toHaveLength(3);
+    expect(r.arrow).toEqual({
+      x: layout.positions.n11!.x,
+      y: layout.positions.n11!.y + NODE_H / 2,
+      dir: 'right',
+    });
+  });
+
+  it('связь через колонку не задевает ни одного узла', () => {
+    const layout = layoutScheme(grid(3, 3));
+    const lanes = laneYs(layout);
+    const pairs: [string, string][] = [
+      ['n00', 'n20'],
+      ['n01', 'n21'],
+      ['n02', 'n20'],
+      ['n00', 'n22'],
+    ];
+    for (const [from, to] of pairs) {
+      const r = routeEdge(
+        layout.positions[from]!,
+        layout.positions[to]!,
+        lanes,
+        jitterOf(from + to),
+      );
+      for (const bar of r.bars)
+        for (const n of rects(layout))
+          expect(hits(bar, n), `${from}→${to} задевает ${n.id}`).toBe(false);
+    }
+  });
+
+  it('связь в одной колонке идёт вдоль правой кромки и не задевает узлы', () => {
+    const layout = layoutScheme(grid(1, 3));
+    const r = routeEdge(layout.positions.n00!, layout.positions.n02!, laneYs(layout));
+    expect(r.arrow.dir).toBe('left');
+    for (const bar of r.bars) for (const n of rects(layout)) expect(hits(bar, n)).toBe(false);
+  });
+
+  it('ребро назад огибает по дорожке и не задевает узлы', () => {
+    const layout = layoutScheme(grid(3, 3));
+    const r = routeEdge(layout.positions.n21!, layout.positions.n01!, laneYs(layout));
+    for (const bar of r.bars) for (const n of rects(layout)) expect(hits(bar, n)).toBe(false);
+  });
+
+  it('сдвиг канала зависит от номера ребра и невелик', () => {
+    expect(jitterOf('e1')).toBe(jitterOf('e1'));
+    for (const id of ['a', 'bb', 'ccc', 'e17'])
+      expect(Math.abs(jitterOf(id))).toBeLessThanOrEqual(8);
+  });
+
+  it('этапы разных областей с одним названием остаются разными колонками, область — отдельной подписью', () => {
+    const nodes = [
+      node('p', { area: 'Вероятность', stage: 'Основы', stageOrder: 1 }),
+      node('l', { area: 'Линейная алгебра', stage: 'Основы', stageOrder: 101 }),
+    ];
+    const { columns } = layoutScheme(nodes);
+    expect(columns).toHaveLength(2);
+    expect(columns.map((c) => c.title)).toEqual(['Основы', 'Основы']);
+    expect(columns.map((c) => c.area)).toEqual(['Вероятность', 'Линейная алгебра']);
+  });
+});
+
+describe('подсветка до и после', () => {
+  const e = (id: string, from: string, to: string): GraphEdge =>
+    ({ id, from, to, type: 'prereq', kind: 'canonical' }) as GraphEdge;
+  it('делит соседей на «нужно раньше» и «открывает»', () => {
+    const h = highlightPath('b', [
+      e('1', 'a', 'b'),
+      e('2', 'b', 'c'),
+      e('3', 'c', 'd'),
+      e('4', 'x', 'y'),
+    ]);
+    expect([...h.before]).toEqual(['a']);
+    expect([...h.after].sort()).toEqual(['c', 'd']);
+    expect([...h.beforeEdges]).toEqual(['1']);
+    expect([...h.afterEdges].sort()).toEqual(['2', '3']);
+    expect(h.nodes.has('x')).toBe(false);
+  });
+});
+
+describe('fitZoom', () => {
+  it('большая схема уменьшается, малая не раздувается больше 1.3', () => {
+    const big = { positions: {}, columns: [], width: 2000, height: 800 };
+    expect(fitZoom(big, { width: 1000, height: 800 })).toBeLessThan(0.5);
+    const small = { positions: {}, columns: [], width: 100, height: 100 };
+    expect(fitZoom(small, { width: 1000, height: 800 })).toBe(1.3);
+  });
+  it('не меньше нижнего предела и не ломается на нулевом окне', () => {
+    const huge = { positions: {}, columns: [], width: 20000, height: 20000 };
+    expect(fitZoom(huge, { width: 300, height: 300 })).toBe(0.3);
+    expect(fitZoom(huge, { width: 0, height: 0 })).toBe(1);
   });
 });

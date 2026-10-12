@@ -26,6 +26,8 @@ export interface GraphNode {
    */
   reviewStatus?: string;
   /** Этап, уровень и необязательность понятия (T-0087): метки профиля навыка; у старых узлов их нет. */
+  /** Область, к которой относится узел; нужна, когда на одном холсте несколько областей (слой шагов курса). */
+  area?: string | null;
   stage?: string | null;
   stageOrder?: number | null;
   level?: 'basic' | 'middle' | 'advanced' | null;
