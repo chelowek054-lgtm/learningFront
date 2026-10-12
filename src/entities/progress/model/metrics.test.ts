@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { Grade, Response, SrsCardRecord } from '../../../shared/engine';
-import { errorLogClosure, knownShare, retention, rubricGrowth, streakDays } from './metrics';
+import {
+  errorLogClosure,
+  isEmptyProgress,
+  knownShare,
+  retention,
+  rubricGrowth,
+  streakDays,
+} from './metrics';
 
 const card = (
   fsrsState: Record<string, unknown>,
@@ -151,5 +158,25 @@ describe('streakDays', () => {
     expect(
       streakDays([response(at(2026, 10, 10), null), response(at(2026, 10, 10) + '', null)], now),
     ).toBe(1);
+  });
+});
+
+describe('isEmptyProgress', () => {
+  const empty = {
+    retention: { rate: null, reviews: 0, lapses: 0 },
+    closure: { rate: null, total: 0, settled: 0 },
+    growth: [],
+    streak: 0,
+  };
+  it('пусто, пока нечего считать', () => {
+    expect(isEmptyProgress(empty, null)).toBe(true);
+    expect(isEmptyProgress(empty, { known: 0, total: 10, rate: 0 })).toBe(true);
+  });
+  it('не пусто, если есть серия, повторения или освоенное', () => {
+    expect(isEmptyProgress({ ...empty, streak: 2 }, null)).toBe(false);
+    expect(
+      isEmptyProgress({ ...empty, retention: { rate: 0.9, reviews: 5, lapses: 1 } }, null),
+    ).toBe(false);
+    expect(isEmptyProgress(empty, { known: 3, total: 10, rate: 0.3 })).toBe(false);
   });
 });
