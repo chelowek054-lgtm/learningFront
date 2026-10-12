@@ -149,23 +149,25 @@ export function legendFor(input: LegendInput): LegendItem[] {
     });
   }
   if (input.grouped) {
-    items.push(
-      {
-        id: 'stage',
-        sample: { kind: 'stage' },
-        text: 'блок этапа: название, область, сколько освоено',
-      },
-      {
+    items.push({
+      id: 'stage',
+      sample: { kind: 'stage' },
+      text: 'блок этапа: название, область, сколько освоено; нажмите, чтобы раскрыть',
+    });
+    // Стрелки-счётчики рисуются без выбора, призраки — только вместе с выбранным понятием.
+    if (!input.selected) {
+      items.push({
         id: 'count',
         sample: { kind: 'count' },
         text: 'число на стрелке: сколько связей между этапами; нажмите, чтобы увидеть список',
-      },
-      {
+      });
+    } else {
+      items.push({
         id: 'ghost',
         sample: { kind: 'ghost' },
-        text: 'пунктирный бледный узел: сосед выбранного из другого этапа',
-      },
-    );
+        text: 'пунктирный бледный узел: сосед выбранного из свёрнутого этапа',
+      });
+    }
   }
   return items;
 }
