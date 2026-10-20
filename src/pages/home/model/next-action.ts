@@ -4,7 +4,7 @@
 // задания) и нигде не объяснял, как они связаны: человек не знал, с чего
 // начать и что будет, если пропустить. Приоритет решается здесь, а не вёрсткой.
 import type { Course, CourseStep, ProfileState, StepReason } from '@/shared/api';
-import { pluralCategory , currentLang, translate } from '../../../shared/i18n-core';
+import { pluralCategory, currentLang, translate } from '../../../shared/i18n-core';
 
 // Вид «Сегодня» по состоянию предмета (R-0057, user-flow-daily-loop): ни одно состояние не подменяется
 // «Определить уровень» по умолчанию.
