@@ -1,6 +1,6 @@
 // Как показать отчёт по предварительным знаниям (T-0075, R-0042).
 import type { AreaReport, PriorReport, Verdict } from '@/shared/api';
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 
 export const VERDICT_LABEL: Record<Verdict, string> = {
   get enough() {

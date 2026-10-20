@@ -1,5 +1,5 @@
 // Хранение выбранного языка интерфейса (web): localStorage.
-import { isLang, type Lang } from './core';
+import { isLang, type Lang } from '../i18n-core';
 
 const LANG_KEY = 'praxis.ui_lang';
 

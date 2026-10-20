@@ -7,7 +7,7 @@ import type {
   GoalVolume,
   VolumeVariant,
 } from '@/shared/api';
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 
 /** Свободный ввод достаточно содержателен, чтобы задавать по нему вопросы. */
 export const canAsk = (text: string): boolean => text.trim().length > 1;

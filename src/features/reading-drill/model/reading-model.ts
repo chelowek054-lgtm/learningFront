@@ -11,7 +11,7 @@ import {
   type QuizQuestion,
   type QuizResult,
 } from '../../../shared/engine';
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 
 export { isCorrect };
 export type { QuestionResult, QuestionType };

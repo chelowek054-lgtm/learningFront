@@ -1,7 +1,7 @@
 // Хранение выбранного языка интерфейса (native). Web-вариант — lang-storage.web.ts.
 import * as SecureStore from 'expo-secure-store';
 
-import { isLang, type Lang } from './core';
+import { isLang, type Lang } from '../i18n-core';
 
 const LANG_KEY = 'praxis.ui_lang';
 

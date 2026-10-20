@@ -1,4 +1,4 @@
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 // Самооценка вспоминания → результат от 0 до 1. Ступени те же, что у оценки карточки повторения:
 // способ меняется, а шкала освоенности для графа остаётся одной.
 export type SelfRating = 'again' | 'hard' | 'good' | 'easy';

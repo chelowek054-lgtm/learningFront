@@ -1,6 +1,6 @@
 // Настройка уведомлений вне приложения (T-0086): что показать и что делает кнопка. Без сети и без UI.
 import type { PushState } from '@/shared/api';
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 
 export type FailureReason = 'unsupported' | 'denied' | 'no_project' | 'failed';
 export type PushAction = 'enable' | 'disable' | null;

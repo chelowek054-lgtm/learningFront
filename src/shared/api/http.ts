@@ -2,7 +2,7 @@
 import { APP_VERSION } from './app-version';
 import { ClientOutdatedError, notifyClientOutdated, parseOutdatedBody } from './client-outdated';
 import { getToken } from './token';
-import { translate } from '../i18n/translate';
+import { translate } from '../i18n-core';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
 

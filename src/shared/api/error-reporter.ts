@@ -4,7 +4,7 @@
 // отправке отчёта породил бы новый отчёт и цикл.
 import { api } from './http';
 import { APP_VERSION } from './app-version';
-import { translate } from '../i18n/translate';
+import { translate } from '../i18n-core';
 
 export interface ErrorReport {
   message: string;

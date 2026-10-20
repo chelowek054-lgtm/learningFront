@@ -2,7 +2,7 @@
 // Один набор правил на встроенную схему, полноэкранный режим и «Дерево»; образцы рисует ui/scheme-legend.tsx.
 import type { GraphEdge, GraphNode } from '@/shared/api';
 import { scaleOf, type MasteryState } from './scheme';
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 
 /** Что рисует образец: тот же вид, что у узла или линии на холсте. */
 export type LegendSample =

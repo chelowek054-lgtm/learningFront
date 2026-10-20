@@ -1,6 +1,6 @@
 // Путь курса по областям и этапам (R-0065, T-0122): порядок шагов не меняется, меняется только группировка.
 import type { CourseStep } from '@/shared/api';
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 
 export interface StepGroup {
   key: string;

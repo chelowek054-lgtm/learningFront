@@ -1,7 +1,7 @@
 // Что показать, пока граф собирается в фоне: по статусу профиля, без сети и без UI.
 // Сборка идёт в две фазы (R-0055): быстрый контур, затем наполнение по областям.
 import type { ProfileState } from '@/shared/api';
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 
 export type BuildKind = 'idle' | 'drafting' | 'outline' | 'running' | 'stale' | 'failed' | 'done';
 

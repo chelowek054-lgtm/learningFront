@@ -1,6 +1,6 @@
 // Публичный API shared/i18n.
 export { I18nProvider, useI18n } from './i18n-context';
-export { currentLang, setCurrentLang, translate } from './translate';
+export { currentLang, setCurrentLang, translate } from '../i18n-core';
 export {
   DEFAULT_LANG,
   LANGUAGES,
@@ -15,5 +15,5 @@ export {
   render,
   type Lang,
   type Params,
-} from './core';
-export type { Key } from './ru';
+} from '../i18n-core';
+export type { Key } from '../i18n-core';
