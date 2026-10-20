@@ -1,6 +1,6 @@
 // Текст ошибки на языке человека: сервер присылает код и параметры, клиент выбирает фразу (R-0081, T-0179).
-import { translate } from '../i18n/translate';
-import { ru, type Key } from '../i18n/ru';
+import { translate } from '../i18n-core';
+import { ru, type Key } from '../i18n-core';
 import { ApiError, NetworkError } from './http';
 
 const STATUS_KEYS: Record<number, Key> = {

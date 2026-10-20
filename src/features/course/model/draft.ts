@@ -1,6 +1,6 @@
 // Статус проверки шагов курса (T-0076, R-0044): курс из черновика можно начинать, но человек должен знать, что он не проверен.
 import type { Course, CourseStep } from '@/shared/api';
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 
 export const isDraft = (step: Pick<CourseStep, 'status'>): boolean => step.status === 'draft';
 

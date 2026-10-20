@@ -1,6 +1,6 @@
 // Источники знаний (T-0079): подписи и расчёты хода разбора без сети и без UI.
 import type { IngestStatus, SourceFields, SourceItem, SourceProgress } from '@/shared/api';
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 
 export const STATUS_LABEL: Record<IngestStatus, string> = {
   get new() {

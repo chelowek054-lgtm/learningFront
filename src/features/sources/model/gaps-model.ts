@@ -1,6 +1,6 @@
 // Пробелы в графе (T-0084): подписи и расчёты без сети и без UI.
 import type { GapFillResult, GapFillStatus, SourceGap } from '@/shared/api';
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 
 export const FILL_LABEL: Record<GapFillStatus, string> = {
   get queued() {

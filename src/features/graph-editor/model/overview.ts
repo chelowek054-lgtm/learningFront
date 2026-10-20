@@ -18,7 +18,7 @@ import {
   type Position,
   type SchemeLayout,
 } from './scheme';
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 
 /** Порог автоматического обзора: больше понятий или связей (и хотя бы два этапа). */
 export const OVERVIEW_NODES = 25;

@@ -1,6 +1,6 @@
 // Офлайн-fallback грейдер эссе (WS5-02): мгновенный черновой сигнал без LLM.
 import type { LocalGrader } from '@/shared/engine';
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 
 const AWL = [
   'analyse',

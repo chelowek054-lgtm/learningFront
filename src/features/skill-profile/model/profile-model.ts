@@ -6,7 +6,7 @@ import type {
   ProfileConcept,
   SkillProfile,
 } from '@/shared/api';
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 
 export const LEVEL_LABEL: Record<ConceptLevel, string> = {
   get basic() {

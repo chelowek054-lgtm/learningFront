@@ -1,6 +1,6 @@
 // Карта по этапам (T-0093): узлы с этапом группируются в порядке этапов, остальные идут отдельно.
 import type { GraphNode } from '@/shared/api';
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 
 export interface NodeGroup {
   title: string;

@@ -2,15 +2,15 @@
 // верно, ошибка сервера показывается фразой нужного языка по коду.
 import { describe, expect, it, vi } from 'vitest';
 
-vi.mock('expo-constants', () => ({ default: { expoConfig: { version: '0.0.0' } } }));
-vi.mock('../api/token', () => ({ getToken: async () => null }));
-
 import { ApiError, NetworkError } from '../api/http';
 import { errorText } from '../api/error-text';
 import { pluralCategory, render, type Entry } from './core';
 import { en } from './en';
 import { ru } from './ru';
 import { setCurrentLang } from './translate';
+
+vi.mock('expo-constants', () => ({ default: { expoConfig: { version: '0.0.0' } } }));
+vi.mock('../api/token', () => ({ getToken: async () => null }));
 
 const entries = (d: Record<string, Entry>) => Object.entries(d);
 const text = (e: Entry) => (typeof e === 'string' ? e : Object.values(e).join(' '));

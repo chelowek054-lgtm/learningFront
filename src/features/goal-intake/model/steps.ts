@@ -1,4 +1,4 @@
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 // Шаги онбординга (макет Claude Design): пять шагов от цели до сборки карты.
 // Диалог цели закрывает первые три; состав навыка и сборка идут на своих экранах.
 

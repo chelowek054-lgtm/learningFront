@@ -1,6 +1,6 @@
 // Выбор темы: чистая логика без react-native, чтобы проверяться тестами.
 import type { ThemeName } from '@/shared/config';
-import { translate } from '../i18n/translate';
+import { translate } from '../i18n-core';
 
 /** `system` следует за устройством; остальное — явный выбор человека. */
 export type ThemeMode = 'system' | ThemeName;

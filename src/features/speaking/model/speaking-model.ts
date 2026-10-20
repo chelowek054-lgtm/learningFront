@@ -1,4 +1,4 @@
-import { translate } from '../../../shared/i18n/translate';
+import { translate } from '../../../shared/i18n-core';
 // Устный ответ (T-0040, T-0042): разбор задания и правила записи. Чистая логика, без звука.
 
 export const DEFAULT_MAX_SEC = 120;

@@ -3,7 +3,7 @@
 import { api, ApiError, apiUrl, CLIENT_HEADERS, getBaseUrl, NetworkError } from './http';
 import type { PickedFile } from './materials-api';
 import { getToken } from './token';
-import { translate } from '../i18n/translate';
+import { translate } from '../i18n-core';
 
 export type IngestStatus = 'new' | 'queued' | 'running' | 'done' | 'failed';
 

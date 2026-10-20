@@ -1,7 +1,7 @@
 // Метаданные модуля «Языки» (TOEFL/IELTS). ЧИСТЫЕ данные — без рендереров/RN.
 // Типы Activity из docs/architecture/03-functional.md §1.1.
 import type { ActivityTypeDef } from '@/shared/engine';
-import { translate } from '../../shared/i18n/translate';
+import { translate } from '../../shared/i18n-core';
 
 export const LANGUAGES_MODULE_ID = 'languages';
 export const LANGUAGES_MODULE_TITLE = 'Языки';

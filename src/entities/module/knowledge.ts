@@ -7,7 +7,7 @@
 // (modules/knowledge/course.py). Тип, который backend отдаёт, но никто не
 // объявлял, оставался без названия и рендерера.
 import type { ActivityTypeDef } from '@/shared/engine';
-import { translate } from '../../shared/i18n/translate';
+import { translate } from '../../shared/i18n-core';
 
 export const KNOWLEDGE_MODULE_ID = 'knowledge';
 export const KNOWLEDGE_MODULE_TITLE = 'Модель знаний';

@@ -1,7 +1,7 @@
 // Метаданные модуля «Программирование/ML». ЧИСТЫЕ данные — без рендереров/RN.
 // Типы Activity из docs/architecture/03-functional.md §2.1.
 import type { ActivityTypeDef } from '@/shared/engine';
-import { translate } from '../../shared/i18n/translate';
+import { translate } from '../../shared/i18n-core';
 
 export const ML_MODULE_ID = 'ml';
 export const ML_MODULE_TITLE = 'Программирование / ML';

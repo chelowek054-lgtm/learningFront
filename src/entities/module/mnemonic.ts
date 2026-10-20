@@ -1,7 +1,7 @@
 // Метаданные модуля «Вспомнить по первым буквам» (T-0063): вторая техника запоминания.
 // ЧИСТЫЕ данные — без рендереров/RN.
 import type { ActivityTypeDef } from '@/shared/engine';
-import { translate } from '../../shared/i18n/translate';
+import { translate } from '../../shared/i18n-core';
 
 export const MNEMONIC_MODULE_ID = 'mnemonic';
 export const MNEMONIC_MODULE_TITLE = 'Вспомнить по первым буквам';
