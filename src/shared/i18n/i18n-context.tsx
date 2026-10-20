@@ -19,7 +19,8 @@ import {
   deviceLocale,
   type Lang,
   type Params,
- Key } from '../i18n-core';
+  Key,
+} from '../i18n-core';
 import { getStoredLang, setStoredLang } from './lang-storage';
 import { currentLang, dictionaries, setCurrentLang } from '../i18n-core';
 
